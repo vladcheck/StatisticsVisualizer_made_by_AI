@@ -27,7 +27,13 @@ QTableWidget* setupTable(QWidget *parent) {
     return table;
 }
 
-QWidget *setupStats(QWidget *parent) {
+QWidget* setupTablePanel(QWidget *parent) {
+    QWidget *tableSection = new QWidget(parent);
+    auto *table = setupTable(tableSection);
+    return tableSection;
+}
+
+QWidget *setupStatsPanel(QWidget *parent) {
     QWidget *statsPanel = new QWidget(parent);
     Helper::setSizePolicyExpanding(statsPanel);
     statsPanel->setStyleSheet("border: 1px solid red;"); // Для визуализации
@@ -47,12 +53,12 @@ QWidget *setupDataSection(QWidget *parent) {
     QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
     dataSectionLayout->setContentsMargins(0, 0, 0, 0); // Убираем внутренние отступы
 
-    auto *table = setupTable(dataSection);
-    auto *statsPanel = setupStats(dataSection);
+    auto *statsPanel = setupStatsPanel(dataSection);
+    auto *tablePanel = setupTablePanel(dataSection);
 
     // Распределяем пространство 1:1 между панелью и таблицей
     dataSectionLayout->addWidget(statsPanel, 1); // stretch factor = 1
-    dataSectionLayout->addWidget(table, 1);      // stretch factor = 1
+    dataSectionLayout->addWidget(tablePanel, 1);      // stretch factor = 1
     return dataSection;
 }
 
