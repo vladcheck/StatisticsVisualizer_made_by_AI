@@ -4,16 +4,20 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     QWidget *centralWidget = new QWidget(this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     setCentralWidget(centralWidget);
 
-    QHBoxLayout *layout = new QHBoxLayout(centralWidget);
+    QWidget *tableGroup = new QWidget(centralWidget);
+    mainLayout->addWidget(tableGroup);
 
-    QTableWidget *table = new QTableWidget(1,20,centralWidget);
+    QTableWidget *table = new QTableWidget(1,20,tableGroup);
     table->resizeColumnsToContents();
-    layout->addWidget(table);
+    table->resizeRowsToContents();
+
+    QHBoxLayout *tableLayout = new QHBoxLayout(tableGroup);
+    tableLayout->addWidget(table);
 
     this->setWindowState(Qt::WindowMaximized);
-    centralWidget->adjustSize(); // Меняет размер окна под размер содержимого
 }
 
 MainWindow::~MainWindow()
