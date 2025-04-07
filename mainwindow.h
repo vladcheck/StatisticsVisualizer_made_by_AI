@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QTableWidget>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QFont>
 
 class MainWindow : public QMainWindow
 {
