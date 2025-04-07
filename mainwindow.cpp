@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "helperFunctions.h"
 
 const QString fontName = "Arial";
 
@@ -28,7 +29,7 @@ QTableWidget* setupTable(QWidget *parent) {
 
 QWidget *setupStats(QWidget *parent) {
     QWidget *statsPanel = new QWidget(parent);
-    statsPanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    Helper::setSizePolicyExpanding(statsPanel);
     statsPanel->setStyleSheet("border: 1px solid red;"); // Для визуализации
 
     QVBoxLayout *statsLayout = new QVBoxLayout(statsPanel);
@@ -38,7 +39,7 @@ QWidget *setupStats(QWidget *parent) {
 
 QWidget *setupDataSection(QWidget *parent) {
     QWidget *dataSection = new QWidget(parent);
-    dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     dataSection->setMaximumHeight(600);
     dataSection->setStyleSheet("border: 1px solid green;"); // Для визуализации
 
