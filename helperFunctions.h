@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QIcon>
+#include <QPixmap>
 
 namespace Helper {
     void setSizePolicyExpanding(QWidget *w) {
@@ -36,9 +37,16 @@ namespace Helper {
 
     QPushButton* createToolButton(const QString& tooltip, const QString& iconName) {
         QPushButton *btn = new QPushButton();
-        btn->setIcon(QIcon(":/icons/" + iconName + ".png"));
+
+        // Загрузка изображения через QPixmap
+        QPixmap pixmap(":/icons/" + iconName + ".png");
+        btn->setIcon(QIcon(pixmap));
+        btn->setIconSize(QSize(28, 28));  // Размер иконки
+
+        // Настройка внешнего вида
         btn->setToolTip(tooltip);
-        btn->setFixedSize(32, 32);
+        btn->setFixedSize(32, 32);        // Размер кнопки
+
         return btn;
     }
 

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>add-column.png</file>
+        <file>add-row.png</file>
+        <file>delete-column.png</file>
+        <file>delete-row.png</file>
+    </qresource>
+</RCC>

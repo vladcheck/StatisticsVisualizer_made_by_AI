@@ -27,13 +27,13 @@ QWidget* setupTableToolbar(QWidget *parent) {
     auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 100);
 
     // Основные действия
-    QPushButton *addRowBtn = Helper::createToolButton("Добавить строку", "add_row");
-    QPushButton *addColBtn = Helper::createToolButton("Добавить столбец", "add_col");
-    QPushButton *delRowBtn = Helper::createToolButton("Удалить строку", "del_row");
-    QPushButton *delColBtn = Helper::createToolButton("Удалить столбец", "del_col");
+    QPushButton *addRowBtn = Helper::createToolButton("Добавить строку", "add-row");
+    QPushButton *addColBtn = Helper::createToolButton("Добавить столбец", "add-column");
+    QPushButton *delRowBtn = Helper::createToolButton("Удалить строку", "delete-row");
+    QPushButton *delColBtn = Helper::createToolButton("Удалить столбец", "delete-column");
 
     // Форматирование
-    QPushButton *autoSizeBtn = Helper::createToolButton("Авторазмер", "auto_size");
+    QPushButton *autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size");
 
     QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
     toolbarLayout->setSpacing(5);
@@ -61,7 +61,6 @@ QTableWidget* setupTable(QWidget *parent) {
     Helper::setSizePolicyExpanding(table);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); // Колонки на всю ширину
     table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);    // Строки на всю высоту
-    table->setStyleSheet("border: 1px solid blue;"); // Для визуализации
     table->resizeColumnsToContents();
     return table;
 }
@@ -82,7 +81,6 @@ QWidget* setupTablePanel(QWidget *parent) {
 QWidget *setupStatsPanel(QWidget *parent) {
     QWidget *statsPanel = new QWidget(parent);
     Helper::setSizePolicyExpanding(statsPanel);
-    statsPanel->setStyleSheet("border: 1px solid red;"); // Для визуализации
 
     QVBoxLayout *statsLayout = new QVBoxLayout(statsPanel);
     statsLayout->addWidget(new QLabel("Характеристики", statsPanel));
@@ -93,7 +91,6 @@ QWidget *setupDataSection(QWidget *parent) {
     QWidget *dataSection = new QWidget(parent);
     dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     dataSection->setMaximumHeight(600);
-    dataSection->setStyleSheet("border: 1px solid green;"); // Для визуализации
 
     // Горизонтальный layout для разделения на 2 части
     QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
