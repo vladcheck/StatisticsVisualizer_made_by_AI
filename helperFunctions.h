@@ -4,6 +4,8 @@
 #include <QHBoxLayout>
 #include <QSpinBox>
 #include <QLabel>
+#include <QPushButton>
+#include <QIcon>
 
 namespace Helper {
     void setSizePolicyExpanding(QWidget *w) {
@@ -30,6 +32,30 @@ namespace Helper {
         container->addWidget(spinBox);
 
         return container;
+    }
+
+    QPushButton* createToolButton(const QString& tooltip, const QString& iconName) {
+        QPushButton *btn = new QPushButton();
+        btn->setIcon(QIcon(":/icons/" + iconName + ".png"));
+        btn->setToolTip(tooltip);
+        btn->setFixedSize(32, 32);
+        return btn;
+    }
+
+    // Вертикальный разделитель
+    QWidget* createSeparator() {
+        QFrame *line = new QFrame();
+        line->setFrameShape(QFrame::VLine);
+        line->setFrameShadow(QFrame::Sunken);
+        return line;
+    }
+
+    // Кнопка очистки с иконкой
+    QPushButton* createClearButton(QWidget* parent) {
+        QPushButton *btn = new QPushButton("Очистить", parent);
+        btn->setIcon(QIcon(":/icons/clear.png"));
+        btn->setToolTip("Очистить всё содержимое таблицы");
+        return btn;
     }
 };
 

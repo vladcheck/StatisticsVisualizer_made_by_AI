@@ -22,18 +22,35 @@ QWidget* setupTableToolbar(QWidget *parent) {
     QWidget *toolbar = new QWidget(parent);
     toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    // Создаем спинбоксы с подписями
-    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar,"Строки",10);
-    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar,"Столбцы",512);
+    // Спинбоксы
+    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 1000);
+    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 100);
 
-    // Кнопка очистки
-    QPushButton *clearBtn = new QPushButton("Очистить", toolbar);
+    // Основные действия
+    QPushButton *addRowBtn = Helper::createToolButton("Добавить строку", "add_row");
+    QPushButton *addColBtn = Helper::createToolButton("Добавить столбец", "add_col");
+    QPushButton *delRowBtn = Helper::createToolButton("Удалить строку", "del_row");
+    QPushButton *delColBtn = Helper::createToolButton("Удалить столбец", "del_col");
+
+    // Форматирование
+    QPushButton *autoSizeBtn = Helper::createToolButton("Авторазмер", "auto_size");
 
     QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
+    toolbarLayout->setSpacing(5);
+
+    // Группируем элементы
     toolbarLayout->addLayout(rowsContainer);
     toolbarLayout->addLayout(columnsContainer);
-    toolbarLayout->addStretch(); // Растягиваем пространство между элементами
-    toolbarLayout->addWidget(clearBtn);
+    toolbarLayout->addWidget(Helper::createSeparator());
+    toolbarLayout->addWidget(addRowBtn);
+    toolbarLayout->addWidget(addColBtn);
+    toolbarLayout->addWidget(delRowBtn);
+    toolbarLayout->addWidget(delColBtn);
+    toolbarLayout->addWidget(Helper::createSeparator());
+    toolbarLayout->addWidget(autoSizeBtn);
+    toolbarLayout->addWidget(Helper::createSeparator());
+    toolbarLayout->addStretch();
+    toolbarLayout->addWidget(Helper::createClearButton(parent));
 
     return toolbar;
 }
