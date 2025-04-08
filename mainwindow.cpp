@@ -78,7 +78,6 @@ QWidget* setupTablePanel(QWidget *parent) {
     return tableSection;
 }
 
-// Обновлённая функция setupStatsPanel
 QWidget* setupStatsPanel(QWidget* parent) {
     QWidget* statsPanel = new QWidget(parent);
     statsPanel->setLayout(new QVBoxLayout(statsPanel));
