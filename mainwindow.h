@@ -7,6 +7,9 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QFont>
+#include <QSpinBox>
+#include <QPushButton>
+#include "iostream"
 
 class MainWindow : public QMainWindow
 {

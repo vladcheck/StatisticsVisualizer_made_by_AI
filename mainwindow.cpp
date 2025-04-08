@@ -18,6 +18,26 @@ QWidget* setupHeader(QWidget *parent, const int fontSize) {
     return header;
 }
 
+QWidget* setupTableToolbar(QWidget *parent) {
+    QWidget *toolbar = new QWidget(parent);
+    toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    // Создаем спинбоксы с подписями
+    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar,"Строки",10);
+    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar,"Столбцы",512);
+
+    // Кнопка очистки
+    QPushButton *clearBtn = new QPushButton("Очистить", toolbar);
+
+    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
+    toolbarLayout->addLayout(rowsContainer);
+    toolbarLayout->addLayout(columnsContainer);
+    toolbarLayout->addStretch(); // Растягиваем пространство между элементами
+    toolbarLayout->addWidget(clearBtn);
+
+    return toolbar;
+}
+
 QTableWidget* setupTable(QWidget *parent) {
     // Правая часть - таблица
     QTableWidget *table = new QTableWidget(3, 20, parent);
@@ -29,7 +49,14 @@ QTableWidget* setupTable(QWidget *parent) {
 
 QWidget* setupTablePanel(QWidget *parent) {
     QWidget *tableSection = new QWidget(parent);
+
+    auto *tableToolbar = setupTableToolbar(tableSection);
     auto *table = setupTable(tableSection);
+
+    QVBoxLayout *tableSectionLayout = new QVBoxLayout(tableSection);
+    tableSectionLayout->addWidget(tableToolbar);
+    tableSectionLayout->addWidget(table);
+
     return tableSection;
 }
 
