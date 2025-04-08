@@ -17,6 +17,16 @@ namespace Helper {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
+    // Улучшенный разделитель (horizontal = false для вертикального)
+    QWidget* createSeparator(bool horizontal = true) {
+        QFrame* line = new QFrame();
+        line->setFrameShape(horizontal ? QFrame::HLine : QFrame::VLine);
+        line->setFrameShadow(QFrame::Sunken);
+        line->setStyleSheet("color: #ddd;");
+        line->setFixedHeight(horizontal ? 1 : 20);
+        return line;
+    }
+
     QSpinBox *createSpinBox(QWidget *parent, int max, int min = 1) {
         QSpinBox *spinBox = new QSpinBox(parent);
         spinBox->setMinimum(min);
@@ -50,20 +60,57 @@ namespace Helper {
         return btn;
     }
 
-    // Вертикальный разделитель
-    QWidget* createSeparator() {
-        QFrame *line = new QFrame();
-        line->setFrameShape(QFrame::VLine);
-        line->setFrameShadow(QFrame::Sunken);
-        return line;
-    }
-
     // Кнопка очистки с иконкой
     QPushButton* createClearButton(QWidget* parent) {
         QPushButton *btn = new QPushButton("Очистить", parent);
         btn->setIcon(QIcon(":/icons/clear.png"));
         btn->setToolTip("Очистить всё содержимое таблицы");
         return btn;
+    }
+
+    QWidget* createStatRow(QWidget* parent, const QString& title, const QString& value = "—") {
+        QWidget* container = new QWidget(parent);
+        QHBoxLayout* layout = new QHBoxLayout(container);
+        layout->setContentsMargins(0, 2, 0, 2);
+
+        QLabel* titleLabel = new QLabel(title, container);
+        titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        titleLabel->setStyleSheet("color: #666;");
+
+        QLabel* valueLabel = new QLabel(value, container);
+        valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        valueLabel->setStyleSheet("font-weight: 500; color: #333;");
+
+        layout->addWidget(titleLabel);
+        layout->addWidget(valueLabel);
+
+        return container;
+    }
+
+    // Создание секции с заголовком
+    QWidget* createStatSection(QWidget* parent, const QString& title) {
+        QWidget* section = new QWidget(parent);
+        QVBoxLayout* layout = new QVBoxLayout(section); // Создаем layout сразу
+
+        QLabel* header = new QLabel(title, section);
+        header->setStyleSheet("font-weight: 600; color: #444; margin-bottom: 4px;");
+
+        layout->addWidget(header);
+        layout->addWidget(createSeparator(true));
+
+        return section; // Виджет УЖЕ имеет layout
+    }
+
+    void updateStatValue(QWidget* section, const QString& title, const QString& value) {
+        QList<QLabel*> labels = section->findChildren<QLabel*>();
+        for (QLabel* label : labels) {
+            if (label->text() == title) {
+                QWidget* row = label->parentWidget();
+                QLabel* valueLabel = qobject_cast<QLabel*>(row->layout()->itemAt(1)->widget());
+                valueLabel->setText(value);
+                break;
+            }
+        }
     }
 };
 

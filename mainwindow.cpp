@@ -57,7 +57,7 @@ QWidget* setupTableToolbar(QWidget *parent) {
 
 QTableWidget* setupTable(QWidget *parent) {
     // Правая часть - таблица
-    QTableWidget *table = new QTableWidget(3, 20, parent);
+    QTableWidget *table = new QTableWidget(1, 20, parent);
     Helper::setSizePolicyExpanding(table);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); // Колонки на всю ширину
     table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);    // Строки на всю высоту
@@ -78,12 +78,46 @@ QWidget* setupTablePanel(QWidget *parent) {
     return tableSection;
 }
 
-QWidget *setupStatsPanel(QWidget *parent) {
-    QWidget *statsPanel = new QWidget(parent);
+// Обновлённая функция setupStatsPanel
+QWidget* setupStatsPanel(QWidget* parent) {
+    QWidget* statsPanel = new QWidget(parent);
+    statsPanel->setLayout(new QVBoxLayout(statsPanel));
     Helper::setSizePolicyExpanding(statsPanel);
 
-    QVBoxLayout *statsLayout = new QVBoxLayout(statsPanel);
-    statsLayout->addWidget(new QLabel("Характеристики", statsPanel));
+    QVBoxLayout* statsLayout = qobject_cast<QVBoxLayout*>(statsPanel->layout());
+    statsLayout->setContentsMargins(12, 8, 12, 8);
+    statsLayout->setSpacing(8);
+
+    QLabel* mainHeader = new QLabel("Анализ данных", statsPanel);
+    mainHeader->setStyleSheet("font-size: 16px; font-weight: 600; color: #2c3e50;");
+    statsLayout->addWidget(mainHeader);
+
+    // Секция базовой статистики
+    QWidget* basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
+    QVBoxLayout* basicLayout = qobject_cast<QVBoxLayout*>(basicSection->layout()); // Используем существующий layout
+    basicLayout->addWidget(Helper::createStatRow(basicSection, "Элементов", "0"));
+    basicLayout->addWidget(Helper::createStatRow(basicSection, "Сумма", "—"));
+    basicLayout->addWidget(Helper::createStatRow(basicSection, "Среднее", "—"));
+    statsLayout->addWidget(basicSection);
+
+    // Секция распределения
+    QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
+    QVBoxLayout* distributionLayout = qobject_cast<QVBoxLayout*>(distributionSection->layout());
+    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Медиана", "—"));
+    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Мода", "—"));
+    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Стандартное отклонение", "—"));
+    statsLayout->addWidget(distributionSection);
+
+    // Секция экстремумов
+    QWidget* extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
+    QVBoxLayout* extremesLayout = qobject_cast<QVBoxLayout*>(extremesSection->layout());
+    extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Минимум", "—"));
+    extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Максимум", "—"));
+    extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Размах", "—"));
+    statsLayout->addWidget(extremesSection);
+
+    statsLayout->addStretch();
+
     return statsPanel;
 }
 
