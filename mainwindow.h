@@ -9,6 +9,7 @@
 #include <QFont>
 #include <QSpinBox>
 #include <QPushButton>
+#include <QHeaderView>
 #include "iostream"
 
 class MainWindow : public QMainWindow

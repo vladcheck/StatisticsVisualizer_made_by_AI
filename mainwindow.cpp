@@ -41,7 +41,9 @@ QWidget* setupTableToolbar(QWidget *parent) {
 QTableWidget* setupTable(QWidget *parent) {
     // Правая часть - таблица
     QTableWidget *table = new QTableWidget(3, 20, parent);
-    table->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    Helper::setSizePolicyExpanding(table);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); // Колонки на всю ширину
+    table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);    // Строки на всю высоту
     table->setStyleSheet("border: 1px solid blue;"); // Для визуализации
     table->resizeColumnsToContents();
     return table;
