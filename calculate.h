@@ -180,6 +180,17 @@ namespace Calculate
         return QVector<double>();
     }
 
+    double rootMeanSquare(const QVector<double>& values) {
+        if (values.isEmpty())
+            return std::numeric_limits<double>::quiet_NaN();
+
+        double sumSquares = 0.0;
+        for (double value : values) {
+            sumSquares += std::pow(value, 2);
+        }
+
+        return std::sqrt(sumSquares / values.size());
+    }
 
     double skewness(const QVector<double>& values, double mean, double stdDev) {
         const int n = values.size();

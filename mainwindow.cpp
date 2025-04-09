@@ -186,6 +186,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_geometricMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Геом. среднее", "—", "geometricMeanLabel");
     m_harmonicMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Гарм. среднее", "—", "harmonicMeanLabel");
     m_weightedMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Взвеш. среднее", "—", "weightedMeanLabel");
+    m_rmsLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Квадр. среднее", "—", "rmsLabel");
     statsLayout->addWidget(meansSection);
 
     // Секция распределения
@@ -237,7 +238,8 @@ void MainWindow::updateStatistics()
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
         !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
         !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
-        !m_kurtosisLabel || !m_harmonicMeanLabel || !m_weightedMeanLabel)
+        !m_kurtosisLabel || !m_harmonicMeanLabel || !m_weightedMeanLabel ||
+        !m_rmsLabel)
         return;
 
     // Сбор данных
@@ -271,12 +273,13 @@ void MainWindow::updateStatistics()
     const double mean = hasData ? Calculate::getMean(sum, count) : 0.0;
     const double geomMean = Calculate::geometricMean(values);
     const double harmonicMean = Calculate::harmonicMean(values);
+    const double wMean = Calculate::weightedMean(values, weights);
+    const double rms = Calculate::rootMeanSquare(values);
     const double median = hasData ? Calculate::getMedian(values) : 0.0;
     const double mode = hasData ? Calculate::getMode(values) : 0.0;
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
     const double skew = Calculate::skewness(values, mean, stdDev);
     const double kurt = Calculate::kurtosis(values, mean, stdDev);
-    const double wMean = Calculate::weightedMean(values, weights);
 
     const bool validCalculation = !std::isnan(wMean) &&
                                   (values.size() == weights.size()) &&
@@ -300,6 +303,7 @@ void MainWindow::updateStatistics()
     m_geometricMeanLabel->setText((hasData && !std::isnan(geomMean)) ? QString::number(geomMean, 'f', statsPrecision) : "—");
     m_harmonicMeanLabel->setText((hasData && !std::isnan(harmonicMean)) ? QString::number(harmonicMean, 'f', statsPrecision) : "—");
     m_weightedMeanLabel->setText(validCalculation ? QString::number(wMean, 'f', statsPrecision) : "—");
+    m_rmsLabel->setText((!values.isEmpty() && !std::isnan(rms)) ? QString::number(rms, 'f', 2) : "—");
     m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
