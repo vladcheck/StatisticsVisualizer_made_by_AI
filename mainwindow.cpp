@@ -18,14 +18,48 @@ QWidget* setupHeader(QWidget *parent, const int fontSize) {
     return header;
 }
 
-QPushButton* createClearButton(QWidget* parent, QTableWidget* table, QSpinBox* rowSpin, QSpinBox* colSpin) {
-    QPushButton* clearButton = new QPushButton("Очистить", parent);
-    clearButton->setIcon(QIcon(":/icons/clear.png"));
-    clearButton->setToolTip("Очистить всё содержимое таблицы");
+void setupTableActions(QPushButton* addRowBtn,
+                       QPushButton* addColBtn,
+                       QPushButton* delRowBtn,
+                       QPushButton* delColBtn,
+                       QPushButton* clearButton,
+                       QPushButton* autoSizeBtn,
+                       QTableWidget* table,
+                       QSpinBox* rowSpin,
+                       QSpinBox* colSpin)
+{
+    // Добавление строки
+    QObject::connect(addRowBtn, &QPushButton::clicked, [=](){
+        table->setRowCount(table->rowCount() + 1);
+        rowSpin->setValue(table->rowCount());
+    });
 
+    // Добавление столбца
+    QObject::connect(addColBtn, &QPushButton::clicked, [=](){
+        table->setColumnCount(table->columnCount() + 1);
+        colSpin->setValue(table->columnCount());
+    });
+
+    // Удаление строки
+    QObject::connect(delRowBtn, &QPushButton::clicked, [=](){
+        if(table->rowCount() > 1) {
+            table->setRowCount(table->rowCount() - 1);
+            rowSpin->setValue(table->rowCount());
+        }
+    });
+
+    // Удаление столбца
+    QObject::connect(delColBtn, &QPushButton::clicked, [=](){
+        if(table->columnCount() > 1) {
+            table->setColumnCount(table->columnCount() - 1);
+            colSpin->setValue(table->columnCount());
+        }
+    });
+
+    // Очистка таблицы
     QObject::connect(clearButton, &QPushButton::clicked, [=](){
         auto reply = QMessageBox::question(
-            parent,
+            table,
             "Очистка таблицы",
             "Удалить все данные?",
             QMessageBox::Yes | QMessageBox::No
@@ -38,12 +72,19 @@ QPushButton* createClearButton(QWidget* parent, QTableWidget* table, QSpinBox* r
         }
     });
 
-    return clearButton;
+
+    // Автоматическое изменение размера
+    QObject::connect(autoSizeBtn, &QPushButton::clicked, [=](){
+        table->resizeColumnsToContents();
+        table->resizeRowsToContents();
+    });
 }
 
 QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     QWidget *toolbar = new QWidget(parent);
     toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
+    toolbarLayout->setSpacing(5);
 
     // Спинбоксы
     auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 10);
@@ -56,14 +97,13 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     QPushButton *addColBtn = Helper::createToolButton("Добавить столбец", "add-column");
     QPushButton *delRowBtn = Helper::createToolButton("Удалить строку", "delete-row");
     QPushButton *delColBtn = Helper::createToolButton("Удалить столбец", "delete-column");
+    QPushButton *clearButton = Helper::createToolButton("Очистить", "clear-button");
 
     // Форматирование
     QPushButton *autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size");
 
-    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
-    toolbarLayout->setSpacing(5);
-
-    QPushButton* clearButton = createClearButton(toolbar, table, rowSpinBox, colSpinBox);
+    // Подключение функционала кнопок
+    setupTableActions(addRowBtn, addColBtn, delRowBtn, delColBtn, clearButton, autoSizeBtn, table, rowSpinBox, colSpinBox);
 
     // Группируем элементы
     toolbarLayout->addLayout(rowsContainer);
