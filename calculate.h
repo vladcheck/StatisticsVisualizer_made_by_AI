@@ -1,3 +1,6 @@
+#ifndef CALCULATIONS_H
+#define CALCULATIONS_H
+
 #include <QVector>
 #include <limits>
 #include <cmath>
@@ -61,3 +64,5 @@ namespace Calculate
         return std::sqrt(sumSqDifferences / (values.size() - 1));
     }
 };
+
+#endif // CALCULATIONS_H
