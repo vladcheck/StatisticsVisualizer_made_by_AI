@@ -135,6 +135,12 @@ namespace Helper {
         return section; // Виджет УЖЕ имеет layout
     }
 
+    static void addStatRows(QWidget* parent, QLayout* layout, const std::initializer_list<QPair<QString, QString>>& rows) {
+        for (const auto& [title, value] : rows) {
+            layout->addWidget(createStatRow(parent, title, value));
+        }
+    }
+
     void updateStatValue(QWidget* section, const QString& title, const QString& value) {
         QList<QLabel*> labels = section->findChildren<QLabel*>();
         for (QLabel* label : labels) {

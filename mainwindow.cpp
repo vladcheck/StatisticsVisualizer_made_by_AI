@@ -169,15 +169,18 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
 
     // Секция базовой статистики
     *elementCountLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Элементов", "0", "elementCountLabel");
-    *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "—", "sumLabel");
+    *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "0", "sumLabel");
     *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее", "—", "averageLabel");
 
     // Секция распределения
     QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
     QVBoxLayout* distributionLayout = qobject_cast<QVBoxLayout*>(distributionSection->layout());
-    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Медиана", "—"));
-    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Мода", "—"));
-    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Стандартное отклонение", "—"));
+    Helper::addStatRows(distributionSection, distributionLayout,
+    {
+        {"Медиана", "—"},
+        {"Мода", "—"},
+        {"Стандартное отклонение", "—"}
+    });
     statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
@@ -216,26 +219,31 @@ QWidget* MainWindow::setupDataSection(QWidget *parent) {
 void MainWindow::updateStatistics() {
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel) return;
 
+    // Сбор данных
+    QVector<double> values;
     int count = 0;
     double sum = 0.0;
-    bool conversionOK = false;
+    bool conversionOK;
 
-    // Сбор данных
     for (int row = 0; row < m_table->rowCount(); ++row) {
         for (int col = 0; col < m_table->columnCount(); ++col) {
             QTableWidgetItem* item = m_table->item(row, col);
             if (item && !item->text().isEmpty()) {
-                count++;
                 double value = item->text().toDouble(&conversionOK);
-                if (conversionOK) sum += value;
+                if (conversionOK) {
+                    values.append(value);
+                    sum += value;
+                    count++;
+                }
             }
         }
     }
 
-    // Обновление интерфейса
+    // Расчёты
+    const bool hasData = count > 0;
     m_elementCountLabel->setText(QString::number(count));
-    m_sumLabel->setText(count > 0 ? QString::number(sum, 'f', 2) : "—");
-    m_averageLabel->setText(count > 0 ? QString::number(sum / count, 'f', 2) : "—");
+    m_sumLabel->setText(hasData ? QString::number(sum, 'f', 2) : "—");
+    m_averageLabel->setText(hasData ? QString::number(sum/count, 'f', 2) : "—");
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
