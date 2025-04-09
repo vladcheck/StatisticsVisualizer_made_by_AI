@@ -30,11 +30,12 @@ private:
     QLabel *m_averageLabel = nullptr;
     QLabel *m_medianLabel = nullptr;
     QLabel *m_modeLabel = nullptr;
-    QTableWidget *m_table = nullptr;
     QLabel *m_stdDevLabel = nullptr;
     QLabel *m_minLabel = nullptr;
     QLabel *m_maxLabel = nullptr;
     QLabel *m_rangeLabel = nullptr;
+    QLabel* m_geometricMeanLabel = nullptr;
+    QTableWidget *m_table = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);

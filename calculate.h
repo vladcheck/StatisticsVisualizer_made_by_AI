@@ -63,6 +63,20 @@ namespace Calculate
         // Несмещённая оценка (n-1)
         return std::sqrt(sumSqDifferences / (values.size() - 1));
     }
+
+    double geometricMean(const QVector<double>& values) {
+        if (values.isEmpty())
+            return std::numeric_limits<double>::quiet_NaN();
+
+        double product = 1.0;
+        for (double value : values) {
+            if (value <= 0)
+                return std::numeric_limits<double>::quiet_NaN();
+            product *= value;
+        }
+
+        return std::pow(product, 1.0 / values.size());
+    }
 };
 
 #endif // CALCULATIONS_H
