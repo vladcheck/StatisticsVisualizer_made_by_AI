@@ -30,6 +30,12 @@ namespace Helper {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
+    template<typename Func>
+    static void connect(QPushButton* button, Func&& callback) {
+        QObject::connect(button, &QPushButton::clicked,
+                         button, std::forward<Func>(callback));
+    }
+
     // Улучшенный разделитель (horizontal = false для вертикального)
     QWidget* createSeparator(bool horizontal = true) {
         QFrame* line = new QFrame();

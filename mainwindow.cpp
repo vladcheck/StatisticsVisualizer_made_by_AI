@@ -20,19 +20,19 @@ QWidget* setupHeader(QWidget *parent, const int fontSize) {
 
 void setupTableActions(const TableActions& actions) {
     // Добавление строки
-    QObject::connect(actions.addRowBtn, &QPushButton::clicked, [=](){
+    Helper::connect(actions.addRowBtn, [=](){
         actions.table->setRowCount(actions.table->rowCount() + 1);
         actions.rowSpin->setValue(actions.table->rowCount());
     });
 
     // Добавление столбца
-    QObject::connect(actions.addColBtn, &QPushButton::clicked, [=](){
+    Helper::connect(actions.addColBtn, [=](){
         actions.table->setColumnCount(actions.table->columnCount() + 1);
         actions.colSpin->setValue(actions.table->columnCount());
     });
 
     // Удаление строки
-    QObject::connect(actions.delRowBtn, &QPushButton::clicked, [=](){
+    Helper::connect(actions.delRowBtn, [=](){
         if(actions.table->rowCount() > 1) {
             actions.table->setRowCount(actions.table->rowCount() - 1);
             actions.rowSpin->setValue(actions.table->rowCount());
@@ -40,7 +40,7 @@ void setupTableActions(const TableActions& actions) {
     });
 
     // Удаление столбца
-    QObject::connect(actions.delColBtn, &QPushButton::clicked, [=](){
+    Helper::connect(actions.delColBtn, [=](){
         if(actions.table->columnCount() > 1) {
             actions.table->setColumnCount(actions.table->columnCount() - 1);
             actions.colSpin->setValue(actions.table->columnCount());
@@ -48,7 +48,7 @@ void setupTableActions(const TableActions& actions) {
     });
 
     // Очистка таблицы
-    QObject::connect(actions.clearButton, &QPushButton::clicked, [=](){
+    Helper::connect(actions.clearButton, [=](){
         auto reply = QMessageBox::question(
             actions.table,
             "Очистка таблицы",
@@ -64,7 +64,7 @@ void setupTableActions(const TableActions& actions) {
     });
 
     // Авторазмер
-    QObject::connect(actions.autoSizeBtn, &QPushButton::clicked, [=](){
+    Helper::connect(actions.autoSizeBtn, [=](){
         actions.table->resizeColumnsToContents();
         actions.table->resizeRowsToContents();
     });
