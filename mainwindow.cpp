@@ -24,7 +24,7 @@ QPushButton* createClearButton(QWidget* parent, QTableWidget* table, QSpinBox* r
     clearButton->setToolTip("Очистить всё содержимое таблицы");
 
     QObject::connect(clearButton, &QPushButton::clicked, [=](){
-        QMessageBox::StandardButton reply = QMessageBox::question(
+        auto reply = QMessageBox::question(
             parent,
             "Очистка таблицы",
             "Удалить все данные?",
@@ -64,21 +64,6 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     toolbarLayout->setSpacing(5);
 
     QPushButton* clearButton = createClearButton(toolbar, table, rowSpinBox, colSpinBox);
-
-    QObject::connect(clearButton, &QPushButton::clicked, [=](){
-        QMessageBox::StandardButton reply = QMessageBox::question(
-            parent,
-            "Очистка таблицы",
-            "Удалить все данные?",
-            QMessageBox::Yes | QMessageBox::No
-            );
-
-        if (reply == QMessageBox::Yes) {
-            table->clearContents();
-            rowSpinBox->setValue(rowSpinBox->minimum());
-            colSpinBox->setValue(colSpinBox->minimum());
-        }
-    });
 
     // Группируем элементы
     toolbarLayout->addLayout(rowsContainer);
