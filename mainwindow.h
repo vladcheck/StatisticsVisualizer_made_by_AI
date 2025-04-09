@@ -30,10 +30,12 @@ private:
     QLabel* m_medianLabel = nullptr;
     QLabel* m_modeLabel = nullptr;
     QTableWidget* m_table = nullptr;
+    QLabel* m_stdDevLabel = nullptr;
 
     QWidget* setupDataSection(QWidget* parent);
     QWidget* setupStatsPanel(QWidget* parent, QLabel**, QLabel**, QLabel**);
     double getMedian(QVector<double>& values);
     double getMode(const QVector<double>& values);
+    double getStandardDeviation(const QVector<double>& values, double mean);
 };
 #endif // MAINWINDOW_H

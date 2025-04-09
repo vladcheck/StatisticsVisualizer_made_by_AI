@@ -178,7 +178,7 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     QVBoxLayout* distributionLayout = qobject_cast<QVBoxLayout*>(distributionSection->layout());
     m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
     m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
-    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Стандартное отклонение", "—"));
+    m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
     statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
@@ -247,9 +247,21 @@ double MainWindow::getMode(const QVector<double>& values) {
     return (maxFrequency > 1) ? mode : std::numeric_limits<double>::quiet_NaN();
 }
 
+double MainWindow::getStandardDeviation(const QVector<double>& values, double mean) {
+    if (values.size() < 2) return std::numeric_limits<double>::quiet_NaN();
+
+    double sumSqDifferences = 0.0;
+    for (double value : values) {
+        sumSqDifferences += std::pow(value - mean, 2);
+    }
+
+    // Несмещённая оценка (n-1)
+    return std::sqrt(sumSqDifferences / (values.size() - 1));
+}
+
 void MainWindow::updateStatistics() {
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
-        !m_medianLabel || !m_modeLabel) return;
+        !m_medianLabel || !m_modeLabel || !m_stdDevLabel) return;
 
     // Сбор данных
     QVector<double> values;
@@ -273,14 +285,16 @@ void MainWindow::updateStatistics() {
 
     // Расчёты
     const bool hasData = count > 0;
+    const double mean = hasData ? (sum / count) : 0.0;
     const double mode = hasData ? getMode(values) : 0.0;
+    const double stdDev = hasData ? getStandardDeviation(values, mean) : 0.0;
+
     m_elementCountLabel->setText(QString::number(count));
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
-    m_averageLabel->setText(hasData ? QString::number(sum/count, 'f', statsPrecision) : "—");
+    m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(getMedian(values)) : "-");
-    m_modeLabel->setText(hasData && !std::isnan(mode)
-                             ? QString::number(mode, 'f', statsPrecision)
-                             : "—");
+    m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
+    m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
