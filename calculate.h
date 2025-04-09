@@ -78,6 +78,18 @@ namespace Calculate
         return std::pow(product, 1.0 / values.size());
     }
 
+    double harmonicMean(const QVector<double>& values) {
+        if (values.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+
+        double reciprocalSum = 0.0;
+        for (double value : values) {
+            if (value <= 0) return std::numeric_limits<double>::quiet_NaN();
+            reciprocalSum += 1.0 / value;
+        }
+
+        return values.size() / reciprocalSum;
+    }
+
     double skewness(const QVector<double>& values, double mean, double stdDev) {
         const int n = values.size();
         if (n < 3 || stdDev == 0) return std::numeric_limits<double>::quiet_NaN();

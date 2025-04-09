@@ -181,6 +181,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "0", "sumLabel");
     *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее арифметическое", "—", "averageLabel");
     m_geometricMeanLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Геом. среднее", "—", "geometricMeanLabel");
+    m_harmonicMeanLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Гарм. среднее", "—", "harmonicMeanLabel");
 
     // Секция распределения
     QWidget *distributionSection = Helper::createStatSection(statsPanel, "Распределение");
@@ -231,7 +232,7 @@ void MainWindow::updateStatistics()
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
         !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
         !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
-        !m_kurtosisLabel)
+        !m_kurtosisLabel || !m_harmonicMeanLabel)
         return;
 
     // Сбор данных
@@ -262,6 +263,7 @@ void MainWindow::updateStatistics()
     const bool hasData = count > 0;
     const double mean = hasData ? Calculate::getMean(sum, count) : 0.0;
     const double geomMean = Calculate::geometricMean(values);
+    const double harmonicMean = Calculate::harmonicMean(values);
     const double median = hasData ? Calculate::getMedian(values) : 0.0;
     const double mode = hasData ? Calculate::getMode(values) : 0.0;
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
@@ -284,6 +286,7 @@ void MainWindow::updateStatistics()
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
     m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
     m_geometricMeanLabel->setText((hasData && !std::isnan(geomMean)) ? QString::number(geomMean, 'f', statsPrecision) : "—");
+    m_harmonicMeanLabel->setText((hasData && !std::isnan(harmonicMean)) ? QString::number(harmonicMean, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
