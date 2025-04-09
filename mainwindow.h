@@ -11,6 +11,8 @@
 #include <QPushButton>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QMap>
+#include <limits>
 #include "iostream"
 
 class MainWindow : public QMainWindow
@@ -25,11 +27,13 @@ private:
     QLabel* m_elementCountLabel = nullptr;
     QLabel* m_sumLabel = nullptr;
     QLabel* m_averageLabel = nullptr;
-    QLabel* m_medianLabel = nullptr; // Добавляем новый член
+    QLabel* m_medianLabel = nullptr;
+    QLabel* m_modeLabel = nullptr;
     QTableWidget* m_table = nullptr;
 
     QWidget* setupDataSection(QWidget* parent);
     QWidget* setupStatsPanel(QWidget* parent, QLabel**, QLabel**, QLabel**);
-    double getMedian(QVector<double>& values); // Объявляем функцию
+    double getMedian(QVector<double>& values);
+    double getMode(const QVector<double>& values);
 };
 #endif // MAINWINDOW_H

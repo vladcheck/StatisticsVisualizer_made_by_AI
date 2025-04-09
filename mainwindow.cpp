@@ -4,6 +4,7 @@
 const QString fontName = "Arial";
 const unsigned int initialRowCount = 1;
 const unsigned int initialColCount = 20;
+const int statsPrecision = 3;
 
 QWidget* setupHeader(QWidget *parent, const int fontSize) {
     const QFont headerFont(fontName, fontSize);
@@ -176,7 +177,7 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
     QVBoxLayout* distributionLayout = qobject_cast<QVBoxLayout*>(distributionSection->layout());
     m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
-    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Мода", "—"));
+    m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
     distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Стандартное отклонение", "—"));
     statsLayout->addWidget(distributionSection);
 
@@ -225,10 +226,30 @@ double MainWindow::getMedian(QVector<double>& values) {
                : values[mid];
 }
 
+double MainWindow::getMode(const QVector<double>& values) {
+    if (values.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+
+    QMap<double, int> frequencyMap;
+    for (double value : values) {
+        frequencyMap[value]++;
+    }
+
+    int maxFrequency = 0;
+    double mode = std::numeric_limits<double>::quiet_NaN();
+    for (auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it) {
+        if (it.value() > maxFrequency) {
+            maxFrequency = it.value();
+            mode = it.key();
+        }
+    }
+
+    // Считаем моду существующей только если частота > 1
+    return (maxFrequency > 1) ? mode : std::numeric_limits<double>::quiet_NaN();
+}
 
 void MainWindow::updateStatistics() {
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
-        !m_medianLabel) return;
+        !m_medianLabel || !m_modeLabel) return;
 
     // Сбор данных
     QVector<double> values;
@@ -252,10 +273,14 @@ void MainWindow::updateStatistics() {
 
     // Расчёты
     const bool hasData = count > 0;
+    const double mode = hasData ? getMode(values) : 0.0;
     m_elementCountLabel->setText(QString::number(count));
-    m_sumLabel->setText(hasData ? QString::number(sum, 'f', 2) : "—");
-    m_averageLabel->setText(hasData ? QString::number(sum/count, 'f', 2) : "—");
+    m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
+    m_averageLabel->setText(hasData ? QString::number(sum/count, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(getMedian(values)) : "-");
+    m_modeLabel->setText(hasData && !std::isnan(mode)
+                             ? QString::number(mode, 'f', statsPrecision)
+                             : "—");
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
