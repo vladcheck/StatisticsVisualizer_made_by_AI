@@ -177,7 +177,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     statsLayout->addWidget(basicSection);
 
     // Секция базовой статистики
-    *elementCountLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Элементов", "0", "elementCountLabel");
+    *elementCountLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Количество элементов", "0", "elementCountLabel");
     *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "0", "sumLabel");
     *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее арифметическое", "—", "averageLabel");
     m_geometricMeanLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Геом. среднее", "—", "geometricMeanLabel");
@@ -190,6 +190,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
     statsLayout->addWidget(distributionSection);
     m_skewnessLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Асимметрия", "—", "skewnessLabel");
+    m_kurtosisLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Эксцесс", "—", "kurtosisLabel");
 
     // Секция экстремумов
     QWidget *extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
@@ -229,7 +230,8 @@ void MainWindow::updateStatistics()
 {
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
         !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
-        !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel)
+        !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
+        !m_kurtosisLabel)
         return;
 
     // Сбор данных
@@ -264,6 +266,7 @@ void MainWindow::updateStatistics()
     const double mode = hasData ? Calculate::getMode(values) : 0.0;
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
     const double skew = Calculate::skewness(values, mean, stdDev);
+    const double kurt = Calculate::kurtosis(values, mean, stdDev);
 
     double minValue = std::numeric_limits<double>::quiet_NaN();
     double maxValue = std::numeric_limits<double>::quiet_NaN();
@@ -285,6 +288,7 @@ void MainWindow::updateStatistics()
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
     m_skewnessLabel->setText((hasData && !std::isnan(skew)) ? QString::number(skew, 'f', statsPrecision) : "—");
+    m_kurtosisLabel->setText((hasData && !std::isnan(kurt)) ? QString::number(kurt, 'f', statsPrecision) : "—");
     m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
     m_maxLabel->setText(hasData ? QString::number(maxValue, 'f', statsPrecision) : "—");
     m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");

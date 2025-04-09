@@ -90,6 +90,20 @@ namespace Calculate
         const double factor = n / static_cast<double>((n - 1) * (n - 2));
         return factor * (sumCubedDeviations / std::pow(stdDev, 3));
     }
+
+    double kurtosis(const QVector<double>& values, double mean, double stdDev) {
+        const int n = values.size();
+        if (n < 4 || stdDev == 0) return std::numeric_limits<double>::quiet_NaN();
+
+        double sumFourthDeviations = 0.0;
+        for (double value : values) {
+            sumFourthDeviations += std::pow(value - mean, 4);
+        }
+
+        const double biasCorrection = (n * (n + 1)) / static_cast<double>((n - 1) * (n - 2) * (n - 3));
+        const double term = sumFourthDeviations / std::pow(stdDev, 4);
+        return biasCorrection * term - 3 * std::pow(n - 1, 2) / static_cast<double>((n - 2) * (n - 3));
+    }
 };
 
 #endif // CALCULATIONS_H

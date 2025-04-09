@@ -36,6 +36,7 @@ private:
     QLabel *m_rangeLabel = nullptr;
     QLabel* m_geometricMeanLabel = nullptr;
     QLabel* m_skewnessLabel = nullptr;
+    QLabel* m_kurtosisLabel = nullptr;
     QTableWidget *m_table = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);
