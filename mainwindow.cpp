@@ -136,20 +136,20 @@ QTableWidget* setupTable(QWidget *parent) {
     return table;
 }
 
-QWidget* setupTablePanel(QWidget *parent) {
+QWidget* setupTablePanel(QWidget *parent, QTableWidget** outTable) {
     QWidget *tableSection = new QWidget(parent);
 
-    auto *table = setupTable(tableSection);
-    auto *tableToolbar = setupTableToolbar(tableSection,table);
+    *outTable = setupTable(tableSection); // Создаем таблицу и возвращаем через outTable
+    auto *tableToolbar = setupTableToolbar(tableSection, *outTable);
 
     QVBoxLayout *tableSectionLayout = new QVBoxLayout(tableSection);
     tableSectionLayout->addWidget(tableToolbar);
-    tableSectionLayout->addWidget(table);
+    tableSectionLayout->addWidget(*outTable);
 
     return tableSection;
 }
 
-QWidget* setupStatsPanel(QWidget* parent) {
+QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel) {
     QWidget* statsPanel = new QWidget(parent);
     statsPanel->setLayout(new QVBoxLayout(statsPanel));
     Helper::setSizePolicyExpanding(statsPanel);
@@ -164,8 +164,17 @@ QWidget* setupStatsPanel(QWidget* parent) {
 
     // Секция базовой статистики
     QWidget* basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
-    QVBoxLayout* basicLayout = qobject_cast<QVBoxLayout*>(basicSection->layout()); // Используем существующий layout
-    basicLayout->addWidget(Helper::createStatRow(basicSection, "Элементов", "0"));
+    QVBoxLayout* basicLayout = qobject_cast<QVBoxLayout*>(basicSection->layout());
+
+    // Создаем строку "Элементов" с явным указанием objectName
+    QWidget* elementsRow = Helper::createStatRow(basicSection, "Элементов", "0", "valueLabel");
+    *elementCountLabel = elementsRow->findChild<QLabel*>("valueLabel");
+
+    if (!*elementCountLabel) {
+        qDebug() << "Error: valueLabel still not found!";
+    }
+
+    basicLayout->addWidget(elementsRow);
     basicLayout->addWidget(Helper::createStatRow(basicSection, "Сумма", "—"));
     basicLayout->addWidget(Helper::createStatRow(basicSection, "Среднее", "—"));
     statsLayout->addWidget(basicSection);
@@ -186,43 +195,72 @@ QWidget* setupStatsPanel(QWidget* parent) {
     extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Размах", "—"));
     statsLayout->addWidget(extremesSection);
 
+
+    basicLayout->addWidget(elementsRow);
     statsLayout->addStretch();
 
     return statsPanel;
 }
 
-QWidget *setupDataSection(QWidget *parent) {
+QWidget* MainWindow::setupDataSection(QWidget *parent) {
     QWidget *dataSection = new QWidget(parent);
-    dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    dataSection->setMaximumHeight(600);
+    dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // Убрана фиксированная высота
 
-    // Горизонтальный layout для разделения на 2 части
     QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
-    dataSectionLayout->setContentsMargins(0, 0, 0, 0); // Убираем внутренние отступы
+    dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto *statsPanel = setupStatsPanel(dataSection);
-    auto *tablePanel = setupTablePanel(dataSection);
+    auto *statsPanel = setupStatsPanel(dataSection, &m_elementCountLabel);
 
-    // Распределяем пространство 1:1 между панелью и таблицей
-    dataSectionLayout->addWidget(statsPanel, 1); // stretch factor = 1
-    dataSectionLayout->addWidget(tablePanel, 1);      // stretch factor = 1
+    // Создаем tablePanel и получаем таблицу
+    QTableWidget* table = nullptr;
+    auto *tablePanel = setupTablePanel(dataSection, &table);
+    m_table = table; // Сохраняем таблицу
+
+    dataSectionLayout->addWidget(statsPanel, 1);
+    dataSectionLayout->addWidget(tablePanel, 1);
+
     return dataSection;
 }
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-{
-    // Основной контейнер
+void MainWindow::updateElementCount() {
+    if (!m_table) {
+        qWarning() << "m_table is nullptr!";
+        return;
+    } else if (!m_elementCountLabel) {
+        qWarning() << "m_elementCountLabel is nullptr!";
+        return;
+    }
+
+    int count = 0;
+    for(int row = 0; row < m_table->rowCount(); ++row) {
+        for(int col = 0; col < m_table->columnCount(); ++col) {
+            QTableWidgetItem* item = m_table->item(row, col);
+            if(item && !item->text().isEmpty()) count++;
+        }
+    }
+    m_elementCountLabel->setText(QString::number(count));
+}
+
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
-    auto *header = setupHeader(mainWidget, 20); // Хедер
-    auto *dataSection = setupDataSection(mainWidget);     // Основная секция с данными
+    auto *header = setupHeader(mainWidget, 20);
+    auto *dataSection = setupDataSection(mainWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->setContentsMargins(10, 10, 10, 10); // Отступы от краев окна
+    mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(header);
-    mainLayout->addWidget(dataSection, 1); // Занимаем оставшееся пространство
+    mainLayout->addWidget(dataSection, 1);
+
+    // Проверка инициализации перед подключением сигналов
+    if (m_table) {
+        connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateElementCount);
+        connect(m_table, &QTableWidget::cellChanged, this, &MainWindow::updateElementCount);
+        updateElementCount();
+    } else {
+        qFatal("Table initialization failed!");
+    }
 
     this->setWindowState(Qt::WindowMaximized);
 }

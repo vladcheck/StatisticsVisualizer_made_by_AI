@@ -96,7 +96,10 @@ namespace Helper {
         return btn;
     }
 
-    QWidget* createStatRow(QWidget* parent, const QString& title, const QString& value = "—") {
+    static QWidget* createStatRow(QWidget* parent,
+                                  const QString& title,
+                                  const QString& value = "—",
+                                  const QString& objectName = "") {
         QWidget* container = new QWidget(parent);
         QHBoxLayout* layout = new QHBoxLayout(container);
         layout->setContentsMargins(0, 2, 0, 2);
@@ -108,13 +111,13 @@ namespace Helper {
         QLabel* valueLabel = new QLabel(value, container);
         valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         valueLabel->setStyleSheet("font-weight: 500; color: #333;");
+        valueLabel->setObjectName(objectName); // Установка objectName
 
         layout->addWidget(titleLabel);
         layout->addWidget(valueLabel);
 
         return container;
     }
-
     // Создание секции с заголовком
     QWidget* createStatSection(QWidget* parent, const QString& title) {
         QWidget* section = new QWidget(parent);
