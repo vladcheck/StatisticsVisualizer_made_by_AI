@@ -2,6 +2,8 @@
 #include "helperFunctions.h"
 
 const QString fontName = "Arial";
+const unsigned int initialRowCount = 1;
+const unsigned int initialColCount = 20;
 
 QWidget* setupHeader(QWidget *parent, const int fontSize) {
     const QFont headerFont(fontName, fontSize);
@@ -68,6 +70,20 @@ void setupTableActions(const TableActions& actions) {
         actions.table->resizeColumnsToContents();
         actions.table->resizeRowsToContents();
     });
+
+    // Обработка изменения спинбокса строк
+    Helper::connect(actions.rowSpin, [=](int value) {
+        if (value >= actions.rowSpin->minimum()) {
+            actions.table->setRowCount(value);
+        }
+    });
+
+    // Обработка изменения спинбокса столбцов
+    Helper::connect(actions.colSpin, [=](int value) {
+        if (value >= actions.colSpin->minimum()) {
+            actions.table->setColumnCount(value);
+        }
+    });
 }
 
 QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
@@ -77,8 +93,8 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     toolbarLayout->setSpacing(5);
 
     // Спинбоксы
-    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 10);
-    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 512);
+    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 10, initialRowCount);
+    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
     QSpinBox* rowSpinBox = qobject_cast<QSpinBox*>(rowsContainer->layout()->itemAt(1)->widget());
     QSpinBox* colSpinBox = qobject_cast<QSpinBox*>(columnsContainer->layout()->itemAt(1)->widget());
 
@@ -112,7 +128,7 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
 
 QTableWidget* setupTable(QWidget *parent) {
     // Правая часть - таблица
-    QTableWidget *table = new QTableWidget(1, 20, parent);
+    QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
     Helper::setSizePolicyExpanding(table);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); // Колонки на всю ширину
     table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);    // Строки на всю высоту

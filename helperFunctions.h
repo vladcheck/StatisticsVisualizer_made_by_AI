@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QIcon>
 #include <QPixmap>
+#include <QTableWidget>
 
 struct TableActions {
     QPushButton* addRowBtn;
@@ -30,6 +31,21 @@ namespace Helper {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
+    // Для QAction
+    template<typename Func>
+    static void connect(QAction* action, Func&& callback) {
+        QObject::connect(action, &QAction::triggered,
+                         action, std::forward<Func>(callback));
+    }
+
+    // Для QSpinBox
+    template<typename Func>
+    static void connect(QSpinBox* spinBox, Func&& callback) {
+        QObject::connect(spinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+                         spinBox, std::forward<Func>(callback));
+    }
+
+    // Для QPushButton
     template<typename Func>
     static void connect(QPushButton* button, Func&& callback) {
         QObject::connect(button, &QPushButton::clicked,
@@ -46,10 +62,11 @@ namespace Helper {
         return line;
     }
 
-    QSpinBox *createSpinBox(QWidget *parent, int max, int min = 1) {
+    QSpinBox *createSpinBox(QWidget *parent, int max, int value = 1, int min = 1) {
         QSpinBox *spinBox = new QSpinBox(parent);
         spinBox->setMinimum(min);
         spinBox->setMaximum(max);
+        spinBox->setValue(value);
         return spinBox;
     }
 
