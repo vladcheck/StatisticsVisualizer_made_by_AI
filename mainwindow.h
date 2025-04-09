@@ -25,9 +25,11 @@ private:
     QLabel* m_elementCountLabel = nullptr;
     QLabel* m_sumLabel = nullptr;
     QLabel* m_averageLabel = nullptr;
+    QLabel* m_medianLabel = nullptr; // Добавляем новый член
     QTableWidget* m_table = nullptr;
 
     QWidget* setupDataSection(QWidget* parent);
     QWidget* setupStatsPanel(QWidget* parent, QLabel**, QLabel**, QLabel**);
+    double getMedian(QVector<double>& values); // Объявляем функцию
 };
 #endif // MAINWINDOW_H

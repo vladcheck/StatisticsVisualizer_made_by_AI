@@ -175,12 +175,9 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     // Секция распределения
     QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
     QVBoxLayout* distributionLayout = qobject_cast<QVBoxLayout*>(distributionSection->layout());
-    Helper::addStatRows(distributionSection, distributionLayout,
-    {
-        {"Медиана", "—"},
-        {"Мода", "—"},
-        {"Стандартное отклонение", "—"}
-    });
+    m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
+    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Мода", "—"));
+    distributionLayout->addWidget(Helper::createStatRow(distributionSection, "Стандартное отклонение", "—"));
     statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
@@ -216,8 +213,22 @@ QWidget* MainWindow::setupDataSection(QWidget *parent) {
     return dataSection;
 }
 
+double MainWindow::getMedian(QVector<double>& values) {
+    if (values.isEmpty()) return 0.0;
+
+    std::sort(values.begin(), values.end());
+    const int size = values.size();
+    const int mid = size / 2;
+
+    return (size % 2 == 0)
+               ? (values[mid - 1] + values[mid]) / 2.0
+               : values[mid];
+}
+
+
 void MainWindow::updateStatistics() {
-    if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel) return;
+    if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
+        !m_medianLabel) return;
 
     // Сбор данных
     QVector<double> values;
@@ -244,6 +255,7 @@ void MainWindow::updateStatistics() {
     m_elementCountLabel->setText(QString::number(count));
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', 2) : "—");
     m_averageLabel->setText(hasData ? QString::number(sum/count, 'f', 2) : "—");
+    m_medianLabel->setText(hasData ? QString::number(getMedian(values)) : "-");
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
