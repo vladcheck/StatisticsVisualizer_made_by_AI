@@ -184,9 +184,9 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     // Секция экстремумов
     QWidget* extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
     QVBoxLayout* extremesLayout = qobject_cast<QVBoxLayout*>(extremesSection->layout());
-    extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Минимум", "—"));
-    extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Максимум", "—"));
-    extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Размах", "—"));
+    m_minLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Минимум", "—", "minLabel");
+    m_maxLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Максимум", "—", "maxLabel");
+    m_rangeLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Размах", "—", "rangeLabel");
     statsLayout->addWidget(extremesSection);
 
     statsLayout->addStretch();
@@ -261,7 +261,8 @@ double MainWindow::getStandardDeviation(const QVector<double>& values, double me
 
 void MainWindow::updateStatistics() {
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
-        !m_medianLabel || !m_modeLabel || !m_stdDevLabel) return;
+        !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
+        !m_minLabel || !m_maxLabel || !m_rangeLabel) return;
 
     // Сбор данных
     QVector<double> values;
@@ -289,12 +290,25 @@ void MainWindow::updateStatistics() {
     const double mode = hasData ? getMode(values) : 0.0;
     const double stdDev = hasData ? getStandardDeviation(values, mean) : 0.0;
 
+    double minValue = std::numeric_limits<double>::quiet_NaN();
+    double maxValue = std::numeric_limits<double>::quiet_NaN();
+    double range = std::numeric_limits<double>::quiet_NaN();
+    if (hasData) {
+        auto [minIt, maxIt] = std::minmax_element(values.begin(), values.end());
+        minValue = *minIt;
+        maxValue = *maxIt;
+        range = maxValue - minValue;
+    }
+
     m_elementCountLabel->setText(QString::number(count));
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
     m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(getMedian(values)) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
+    m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
+    m_maxLabel->setText(hasData ? QString::number(maxValue, 'f', statsPrecision) : "—");
+    m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
