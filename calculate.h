@@ -77,6 +77,19 @@ namespace Calculate
 
         return std::pow(product, 1.0 / values.size());
     }
+
+    double skewness(const QVector<double>& values, double mean, double stdDev) {
+        const int n = values.size();
+        if (n < 3 || stdDev == 0) return std::numeric_limits<double>::quiet_NaN();
+
+        double sumCubedDeviations = 0.0;
+        for (double value : values) {
+            sumCubedDeviations += std::pow(value - mean, 3);
+        }
+
+        const double factor = n / static_cast<double>((n - 1) * (n - 2));
+        return factor * (sumCubedDeviations / std::pow(stdDev, 3));
+    }
 };
 
 #endif // CALCULATIONS_H

@@ -35,6 +35,7 @@ private:
     QLabel *m_maxLabel = nullptr;
     QLabel *m_rangeLabel = nullptr;
     QLabel* m_geometricMeanLabel = nullptr;
+    QLabel* m_skewnessLabel = nullptr;
     QTableWidget *m_table = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);

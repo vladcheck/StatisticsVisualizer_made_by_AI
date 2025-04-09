@@ -189,6 +189,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
     m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
     statsLayout->addWidget(distributionSection);
+    m_skewnessLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Асимметрия", "—", "skewnessLabel");
 
     // Секция экстремумов
     QWidget *extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
@@ -228,7 +229,7 @@ void MainWindow::updateStatistics()
 {
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
         !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
-        !m_minLabel || !m_maxLabel || !m_rangeLabel)
+        !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel)
         return;
 
     // Сбор данных
@@ -262,6 +263,7 @@ void MainWindow::updateStatistics()
     const double median = hasData ? Calculate::getMedian(values) : 0.0;
     const double mode = hasData ? Calculate::getMode(values) : 0.0;
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
+    const double skew = Calculate::skewness(values, mean, stdDev);
 
     double minValue = std::numeric_limits<double>::quiet_NaN();
     double maxValue = std::numeric_limits<double>::quiet_NaN();
@@ -274,6 +276,7 @@ void MainWindow::updateStatistics()
         range = maxValue - minValue;
     }
 
+    // Обновление интерфейса
     m_elementCountLabel->setText(QString::number(count));
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
     m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
@@ -281,6 +284,7 @@ void MainWindow::updateStatistics()
     m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
+    m_skewnessLabel->setText((hasData && !std::isnan(skew)) ? QString::number(skew, 'f', statsPrecision) : "—");
     m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
     m_maxLabel->setText(hasData ? QString::number(maxValue, 'f', statsPrecision) : "—");
     m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");
