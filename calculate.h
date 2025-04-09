@@ -2,11 +2,28 @@
 #define CALCULATIONS_H
 
 #include <QVector>
+#include <QTableWidgetItem>
+
 #include <limits>
 #include <cmath>
 
 namespace Calculate
 {
+    QVector<double> getWeights(const QTableWidget* table, int weightColumn = 1) {
+        QVector<double> weights;
+        if (!table || weightColumn >= table->columnCount()) return weights;
+
+        for (int row = 0; row < table->rowCount(); ++row) {
+            QTableWidgetItem* item = table->item(row, weightColumn);
+            if (item && !item->text().isEmpty()) {
+                bool ok;
+                double weight = item->text().toDouble(&ok);
+                if (ok && weight >= 0) weights.append(weight);
+            }
+        }
+        return weights;
+    }
+
     double getMean(double sum, double count) { return sum / count; }
 
     double getMedian(QVector<double> &values)
@@ -89,6 +106,80 @@ namespace Calculate
 
         return values.size() / reciprocalSum;
     }
+
+    double weightedMean(const QVector<double>& values, const QVector<double>& weights) {
+        qDebug() << "=== weightedMean calculation ===";
+        qDebug() << "Values:" << values;
+        qDebug() << "Weights:" << weights;
+
+        if (values.size() != weights.size()) {
+            qDebug() << "Error: Size mismatch (values:" << values.size() << "weights:" << weights.size() << ")";
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        if (values.isEmpty()) {
+            qDebug() << "Error: Empty data";
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        double sumProducts = 0.0, sumWeights = 0.0;
+        for (int i = 0; i < values.size(); ++i) {
+            if (std::isnan(values[i]) || std::isnan(weights[i])) {
+                qDebug() << "NaN detected at index" << i;
+                return std::numeric_limits<double>::quiet_NaN();
+            }
+            sumProducts += values[i] * weights[i];
+            sumWeights += weights[i];
+        }
+
+        qDebug() << "Sum products:" << sumProducts;
+        qDebug() << "Sum weights:" << sumWeights;
+
+        if (sumWeights <= 0) {
+            qDebug() << "Error: Non-positive sum of weights";
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        const double result = sumProducts / sumWeights;
+        qDebug() << "Result:" << result;
+        return result;
+    }
+
+    // 2. Автоматический поиск столбца с весами
+    QVector<double> findWeights(const QTableWidget* table) {
+        const int colCount = table->columnCount();
+
+        for (int col = 0; col < colCount; ++col) {
+            QVector<double> candidateWeights;
+            bool validColumn = true;
+
+            for (int row = 0; row < table->rowCount(); ++row) {
+                QTableWidgetItem* item = table->item(row, col);
+                if (!item || item->text().isEmpty()) {
+                    validColumn = false;
+                    break;
+                }
+
+                bool ok;
+                const double value = item->text().toDouble(&ok);
+                if (!ok || value < 0) {
+                    validColumn = false;
+                    break;
+                }
+
+                candidateWeights.append(value);
+            }
+
+            if (validColumn && !candidateWeights.isEmpty()) {
+                qDebug() << "Found weights in column" << col;
+                return candidateWeights;
+            }
+        }
+
+        qDebug() << "No valid weights column found";
+        return QVector<double>();
+    }
+
 
     double skewness(const QVector<double>& values, double mean, double stdDev) {
         const int n = values.size();

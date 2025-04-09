@@ -28,66 +28,66 @@ void setupTableActions(const TableActions &actions)
     // Добавление строки
     Helper::connect(actions.addRowBtn, [=]()
                     {
-        actions.table->setRowCount(actions.table->rowCount() + 1);
-        actions.rowSpin->setValue(actions.table->rowCount()); });
+                        actions.table->setRowCount(actions.table->rowCount() + 1);
+                        actions.rowSpin->setValue(actions.table->rowCount()); });
 
     // Добавление столбца
     Helper::connect(actions.addColBtn, [=]()
                     {
-        actions.table->setColumnCount(actions.table->columnCount() + 1);
-        actions.colSpin->setValue(actions.table->columnCount()); });
+                        actions.table->setColumnCount(actions.table->columnCount() + 1);
+                        actions.colSpin->setValue(actions.table->columnCount()); });
 
     // Удаление строки
     Helper::connect(actions.delRowBtn, [=]()
                     {
-        if(actions.table->rowCount() > 1) {
-            actions.table->setRowCount(actions.table->rowCount() - 1);
-            actions.rowSpin->setValue(actions.table->rowCount());
-        } });
+                        if(actions.table->rowCount() > 1) {
+                            actions.table->setRowCount(actions.table->rowCount() - 1);
+                            actions.rowSpin->setValue(actions.table->rowCount());
+                        } });
 
     // Удаление столбца
     Helper::connect(actions.delColBtn, [=]()
                     {
-        if(actions.table->columnCount() > 1) {
-            actions.table->setColumnCount(actions.table->columnCount() - 1);
-            actions.colSpin->setValue(actions.table->columnCount());
-        } });
+                        if(actions.table->columnCount() > 1) {
+                            actions.table->setColumnCount(actions.table->columnCount() - 1);
+                            actions.colSpin->setValue(actions.table->columnCount());
+                        } });
 
     // Очистка таблицы
     Helper::connect(actions.clearButton, [=]()
                     {
-        auto reply = QMessageBox::question(
-            actions.table,
-            "Очистка таблицы",
-            "Удалить все данные?",
-            QMessageBox::Yes | QMessageBox::No
-            );
+                        auto reply = QMessageBox::question(
+                            actions.table,
+                            "Очистка таблицы",
+                            "Удалить все данные?",
+                            QMessageBox::Yes | QMessageBox::No
+                            );
 
-        if (reply == QMessageBox::Yes) {
-            actions.table->clearContents();
-            actions.rowSpin->setValue(actions.rowSpin->minimum());
-            actions.colSpin->setValue(actions.colSpin->minimum());
-        } });
+                        if (reply == QMessageBox::Yes) {
+                            actions.table->clearContents();
+                            actions.rowSpin->setValue(actions.rowSpin->minimum());
+                            actions.colSpin->setValue(actions.colSpin->minimum());
+                        } });
 
     // Авторазмер
     Helper::connect(actions.autoSizeBtn, [=]()
                     {
-        actions.table->resizeColumnsToContents();
-        actions.table->resizeRowsToContents(); });
+                        actions.table->resizeColumnsToContents();
+                        actions.table->resizeRowsToContents(); });
 
     // Обработка изменения спинбокса строк
     Helper::connect(actions.rowSpin, [=](int value)
                     {
-        if (value >= actions.rowSpin->minimum()) {
-            actions.table->setRowCount(value);
-        } });
+                        if (value >= actions.rowSpin->minimum()) {
+                            actions.table->setRowCount(value);
+                        } });
 
     // Обработка изменения спинбокса столбцов
     Helper::connect(actions.colSpin, [=](int value)
                     {
-        if (value >= actions.colSpin->minimum()) {
-            actions.table->setColumnCount(value);
-        } });
+                        if (value >= actions.colSpin->minimum()) {
+                            actions.table->setColumnCount(value);
+                        } });
 }
 
 QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table)
@@ -105,15 +105,15 @@ QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table)
 
     // Создаем и настраиваем структуру
     TableActions actions{
-        .addRowBtn = Helper::createToolButton("Добавить строку", "add-row"),
-        .addColBtn = Helper::createToolButton("Добавить столбец", "add-column"),
-        .delRowBtn = Helper::createToolButton("Удалить строку", "delete-row"),
-        .delColBtn = Helper::createToolButton("Удалить столбец", "delete-column"),
-        .clearButton = Helper::createToolButton("Очистить", "clear-button"),
-        .autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size"),
-        .table = table,
-        .rowSpin = rowSpinBox,
-        .colSpin = colSpinBox};
+                         .addRowBtn = Helper::createToolButton("Добавить строку", "add-row"),
+                         .addColBtn = Helper::createToolButton("Добавить столбец", "add-column"),
+                         .delRowBtn = Helper::createToolButton("Удалить строку", "delete-row"),
+                         .delColBtn = Helper::createToolButton("Удалить столбец", "delete-column"),
+                         .clearButton = Helper::createToolButton("Очистить", "clear-button"),
+                         .autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size"),
+                         .table = table,
+                         .rowSpin = rowSpinBox,
+                         .colSpin = colSpinBox};
 
     // Подключение функционала
     setupTableActions(actions);
@@ -172,16 +172,21 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     mainHeader->setStyleSheet("font-size: 16px; font-weight: 600; color: #2c3e50;");
     statsLayout->addWidget(mainHeader);
 
+    // Секция базовой статистики
     QWidget *basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
     QVBoxLayout *basicLayout = qobject_cast<QVBoxLayout *>(basicSection->layout());
-    statsLayout->addWidget(basicSection);
-
-    // Секция базовой статистики
     *elementCountLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Количество элементов", "0", "elementCountLabel");
     *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "0", "sumLabel");
     *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее арифметическое", "—", "averageLabel");
-    m_geometricMeanLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Геом. среднее", "—", "geometricMeanLabel");
-    m_harmonicMeanLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Гарм. среднее", "—", "harmonicMeanLabel");
+    statsLayout->addWidget(basicSection);
+
+    // Секция средних
+    QWidget *meansSection = Helper::createStatSection(statsPanel, "Средние");
+    QVBoxLayout *meansLayout = qobject_cast<QVBoxLayout *>(meansSection->layout());
+    m_geometricMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Геом. среднее", "—", "geometricMeanLabel");
+    m_harmonicMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Гарм. среднее", "—", "harmonicMeanLabel");
+    m_weightedMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Взвеш. среднее", "—", "weightedMeanLabel");
+    statsLayout->addWidget(meansSection);
 
     // Секция распределения
     QWidget *distributionSection = Helper::createStatSection(statsPanel, "Распределение");
@@ -189,9 +194,9 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
     m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
     m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
-    statsLayout->addWidget(distributionSection);
     m_skewnessLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Асимметрия", "—", "skewnessLabel");
     m_kurtosisLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Эксцесс", "—", "kurtosisLabel");
+    statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
     QWidget *extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
@@ -232,7 +237,7 @@ void MainWindow::updateStatistics()
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
         !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
         !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
-        !m_kurtosisLabel || !m_harmonicMeanLabel)
+        !m_kurtosisLabel || !m_harmonicMeanLabel || !m_weightedMeanLabel)
         return;
 
     // Сбор данных
@@ -260,6 +265,8 @@ void MainWindow::updateStatistics()
     }
 
     // Расчёты
+    const QVector<double> weights = Calculate::findWeights(m_table); // Автопоиск столбца
+
     const bool hasData = count > 0;
     const double mean = hasData ? Calculate::getMean(sum, count) : 0.0;
     const double geomMean = Calculate::geometricMean(values);
@@ -269,6 +276,11 @@ void MainWindow::updateStatistics()
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
     const double skew = Calculate::skewness(values, mean, stdDev);
     const double kurt = Calculate::kurtosis(values, mean, stdDev);
+    const double wMean = Calculate::weightedMean(values, weights);
+
+    const bool validCalculation = !std::isnan(wMean) &&
+                                  (values.size() == weights.size()) &&
+                                  !values.isEmpty();
 
     double minValue = std::numeric_limits<double>::quiet_NaN();
     double maxValue = std::numeric_limits<double>::quiet_NaN();
@@ -287,6 +299,7 @@ void MainWindow::updateStatistics()
     m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
     m_geometricMeanLabel->setText((hasData && !std::isnan(geomMean)) ? QString::number(geomMean, 'f', statsPrecision) : "—");
     m_harmonicMeanLabel->setText((hasData && !std::isnan(harmonicMean)) ? QString::number(harmonicMean, 'f', statsPrecision) : "—");
+    m_weightedMeanLabel->setText(validCalculation ? QString::number(wMean, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
@@ -295,6 +308,10 @@ void MainWindow::updateStatistics()
     m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
     m_maxLabel->setText(hasData ? QString::number(maxValue, 'f', statsPrecision) : "—");
     m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");
+
+    qDebug() << "Weights:" << weights;
+    qDebug() << "Weighted mean:" << wMean;
+    qDebug() << "Sum weights:" << std::accumulate(weights.begin(), weights.end(), 0.0);
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)

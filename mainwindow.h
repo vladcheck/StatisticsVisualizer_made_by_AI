@@ -25,6 +25,7 @@ private slots:
     void updateStatistics();
 
 private:
+    QTableWidget *m_table = nullptr;
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;
     QLabel *m_averageLabel = nullptr;
@@ -38,7 +39,7 @@ private:
     QLabel* m_skewnessLabel = nullptr;
     QLabel* m_kurtosisLabel = nullptr;
     QLabel* m_harmonicMeanLabel = nullptr;
-    QTableWidget *m_table = nullptr;
+    QLabel* m_weightedMeanLabel = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
