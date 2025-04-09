@@ -99,17 +99,12 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     setupTableActions(actions);
 
     // Группируем элементы
-    toolbarLayout->addLayout(rowsContainer);
-    toolbarLayout->addLayout(columnsContainer);
-    toolbarLayout->addWidget(Helper::createSeparator());
-    toolbarLayout->addWidget(actions.addRowBtn);
-    toolbarLayout->addWidget(actions.addColBtn);
-    toolbarLayout->addWidget(actions.delRowBtn);
-    toolbarLayout->addWidget(actions.delColBtn);
-    toolbarLayout->addWidget(Helper::createSeparator());
-    toolbarLayout->addWidget(actions.autoSizeBtn);
-    toolbarLayout->addWidget(Helper::createSeparator());
-    toolbarLayout->addWidget(actions.clearButton);
+    for (auto *item : {rowsContainer,columnsContainer}) {
+        toolbarLayout->addLayout(item);
+    }
+    for (auto *item : {actions.addRowBtn,actions.addColBtn,actions.delRowBtn,actions.delColBtn,actions.autoSizeBtn,actions.clearButton}) {
+        toolbarLayout->addWidget(item);
+    }
     toolbarLayout->addStretch();
 
     return toolbar;
