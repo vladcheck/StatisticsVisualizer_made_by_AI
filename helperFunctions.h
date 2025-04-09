@@ -8,6 +8,19 @@
 #include <QIcon>
 #include <QPixmap>
 
+struct TableActions {
+    QPushButton* addRowBtn;
+    QPushButton* addColBtn;
+    QPushButton* delRowBtn;
+    QPushButton* delColBtn;
+    QPushButton* clearButton;
+    QPushButton* autoSizeBtn;
+    QTableWidget* table;
+    QSpinBox* rowSpin;
+    QSpinBox* colSpin;
+};
+
+
 namespace Helper {
     void setSizePolicyExpanding(QWidget *w) {
         w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

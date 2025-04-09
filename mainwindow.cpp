@@ -18,65 +18,55 @@ QWidget* setupHeader(QWidget *parent, const int fontSize) {
     return header;
 }
 
-void setupTableActions(QPushButton* addRowBtn,
-                       QPushButton* addColBtn,
-                       QPushButton* delRowBtn,
-                       QPushButton* delColBtn,
-                       QPushButton* clearButton,
-                       QPushButton* autoSizeBtn,
-                       QTableWidget* table,
-                       QSpinBox* rowSpin,
-                       QSpinBox* colSpin)
-{
+void setupTableActions(const TableActions& actions) {
     // Добавление строки
-    QObject::connect(addRowBtn, &QPushButton::clicked, [=](){
-        table->setRowCount(table->rowCount() + 1);
-        rowSpin->setValue(table->rowCount());
+    QObject::connect(actions.addRowBtn, &QPushButton::clicked, [=](){
+        actions.table->setRowCount(actions.table->rowCount() + 1);
+        actions.rowSpin->setValue(actions.table->rowCount());
     });
 
     // Добавление столбца
-    QObject::connect(addColBtn, &QPushButton::clicked, [=](){
-        table->setColumnCount(table->columnCount() + 1);
-        colSpin->setValue(table->columnCount());
+    QObject::connect(actions.addColBtn, &QPushButton::clicked, [=](){
+        actions.table->setColumnCount(actions.table->columnCount() + 1);
+        actions.colSpin->setValue(actions.table->columnCount());
     });
 
     // Удаление строки
-    QObject::connect(delRowBtn, &QPushButton::clicked, [=](){
-        if(table->rowCount() > 1) {
-            table->setRowCount(table->rowCount() - 1);
-            rowSpin->setValue(table->rowCount());
+    QObject::connect(actions.delRowBtn, &QPushButton::clicked, [=](){
+        if(actions.table->rowCount() > 1) {
+            actions.table->setRowCount(actions.table->rowCount() - 1);
+            actions.rowSpin->setValue(actions.table->rowCount());
         }
     });
 
     // Удаление столбца
-    QObject::connect(delColBtn, &QPushButton::clicked, [=](){
-        if(table->columnCount() > 1) {
-            table->setColumnCount(table->columnCount() - 1);
-            colSpin->setValue(table->columnCount());
+    QObject::connect(actions.delColBtn, &QPushButton::clicked, [=](){
+        if(actions.table->columnCount() > 1) {
+            actions.table->setColumnCount(actions.table->columnCount() - 1);
+            actions.colSpin->setValue(actions.table->columnCount());
         }
     });
 
     // Очистка таблицы
-    QObject::connect(clearButton, &QPushButton::clicked, [=](){
+    QObject::connect(actions.clearButton, &QPushButton::clicked, [=](){
         auto reply = QMessageBox::question(
-            table,
+            actions.table,
             "Очистка таблицы",
             "Удалить все данные?",
             QMessageBox::Yes | QMessageBox::No
             );
 
         if (reply == QMessageBox::Yes) {
-            table->clearContents();
-            rowSpin->setValue(rowSpin->minimum());
-            colSpin->setValue(colSpin->minimum());
+            actions.table->clearContents();
+            actions.rowSpin->setValue(actions.rowSpin->minimum());
+            actions.colSpin->setValue(actions.colSpin->minimum());
         }
     });
 
-
-    // Автоматическое изменение размера
-    QObject::connect(autoSizeBtn, &QPushButton::clicked, [=](){
-        table->resizeColumnsToContents();
-        table->resizeRowsToContents();
+    // Авторазмер
+    QObject::connect(actions.autoSizeBtn, &QPushButton::clicked, [=](){
+        actions.table->resizeColumnsToContents();
+        actions.table->resizeRowsToContents();
     });
 }
 
@@ -92,31 +82,34 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     QSpinBox* rowSpinBox = qobject_cast<QSpinBox*>(rowsContainer->layout()->itemAt(1)->widget());
     QSpinBox* colSpinBox = qobject_cast<QSpinBox*>(columnsContainer->layout()->itemAt(1)->widget());
 
-    // Основные действия
-    QPushButton *addRowBtn = Helper::createToolButton("Добавить строку", "add-row");
-    QPushButton *addColBtn = Helper::createToolButton("Добавить столбец", "add-column");
-    QPushButton *delRowBtn = Helper::createToolButton("Удалить строку", "delete-row");
-    QPushButton *delColBtn = Helper::createToolButton("Удалить столбец", "delete-column");
-    QPushButton *clearButton = Helper::createToolButton("Очистить", "clear-button");
+    // Создаем и настраиваем структуру
+    TableActions actions{
+        .addRowBtn = Helper::createToolButton("Добавить строку", "add-row"),
+        .addColBtn = Helper::createToolButton("Добавить столбец", "add-column"),
+        .delRowBtn = Helper::createToolButton("Удалить строку", "delete-row"),
+        .delColBtn = Helper::createToolButton("Удалить столбец", "delete-column"),
+        .clearButton = Helper::createToolButton("Очистить", "clear-button"),
+        .autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size"),
+        .table = table,
+        .rowSpin = rowSpinBox,
+        .colSpin = colSpinBox
+    };
 
-    // Форматирование
-    QPushButton *autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size");
-
-    // Подключение функционала кнопок
-    setupTableActions(addRowBtn, addColBtn, delRowBtn, delColBtn, clearButton, autoSizeBtn, table, rowSpinBox, colSpinBox);
+    // Подключение функционала
+    setupTableActions(actions);
 
     // Группируем элементы
     toolbarLayout->addLayout(rowsContainer);
     toolbarLayout->addLayout(columnsContainer);
     toolbarLayout->addWidget(Helper::createSeparator());
-    toolbarLayout->addWidget(addRowBtn);
-    toolbarLayout->addWidget(addColBtn);
-    toolbarLayout->addWidget(delRowBtn);
-    toolbarLayout->addWidget(delColBtn);
+    toolbarLayout->addWidget(actions.addRowBtn);
+    toolbarLayout->addWidget(actions.addColBtn);
+    toolbarLayout->addWidget(actions.delRowBtn);
+    toolbarLayout->addWidget(actions.delColBtn);
     toolbarLayout->addWidget(Helper::createSeparator());
-    toolbarLayout->addWidget(autoSizeBtn);
+    toolbarLayout->addWidget(actions.autoSizeBtn);
     toolbarLayout->addWidget(Helper::createSeparator());
-    toolbarLayout->addWidget(clearButton);
+    toolbarLayout->addWidget(actions.clearButton);
     toolbarLayout->addStretch();
 
     return toolbar;
