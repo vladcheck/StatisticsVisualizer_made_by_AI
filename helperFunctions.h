@@ -100,24 +100,19 @@ namespace Helper {
                                   const QString& title,
                                   const QString& value = "—",
                                   const QString& objectName = "") {
-        QWidget* container = new QWidget(parent);
-        QHBoxLayout* layout = new QHBoxLayout(container);
-        layout->setContentsMargins(0, 2, 0, 2);
+        QWidget* row = new QWidget(parent);
+        QHBoxLayout* layout = new QHBoxLayout(row);
+        layout->setContentsMargins(0, 0, 0, 0);
 
-        QLabel* titleLabel = new QLabel(title, container);
-        titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        titleLabel->setStyleSheet("color: #666;");
-
-        QLabel* valueLabel = new QLabel(value, container);
-        valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        valueLabel->setStyleSheet("font-weight: 500; color: #333;");
-        valueLabel->setObjectName(objectName); // Установка objectName
+        QLabel* titleLabel = new QLabel(title + ":", row);
+        QLabel* valueLabel = new QLabel(value, row);
+        valueLabel->setObjectName(objectName.isEmpty() ? title + "Value" : objectName);
 
         layout->addWidget(titleLabel);
-        layout->addWidget(valueLabel);
-
-        return container;
+        layout->addWidget(valueLabel, 1, Qt::AlignRight);
+        return row;
     }
+
     // Создание секции с заголовком
     QWidget* createStatSection(QWidget* parent, const QString& title) {
         QWidget* section = new QWidget(parent);

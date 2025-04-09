@@ -149,7 +149,8 @@ QWidget* setupTablePanel(QWidget *parent, QTableWidget** outTable) {
     return tableSection;
 }
 
-QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel) {
+QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel,
+                                     QLabel** sumLabel, QLabel** averageLabel) {
     QWidget* statsPanel = new QWidget(parent);
     statsPanel->setLayout(new QVBoxLayout(statsPanel));
     Helper::setSizePolicyExpanding(statsPanel);
@@ -165,19 +166,18 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     // Секция базовой статистики
     QWidget* basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
     QVBoxLayout* basicLayout = qobject_cast<QVBoxLayout*>(basicSection->layout());
+    statsLayout->addWidget(basicSection);
 
     // Создаем строку "Элементов" с явным указанием objectName
-    QWidget* elementsRow = Helper::createStatRow(basicSection, "Элементов", "0", "valueLabel");
-    *elementCountLabel = elementsRow->findChild<QLabel*>("valueLabel");
-
-    if (!*elementCountLabel) {
-        qDebug() << "Error: valueLabel still not found!";
-    }
-
+    QWidget* elementsRow = Helper::createStatRow(basicSection, "Элементов", "0", "elementCountLabel");
+    *elementCountLabel = elementsRow->findChild<QLabel*>("elementCountLabel");
     basicLayout->addWidget(elementsRow);
-    basicLayout->addWidget(Helper::createStatRow(basicSection, "Сумма", "—"));
-    basicLayout->addWidget(Helper::createStatRow(basicSection, "Среднее", "—"));
-    statsLayout->addWidget(basicSection);
+    QWidget* sumRow = Helper::createStatRow(basicSection, "Сумма", "—", "sumLabel");
+    *sumLabel = sumRow->findChild<QLabel*>("sumLabel");
+    basicLayout->addWidget(sumRow);
+    QWidget* averageRow = Helper::createStatRow(basicSection, "Среднее", "—", "averageLabel");
+    *averageLabel = averageRow->findChild<QLabel*>("averageLabel");
+    basicLayout->addWidget(averageRow);
 
     // Секция распределения
     QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
@@ -209,7 +209,8 @@ QWidget* MainWindow::setupDataSection(QWidget *parent) {
     QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto *statsPanel = setupStatsPanel(dataSection, &m_elementCountLabel);
+    auto *statsPanel = setupStatsPanel(dataSection, &m_elementCountLabel,
+                                       &m_sumLabel, &m_averageLabel);
 
     // Создаем tablePanel и получаем таблицу
     QTableWidget* table = nullptr;
@@ -222,23 +223,29 @@ QWidget* MainWindow::setupDataSection(QWidget *parent) {
     return dataSection;
 }
 
-void MainWindow::updateElementCount() {
-    if (!m_table) {
-        qWarning() << "m_table is nullptr!";
-        return;
-    } else if (!m_elementCountLabel) {
-        qWarning() << "m_elementCountLabel is nullptr!";
-        return;
-    }
+void MainWindow::updateStatistics() {
+    if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel) return;
 
     int count = 0;
-    for(int row = 0; row < m_table->rowCount(); ++row) {
-        for(int col = 0; col < m_table->columnCount(); ++col) {
+    double sum = 0.0;
+    bool conversionOK = false;
+
+    // Сбор данных
+    for (int row = 0; row < m_table->rowCount(); ++row) {
+        for (int col = 0; col < m_table->columnCount(); ++col) {
             QTableWidgetItem* item = m_table->item(row, col);
-            if(item && !item->text().isEmpty()) count++;
+            if (item && !item->text().isEmpty()) {
+                count++;
+                double value = item->text().toDouble(&conversionOK);
+                if (conversionOK) sum += value;
+            }
         }
     }
+
+    // Обновление интерфейса
     m_elementCountLabel->setText(QString::number(count));
+    m_sumLabel->setText(count > 0 ? QString::number(sum, 'f', 2) : "—");
+    m_averageLabel->setText(count > 0 ? QString::number(sum / count, 'f', 2) : "—");
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -255,9 +262,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // Проверка инициализации перед подключением сигналов
     if (m_table) {
-        connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateElementCount);
-        connect(m_table, &QTableWidget::cellChanged, this, &MainWindow::updateElementCount);
-        updateElementCount();
+        connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
+        connect(m_table, &QTableWidget::cellChanged, this, &MainWindow::updateStatistics);
+        updateStatistics();
     } else {
         qFatal("Table initialization failed!");
     }
