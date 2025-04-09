@@ -23,22 +23,20 @@ public:
     ~MainWindow();
 private slots:
     void updateStatistics();
-private:
-    QLabel* m_elementCountLabel = nullptr;
-    QLabel* m_sumLabel = nullptr;
-    QLabel* m_averageLabel = nullptr;
-    QLabel* m_medianLabel = nullptr;
-    QLabel* m_modeLabel = nullptr;
-    QTableWidget* m_table = nullptr;
-    QLabel* m_stdDevLabel = nullptr;
-    QLabel* m_minLabel = nullptr;
-    QLabel* m_maxLabel = nullptr;
-    QLabel* m_rangeLabel = nullptr;
 
-    QWidget* setupDataSection(QWidget* parent);
-    QWidget* setupStatsPanel(QWidget* parent, QLabel**, QLabel**, QLabel**);
-    double getMedian(QVector<double>& values);
-    double getMode(const QVector<double>& values);
-    double getStandardDeviation(const QVector<double>& values, double mean);
+private:
+    QLabel *m_elementCountLabel = nullptr;
+    QLabel *m_sumLabel = nullptr;
+    QLabel *m_averageLabel = nullptr;
+    QLabel *m_medianLabel = nullptr;
+    QLabel *m_modeLabel = nullptr;
+    QTableWidget *m_table = nullptr;
+    QLabel *m_stdDevLabel = nullptr;
+    QLabel *m_minLabel = nullptr;
+    QLabel *m_maxLabel = nullptr;
+    QLabel *m_rangeLabel = nullptr;
+
+    QWidget *setupDataSection(QWidget *parent);
+    QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
 };
 #endif // MAINWINDOW_H

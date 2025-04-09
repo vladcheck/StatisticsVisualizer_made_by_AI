@@ -1,12 +1,14 @@
 #include "mainwindow.h"
 #include "helperFunctions.h"
+#include "calculate.h"
 
 const QString fontName = "Arial";
 const unsigned int initialRowCount = 1;
 const unsigned int initialColCount = 20;
 const int statsPrecision = 3;
 
-QWidget* setupHeader(QWidget *parent, const int fontSize) {
+QWidget *setupHeader(QWidget *parent, const int fontSize)
+{
     const QFont headerFont(fontName, fontSize);
 
     QWidget *header = new QWidget(parent);
@@ -16,42 +18,44 @@ QWidget* setupHeader(QWidget *parent, const int fontSize) {
     h1->setFont(headerFont);
 
     QHBoxLayout *headerAlignment = new QHBoxLayout(header);
-    headerAlignment->setContentsMargins(0,0,0,0);
+    headerAlignment->setContentsMargins(0, 0, 0, 0);
     headerAlignment->addWidget(h1, 0, Qt::AlignCenter);
     return header;
 }
 
-void setupTableActions(const TableActions& actions) {
+void setupTableActions(const TableActions &actions)
+{
     // Добавление строки
-    Helper::connect(actions.addRowBtn, [=](){
+    Helper::connect(actions.addRowBtn, [=]()
+                    {
         actions.table->setRowCount(actions.table->rowCount() + 1);
-        actions.rowSpin->setValue(actions.table->rowCount());
-    });
+        actions.rowSpin->setValue(actions.table->rowCount()); });
 
     // Добавление столбца
-    Helper::connect(actions.addColBtn, [=](){
+    Helper::connect(actions.addColBtn, [=]()
+                    {
         actions.table->setColumnCount(actions.table->columnCount() + 1);
-        actions.colSpin->setValue(actions.table->columnCount());
-    });
+        actions.colSpin->setValue(actions.table->columnCount()); });
 
     // Удаление строки
-    Helper::connect(actions.delRowBtn, [=](){
+    Helper::connect(actions.delRowBtn, [=]()
+                    {
         if(actions.table->rowCount() > 1) {
             actions.table->setRowCount(actions.table->rowCount() - 1);
             actions.rowSpin->setValue(actions.table->rowCount());
-        }
-    });
+        } });
 
     // Удаление столбца
-    Helper::connect(actions.delColBtn, [=](){
+    Helper::connect(actions.delColBtn, [=]()
+                    {
         if(actions.table->columnCount() > 1) {
             actions.table->setColumnCount(actions.table->columnCount() - 1);
             actions.colSpin->setValue(actions.table->columnCount());
-        }
-    });
+        } });
 
     // Очистка таблицы
-    Helper::connect(actions.clearButton, [=](){
+    Helper::connect(actions.clearButton, [=]()
+                    {
         auto reply = QMessageBox::question(
             actions.table,
             "Очистка таблицы",
@@ -63,41 +67,41 @@ void setupTableActions(const TableActions& actions) {
             actions.table->clearContents();
             actions.rowSpin->setValue(actions.rowSpin->minimum());
             actions.colSpin->setValue(actions.colSpin->minimum());
-        }
-    });
+        } });
 
     // Авторазмер
-    Helper::connect(actions.autoSizeBtn, [=](){
+    Helper::connect(actions.autoSizeBtn, [=]()
+                    {
         actions.table->resizeColumnsToContents();
-        actions.table->resizeRowsToContents();
-    });
+        actions.table->resizeRowsToContents(); });
 
     // Обработка изменения спинбокса строк
-    Helper::connect(actions.rowSpin, [=](int value) {
+    Helper::connect(actions.rowSpin, [=](int value)
+                    {
         if (value >= actions.rowSpin->minimum()) {
             actions.table->setRowCount(value);
-        }
-    });
+        } });
 
     // Обработка изменения спинбокса столбцов
-    Helper::connect(actions.colSpin, [=](int value) {
+    Helper::connect(actions.colSpin, [=](int value)
+                    {
         if (value >= actions.colSpin->minimum()) {
             actions.table->setColumnCount(value);
-        }
-    });
+        } });
 }
 
-QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
+QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table)
+{
     QWidget *toolbar = new QWidget(parent);
     toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
     toolbarLayout->setSpacing(5);
 
     // Спинбоксы
-    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 10, initialRowCount);
-    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
-    QSpinBox* rowSpinBox = qobject_cast<QSpinBox*>(rowsContainer->layout()->itemAt(1)->widget());
-    QSpinBox* colSpinBox = qobject_cast<QSpinBox*>(columnsContainer->layout()->itemAt(1)->widget());
+    auto *rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 10, initialRowCount);
+    auto *columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
+    QSpinBox *rowSpinBox = qobject_cast<QSpinBox *>(rowsContainer->layout()->itemAt(1)->widget());
+    QSpinBox *colSpinBox = qobject_cast<QSpinBox *>(columnsContainer->layout()->itemAt(1)->widget());
 
     // Создаем и настраиваем структуру
     TableActions actions{
@@ -109,17 +113,18 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
         .autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size"),
         .table = table,
         .rowSpin = rowSpinBox,
-        .colSpin = colSpinBox
-    };
+        .colSpin = colSpinBox};
 
     // Подключение функционала
     setupTableActions(actions);
 
     // Группируем элементы
-    for (auto *item : {rowsContainer,columnsContainer}) {
+    for (auto *item : {rowsContainer, columnsContainer})
+    {
         toolbarLayout->addLayout(item);
     }
-    for (auto *item : {actions.addRowBtn,actions.addColBtn,actions.delRowBtn,actions.delColBtn,actions.autoSizeBtn,actions.clearButton}) {
+    for (auto *item : {actions.addRowBtn, actions.addColBtn, actions.delRowBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton})
+    {
         toolbarLayout->addWidget(item);
     }
     toolbarLayout->addStretch();
@@ -127,17 +132,19 @@ QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     return toolbar;
 }
 
-QTableWidget* setupTable(QWidget *parent) {
+QTableWidget *setupTable(QWidget *parent)
+{
     // Правая часть - таблица
     QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
     Helper::setSizePolicyExpanding(table);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); // Колонки на всю ширину
-    table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);    // Строки на всю высоту
+    table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);   // Строки на всю высоту
     table->resizeColumnsToContents();
     return table;
 }
 
-QWidget* setupTablePanel(QWidget *parent, QTableWidget** outTable) {
+QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable)
+{
     QWidget *tableSection = new QWidget(parent);
 
     *outTable = setupTable(tableSection); // Создаем таблицу и возвращаем через outTable
@@ -150,40 +157,41 @@ QWidget* setupTablePanel(QWidget *parent, QTableWidget** outTable) {
     return tableSection;
 }
 
-QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel,
-                                     QLabel** sumLabel, QLabel** averageLabel) {
-    QWidget* statsPanel = new QWidget(parent);
+QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel,
+                                     QLabel **sumLabel, QLabel **averageLabel)
+{
+    QWidget *statsPanel = new QWidget(parent);
     statsPanel->setLayout(new QVBoxLayout(statsPanel));
     Helper::setSizePolicyExpanding(statsPanel);
 
-    QVBoxLayout* statsLayout = qobject_cast<QVBoxLayout*>(statsPanel->layout());
+    QVBoxLayout *statsLayout = qobject_cast<QVBoxLayout *>(statsPanel->layout());
     statsLayout->setContentsMargins(12, 8, 12, 8);
     statsLayout->setSpacing(8);
 
-    QLabel* mainHeader = new QLabel("Анализ данных", statsPanel);
+    QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
     mainHeader->setStyleSheet("font-size: 16px; font-weight: 600; color: #2c3e50;");
     statsLayout->addWidget(mainHeader);
 
-    QWidget* basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
-    QVBoxLayout* basicLayout = qobject_cast<QVBoxLayout*>(basicSection->layout());
+    QWidget *basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
+    QVBoxLayout *basicLayout = qobject_cast<QVBoxLayout *>(basicSection->layout());
     statsLayout->addWidget(basicSection);
 
     // Секция базовой статистики
     *elementCountLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Элементов", "0", "elementCountLabel");
     *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "0", "sumLabel");
-    *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее", "—", "averageLabel");
+    *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее арифметическое", "—", "averageLabel");
 
     // Секция распределения
-    QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
-    QVBoxLayout* distributionLayout = qobject_cast<QVBoxLayout*>(distributionSection->layout());
+    QWidget *distributionSection = Helper::createStatSection(statsPanel, "Распределение");
+    QVBoxLayout *distributionLayout = qobject_cast<QVBoxLayout *>(distributionSection->layout());
     m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
     m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
     m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
     statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
-    QWidget* extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
-    QVBoxLayout* extremesLayout = qobject_cast<QVBoxLayout*>(extremesSection->layout());
+    QWidget *extremesSection = Helper::createStatSection(statsPanel, "Экстремумы");
+    QVBoxLayout *extremesLayout = qobject_cast<QVBoxLayout *>(extremesSection->layout());
     m_minLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Минимум", "—", "minLabel");
     m_maxLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Максимум", "—", "maxLabel");
     m_rangeLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Размах", "—", "rangeLabel");
@@ -193,7 +201,8 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     return statsPanel;
 }
 
-QWidget* MainWindow::setupDataSection(QWidget *parent) {
+QWidget *MainWindow::setupDataSection(QWidget *parent)
+{
     QWidget *dataSection = new QWidget(parent);
     dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // Убрана фиксированная высота
 
@@ -204,7 +213,7 @@ QWidget* MainWindow::setupDataSection(QWidget *parent) {
                                        &m_sumLabel, &m_averageLabel);
 
     // Создаем tablePanel и получаем таблицу
-    QTableWidget* table = nullptr;
+    QTableWidget *table = nullptr;
     auto *tablePanel = setupTablePanel(dataSection, &table);
     m_table = table; // Сохраняем таблицу
 
@@ -214,55 +223,12 @@ QWidget* MainWindow::setupDataSection(QWidget *parent) {
     return dataSection;
 }
 
-double MainWindow::getMedian(QVector<double>& values) {
-    if (values.isEmpty()) return 0.0;
-
-    std::sort(values.begin(), values.end());
-    const int size = values.size();
-    const int mid = size / 2;
-
-    return (size % 2 == 0)
-               ? (values[mid - 1] + values[mid]) / 2.0
-               : values[mid];
-}
-
-double MainWindow::getMode(const QVector<double>& values) {
-    if (values.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
-
-    QMap<double, int> frequencyMap;
-    for (double value : values) {
-        frequencyMap[value]++;
-    }
-
-    int maxFrequency = 0;
-    double mode = std::numeric_limits<double>::quiet_NaN();
-    for (auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it) {
-        if (it.value() > maxFrequency) {
-            maxFrequency = it.value();
-            mode = it.key();
-        }
-    }
-
-    // Считаем моду существующей только если частота > 1
-    return (maxFrequency > 1) ? mode : std::numeric_limits<double>::quiet_NaN();
-}
-
-double MainWindow::getStandardDeviation(const QVector<double>& values, double mean) {
-    if (values.size() < 2) return std::numeric_limits<double>::quiet_NaN();
-
-    double sumSqDifferences = 0.0;
-    for (double value : values) {
-        sumSqDifferences += std::pow(value - mean, 2);
-    }
-
-    // Несмещённая оценка (n-1)
-    return std::sqrt(sumSqDifferences / (values.size() - 1));
-}
-
-void MainWindow::updateStatistics() {
+void MainWindow::updateStatistics()
+{
     if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
         !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
-        !m_minLabel || !m_maxLabel || !m_rangeLabel) return;
+        !m_minLabel || !m_maxLabel || !m_rangeLabel)
+        return;
 
     // Сбор данных
     QVector<double> values;
@@ -270,12 +236,16 @@ void MainWindow::updateStatistics() {
     double sum = 0.0;
     bool conversionOK;
 
-    for (int row = 0; row < m_table->rowCount(); ++row) {
-        for (int col = 0; col < m_table->columnCount(); ++col) {
-            QTableWidgetItem* item = m_table->item(row, col);
-            if (item && !item->text().isEmpty()) {
+    for (int row = 0; row < m_table->rowCount(); ++row)
+    {
+        for (int col = 0; col < m_table->columnCount(); ++col)
+        {
+            QTableWidgetItem *item = m_table->item(row, col);
+            if (item && !item->text().isEmpty())
+            {
                 double value = item->text().toDouble(&conversionOK);
-                if (conversionOK) {
+                if (conversionOK)
+                {
                     values.append(value);
                     sum += value;
                     count++;
@@ -286,14 +256,16 @@ void MainWindow::updateStatistics() {
 
     // Расчёты
     const bool hasData = count > 0;
-    const double mean = hasData ? (sum / count) : 0.0;
-    const double mode = hasData ? getMode(values) : 0.0;
-    const double stdDev = hasData ? getStandardDeviation(values, mean) : 0.0;
+    const double mean = hasData ? Calculate::getMean(sum, count) : 0.0;
+    const double median = hasData ? Calculate::getMedian(values) : 0.0;
+    const double mode = hasData ? Calculate::getMode(values) : 0.0;
+    const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
 
     double minValue = std::numeric_limits<double>::quiet_NaN();
     double maxValue = std::numeric_limits<double>::quiet_NaN();
     double range = std::numeric_limits<double>::quiet_NaN();
-    if (hasData) {
+    if (hasData)
+    {
         auto [minIt, maxIt] = std::minmax_element(values.begin(), values.end());
         minValue = *minIt;
         maxValue = *maxIt;
@@ -303,7 +275,7 @@ void MainWindow::updateStatistics() {
     m_elementCountLabel->setText(QString::number(count));
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
     m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
-    m_medianLabel->setText(hasData ? QString::number(getMedian(values)) : "-");
+    m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
     m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
@@ -311,7 +283,8 @@ void MainWindow::updateStatistics() {
     m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");
 }
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
+{
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
@@ -324,11 +297,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     mainLayout->addWidget(dataSection, 1);
 
     // Проверка инициализации перед подключением сигналов
-    if (m_table) {
+    if (m_table)
+    {
         connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
         connect(m_table, &QTableWidget::cellChanged, this, &MainWindow::updateStatistics);
         updateStatistics();
-    } else {
+    }
+    else
+    {
         qFatal("Table initialization failed!");
     }
 
