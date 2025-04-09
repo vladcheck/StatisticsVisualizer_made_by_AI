@@ -60,14 +60,6 @@ namespace Helper {
         return btn;
     }
 
-    // Кнопка очистки с иконкой
-    QPushButton* createClearButton(QWidget* parent) {
-        QPushButton *btn = new QPushButton("Очистить", parent);
-        btn->setIcon(QIcon(":/icons/clear.png"));
-        btn->setToolTip("Очистить всё содержимое таблицы");
-        return btn;
-    }
-
     QWidget* createStatRow(QWidget* parent, const QString& title, const QString& value = "—") {
         QWidget* container = new QWidget(parent);
         QHBoxLayout* layout = new QHBoxLayout(container);

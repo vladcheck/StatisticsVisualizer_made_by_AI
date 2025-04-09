@@ -18,13 +18,38 @@ QWidget* setupHeader(QWidget *parent, const int fontSize) {
     return header;
 }
 
-QWidget* setupTableToolbar(QWidget *parent) {
+QPushButton* createClearButton(QWidget* parent, QTableWidget* table, QSpinBox* rowSpin, QSpinBox* colSpin) {
+    QPushButton* clearButton = new QPushButton("Очистить", parent);
+    clearButton->setIcon(QIcon(":/icons/clear.png"));
+    clearButton->setToolTip("Очистить всё содержимое таблицы");
+
+    QObject::connect(clearButton, &QPushButton::clicked, [=](){
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            parent,
+            "Очистка таблицы",
+            "Удалить все данные?",
+            QMessageBox::Yes | QMessageBox::No
+            );
+
+        if (reply == QMessageBox::Yes) {
+            table->clearContents();
+            rowSpin->setValue(rowSpin->minimum());
+            colSpin->setValue(colSpin->minimum());
+        }
+    });
+
+    return clearButton;
+}
+
+QWidget* setupTableToolbar(QWidget *parent, QTableWidget* table) {
     QWidget *toolbar = new QWidget(parent);
     toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     // Спинбоксы
-    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 1000);
-    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 100);
+    auto* rowsContainer = Helper::createSpinBoxWithLabel(toolbar, "Строки", 10);
+    auto* columnsContainer = Helper::createSpinBoxWithLabel(toolbar, "Столбцы", 512);
+    QSpinBox* rowSpinBox = qobject_cast<QSpinBox*>(rowsContainer->layout()->itemAt(1)->widget());
+    QSpinBox* colSpinBox = qobject_cast<QSpinBox*>(columnsContainer->layout()->itemAt(1)->widget());
 
     // Основные действия
     QPushButton *addRowBtn = Helper::createToolButton("Добавить строку", "add-row");
@@ -38,6 +63,23 @@ QWidget* setupTableToolbar(QWidget *parent) {
     QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
     toolbarLayout->setSpacing(5);
 
+    QPushButton* clearButton = createClearButton(toolbar, table, rowSpinBox, colSpinBox);
+
+    QObject::connect(clearButton, &QPushButton::clicked, [=](){
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            parent,
+            "Очистка таблицы",
+            "Удалить все данные?",
+            QMessageBox::Yes | QMessageBox::No
+            );
+
+        if (reply == QMessageBox::Yes) {
+            table->clearContents();
+            rowSpinBox->setValue(rowSpinBox->minimum());
+            colSpinBox->setValue(colSpinBox->minimum());
+        }
+    });
+
     // Группируем элементы
     toolbarLayout->addLayout(rowsContainer);
     toolbarLayout->addLayout(columnsContainer);
@@ -49,8 +91,8 @@ QWidget* setupTableToolbar(QWidget *parent) {
     toolbarLayout->addWidget(Helper::createSeparator());
     toolbarLayout->addWidget(autoSizeBtn);
     toolbarLayout->addWidget(Helper::createSeparator());
+    toolbarLayout->addWidget(clearButton);
     toolbarLayout->addStretch();
-    toolbarLayout->addWidget(Helper::createClearButton(parent));
 
     return toolbar;
 }
@@ -68,8 +110,8 @@ QTableWidget* setupTable(QWidget *parent) {
 QWidget* setupTablePanel(QWidget *parent) {
     QWidget *tableSection = new QWidget(parent);
 
-    auto *tableToolbar = setupTableToolbar(tableSection);
     auto *table = setupTable(tableSection);
+    auto *tableToolbar = setupTableToolbar(tableSection,table);
 
     QVBoxLayout *tableSectionLayout = new QVBoxLayout(tableSection);
     tableSectionLayout->addWidget(tableToolbar);
