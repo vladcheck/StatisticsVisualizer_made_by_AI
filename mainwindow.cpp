@@ -163,21 +163,14 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     mainHeader->setStyleSheet("font-size: 16px; font-weight: 600; color: #2c3e50;");
     statsLayout->addWidget(mainHeader);
 
-    // Секция базовой статистики
     QWidget* basicSection = Helper::createStatSection(statsPanel, "Основные метрики");
     QVBoxLayout* basicLayout = qobject_cast<QVBoxLayout*>(basicSection->layout());
     statsLayout->addWidget(basicSection);
 
-    // Создаем строку "Элементов" с явным указанием objectName
-    QWidget* elementsRow = Helper::createStatRow(basicSection, "Элементов", "0", "elementCountLabel");
-    *elementCountLabel = elementsRow->findChild<QLabel*>("elementCountLabel");
-    basicLayout->addWidget(elementsRow);
-    QWidget* sumRow = Helper::createStatRow(basicSection, "Сумма", "—", "sumLabel");
-    *sumLabel = sumRow->findChild<QLabel*>("sumLabel");
-    basicLayout->addWidget(sumRow);
-    QWidget* averageRow = Helper::createStatRow(basicSection, "Среднее", "—", "averageLabel");
-    *averageLabel = averageRow->findChild<QLabel*>("averageLabel");
-    basicLayout->addWidget(averageRow);
+    // Секция базовой статистики
+    *elementCountLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Элементов", "0", "elementCountLabel");
+    *sumLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "—", "sumLabel");
+    *averageLabel = Helper::createAndRegisterStatRow(basicSection, basicLayout, "Среднее", "—", "averageLabel");
 
     // Секция распределения
     QWidget* distributionSection = Helper::createStatSection(statsPanel, "Распределение");
@@ -195,10 +188,7 @@ QWidget* MainWindow::setupStatsPanel(QWidget* parent, QLabel** elementCountLabel
     extremesLayout->addWidget(Helper::createStatRow(extremesSection, "Размах", "—"));
     statsLayout->addWidget(extremesSection);
 
-
-    basicLayout->addWidget(elementsRow);
     statsLayout->addStretch();
-
     return statsPanel;
 }
 

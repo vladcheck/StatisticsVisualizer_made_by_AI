@@ -113,6 +113,14 @@ namespace Helper {
         return row;
     }
 
+    QLabel* createAndRegisterStatRow(QWidget* parent, QLayout* layout,
+                                     const QString& title, const QString& defaultValue, const QString& objectName) {
+        QWidget* row = Helper::createStatRow(parent, title, defaultValue, objectName);
+        QLabel* label = row->findChild<QLabel*>(objectName);
+        layout->addWidget(row);
+        return label;
+    }
+
     // Создание секции с заголовком
     QWidget* createStatSection(QWidget* parent, const QString& title) {
         QWidget* section = new QWidget(parent);
