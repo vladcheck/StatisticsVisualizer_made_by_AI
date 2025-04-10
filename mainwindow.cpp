@@ -243,83 +243,79 @@ bool MainWindow::areAllLabelsDefined() {
             m_chiSquareLabel && m_densityLabel);
 }
 
-void MainWindow::updateStatistics()
-{
+MainWindow::StatisticalData MainWindow::collectStatisticalData() {
+    StatisticalData result;
+
+    // Сбор основных данных
+    getTableValues(result.values, result.count, result.sum);
+    result.weights = Calculate::findWeights(m_table);
+    result.hasData = result.count > 0;
+
+    // Сбор категориальных данных
+    getCategorialData(result.categories);
+
+    // Сбор данных для корреляций
+    getCorrelationalData(result.xData, result.yData, 0, 1);
+
+    return result;
+}
+
+void MainWindow::updateUI(const StatisticalData& data) {
+    const bool hasData = data.hasData;
+    const QString na = "—";
+    const double mean = hasData ? data.sum / data.count : 0.0;
+
+    // Основные метрики
+    m_elementCountLabel->setText(hasData ? QString::number(data.count) : na);
+    m_sumLabel->setText(hasData ? QString::number(data.sum, 'f', statsPrecision) : na);
+    m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : na);
+
+    // Средние значения
+    m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(data.values), 'f', statsPrecision) : na);
+    m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(data.values), 'f', statsPrecision) : na);
+    m_weightedMeanLabel->setText(areWeightsValid(data.weights, data.values) ? QString::number(Calculate::weightedMean(data.values, data.weights), 'f', statsPrecision) : na);
+    m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(data.values), 'f', statsPrecision) : na);
+    m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(data.values, trimmedMeanPercentage), 'f', statsPrecision) : na);
+
+    // Распределение
+    m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(data.values), 'f', statsPrecision) : na);
+    m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(data.values), 'f', statsPrecision) : na);
+    m_stdDevLabel->setText(hasData ? QString::number(Calculate::getStandardDeviation(data.values, mean), 'f', statsPrecision) : na);
+    m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(data.values, mean, Calculate::getStandardDeviation(data.values, mean)), 'f', statsPrecision) : na);
+    m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(data.values, mean, Calculate::getStandardDeviation(data.values, mean)), 'f', statsPrecision) : na);
+    m_madLabel->setText(hasData ? QString::number(Calculate::medianAbsoluteDeviation(data.values), 'f', statsPrecision) : na);
+    m_robustStdLabel->setText(hasData ? QString::number(Calculate::robustStandardDeviation(data.values), 'f', statsPrecision) : na);
+
+    // Статистические тесты
+    m_shapiroWilkLabel->setText(hasData ? QString::number(Calculate::shapiroWilkTest(data.values), 'f', statsPrecision) : na);
+    m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(data.values, mean), 'f', statsPrecision) : na);
+    m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(data.values), 'f', statsPrecision) : na);
+    m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(data.values), 'f', statsPrecision) : na);
+
+    // Категориальные данные
+    const bool hasCatData = !data.categories.isEmpty();
+    m_modalFreqLabel->setText(hasCatData ? QString::number(Calculate::modalFrequency(data.categories), 'f', statsPrecision) : na);
+    m_simpsonIndexLabel->setText(hasCatData ? QString::number(Calculate::simpsonDiversityIndex(data.categories), 'f', statsPrecision) : na);
+    m_uniqueRatioLabel->setText(hasCatData ? QString::number(Calculate::uniqueValueRatio(data.categories), 'f', statsPrecision) : na);
+    m_entropyLabel->setText(hasCatData ? QString::number(Calculate::entropy(data.categories), 'f', statsPrecision) : na);
+
+    // Корреляции
+    const bool hasPairs = data.xData.size() >= 2;
+    const bool hasValidSpearman = data.xData.size() >= 3;
+    m_covarianceLabel->setText(hasPairs ? QString::number(Calculate::covariance(data.xData, data.yData), 'f', statsPrecision) : na);
+    m_pearsonLabel->setText(hasPairs ? QString::number(Calculate::pearsonCorrelation(data.xData, data.yData), 'f', statsPrecision) : na);
+    m_spearmanLabel->setText(hasValidSpearman ? QString::number(Calculate::spearmanCorrelation(data.xData, data.yData), 'f', statsPrecision) : na);
+    m_kendallLabel->setText(hasPairs ? QString::number(Calculate::kendallCorrelation(data.xData, data.yData), 'f', statsPrecision) : na);
+}
+
+void MainWindow::updateStatistics() {
     if (!areAllLabelsDefined()) {
         qWarning() << "Some labels are not initialized!";
         return;
     }
 
-    // Сбор данных только из первого столбца (значения)
-    QVector<double> values;
-    int count = 0;
-    double sum = 0.0;
-    getTableValues(values, count, sum);
-
-    // Получение весов с проверкой размера
-    const QVector<double> weights = Calculate::findWeights(m_table);
-
-    // Основные расчёты
-    const bool hasData = count > 0;
-    const double mean = hasData ? sum / count : 0.0;
-    const double geomMean = Calculate::geometricMean(values);
-    const double harmonicMean = Calculate::harmonicMean(values);
-    const double wMean = areWeightsValid(weights,values) ? Calculate::weightedMean(values, weights) : std::numeric_limits<double>::quiet_NaN();
-    const double rms = Calculate::rootMeanSquare(values);
-    const double mad = Calculate::medianAbsoluteDeviation(values);
-    const double median = Calculate::getMedian(values);
-    const double mode = Calculate::getMode(values);
-    const double stdDev = Calculate::getStandardDeviation(values, mean);
-    const double tMean = Calculate::trimmedMean(values, trimmedMeanPercentage);
-    const double skew = Calculate::skewness(values, mean, stdDev);
-    const double kurt = Calculate::kurtosis(values, mean, stdDev);
-    const double robustStd = Calculate::robustStandardDeviation(values);
-    const double shapiro = hasData ? Calculate::shapiroWilkTest(values) : NAN;
-    const double density = hasData ? Calculate::calculateDensity(values, mean) : NAN;
-    const double chi2 = hasData ? Calculate::chiSquareTest(values) : NAN;
-    const double kolmogorov = hasData ? Calculate::kolmogorovSmirnovTest(values) : NAN;
-
-    // Расчёты для категориальных данных (столбец 2)
-    QVector<QString> categories;
-    getCategorialData(categories);
-    const double entropyValue = Calculate::entropy(categories);
-
-    // Расчёты для корреляций (столбцы 0 и 1)
-    QVector<double> xData, yData;
-    getCorrelationalData(xData,yData,0,1);
-    const double pearson = hasPairs(xData) ? Calculate::pearsonCorrelation(xData, yData) : NAN;
-    const double spearman = hasValidSpearman(xData) ? Calculate::spearmanCorrelation(xData, yData) : NAN;
-    const double kendall = hasValidKendall(xData) ? Calculate::kendallCorrelation(xData, yData) : NAN;
-    const double cov = hasPairs(xData) ? Calculate::covariance(xData, yData) : NAN;
-
-    // Обновление интерфейса
-    m_elementCountLabel->setText(hasData ? QString::number(count) : na);
-    m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : na);
-    m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : na);
-    m_geometricMeanLabel->setText(hasData ? QString::number(geomMean, 'f', statsPrecision) : na);
-    m_harmonicMeanLabel->setText(hasData ? QString::number(harmonicMean, 'f', statsPrecision) : na);
-    m_weightedMeanLabel->setText(areWeightsValid(weights,values) ? QString::number(wMean, 'f', statsPrecision) : na);
-    m_rmsLabel->setText(hasData ? QString::number(rms, 'f', statsPrecision) : na);
-    m_trimmedMeanLabel->setText(hasData ? QString::number(tMean, 'f', statsPrecision) : na);
-    m_robustStdLabel->setText(hasData ? QString::number(robustStd, 'f', statsPrecision) : na);
-    m_madLabel->setText(hasData ? QString::number(mad, 'f', statsPrecision) : na);
-    m_medianLabel->setText(hasData ? QString::number(median, 'f', statsPrecision) : na);
-    m_modeLabel->setText(hasData ? QString::number(mode, 'f', statsPrecision) : na);
-    m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
-    m_skewnessLabel->setText(hasData ? QString::number(skew, 'f', statsPrecision) : na);
-    m_kurtosisLabel->setText(hasData ? QString::number(kurt, 'f', statsPrecision) : na);
-    m_modalFreqLabel->setText(hasCatData(categories) ? QString::number(Calculate::modalFrequency(categories), 'f', statsPrecision) : na);
-    m_simpsonIndexLabel->setText(hasCatData(categories) ? QString::number(Calculate::simpsonDiversityIndex(categories), 'f', statsPrecision) : na);
-    m_uniqueRatioLabel->setText(hasCatData(categories) ? QString::number(Calculate::uniqueValueRatio(categories), 'f', statsPrecision) : na);
-    m_entropyLabel->setText(hasCatData(categories) ? QString::number(entropyValue, 'f', statsPrecision) : na);
-    m_covarianceLabel->setText(hasPairs(xData) ? QString::number(cov, 'f', statsPrecision) : na);
-    m_pearsonLabel->setText(hasPairs(xData) ? QString::number(pearson, 'f', statsPrecision) : na);
-    m_spearmanLabel->setText(hasValidSpearman(xData) ? QString::number(spearman, 'f', statsPrecision) : na);
-    m_kendallLabel->setText(hasValidKendall(xData) ? QString::number(kendall, 'f', statsPrecision) : na);
-    m_shapiroWilkLabel->setText(hasData ? QString::number(shapiro, 'f', statsPrecision) : na);
-    m_densityLabel->setText(hasData ? QString::number(density, 'f', statsPrecision) : na);
-    m_chiSquareLabel->setText(hasData ? QString::number(chi2, 'f', statsPrecision) : na);
-    m_kolmogorovLabel->setText(hasData ? QString::number(kolmogorov, 'f', statsPrecision) : na);
+    const auto statisticalData = collectStatisticalData();
+    updateUI(statisticalData);
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {

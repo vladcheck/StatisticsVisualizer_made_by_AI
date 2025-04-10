@@ -30,18 +30,18 @@ namespace Calculate
 
     double getMean(double sum, double count) { return sum / count; }
 
-    double getMedian(QVector<double> &values)
-    {
-        if (values.isEmpty())
-            return 0.0;
+    double getMedian(const QVector<double>& values) {
+        if (values.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
 
-        std::sort(values.begin(), values.end());
-        const int size = values.size();
+        QVector<double> sorted = values; // Создаем копию для сортировки
+        std::sort(sorted.begin(), sorted.end());
+
+        const int size = sorted.size();
         const int mid = size / 2;
 
         return (size % 2 == 0)
-                   ? (values[mid - 1] + values[mid]) / 2.0
-                   : values[mid];
+                   ? (sorted[mid - 1] + sorted[mid]) / 2.0
+                   : sorted[mid];
     }
 
     double getMode(const QVector<double> &values)
