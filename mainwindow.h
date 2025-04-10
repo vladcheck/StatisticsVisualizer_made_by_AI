@@ -43,6 +43,10 @@ private:
     QLabel* m_trimmedMeanLabel = nullptr;
     QLabel* m_madLabel = nullptr;
     QLabel* m_rmsLabel = nullptr;
+    QLabel* m_robustStdLabel = nullptr;
+    QLabel* m_modalFreqLabel = nullptr;    // Модальная частота
+    QLabel* m_simpsonIndexLabel = nullptr; // Индекс Симпсона
+    QLabel* m_uniqueRatioLabel = nullptr;  // Доля уникальных
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);

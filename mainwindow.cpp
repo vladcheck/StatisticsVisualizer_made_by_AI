@@ -196,10 +196,11 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     QVBoxLayout *distributionLayout = qobject_cast<QVBoxLayout *>(distributionSection->layout());
     m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
     m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
-    m_stdDevLabel = Helper::createAFndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
+    m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
     m_skewnessLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Асимметрия", "—", "skewnessLabel");
     m_kurtosisLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Эксцесс", "—", "kurtosisLabel");
     m_madLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медианное абсолютное отклонение", "—", "madLabel");
+    m_robustStdLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Робастный стандартный разброс", "—", "robustStdLabel");
     statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
@@ -209,6 +210,14 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_maxLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Максимум", "—", "maxLabel");
     m_rangeLabel = Helper::createAndRegisterStatRow(extremesSection, extremesLayout, "Размах", "—", "rangeLabel");
     statsLayout->addWidget(extremesSection);
+
+    // Секция категориальных данных
+    QWidget* categoricalSection = Helper::createStatSection(statsPanel, "Категориальные данные");
+    QVBoxLayout* categoricalLayout = qobject_cast<QVBoxLayout*>(categoricalSection->layout());
+    m_modalFreqLabel = Helper::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Модальная частота", "—", "modalFreqLabel");
+    m_simpsonIndexLabel = Helper::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Индекс Симпсона", "—", "simpsonIndexLabel");
+    m_uniqueRatioLabel = Helper::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Доля уникальных", "—", "uniqueRatioLabel");
+    statsLayout->addWidget(categoricalSection);
 
     statsLayout->addStretch();
     return statsPanel;
@@ -285,6 +294,7 @@ void MainWindow::updateStatistics()
     const double tMean = Calculate::trimmedMean(values, trimmedMeanPercentage);
     const double skew = Calculate::skewness(values, mean, stdDev);
     const double kurt = Calculate::kurtosis(values, mean, stdDev);
+    const double robustStd = Calculate::robustStandardDeviation(values);
 
     const bool validCalculation = !std::isnan(wMean) &&
                                   (values.size() == weights.size()) &&
@@ -301,6 +311,17 @@ void MainWindow::updateStatistics()
         range = maxValue - minValue;
     }
 
+    QVector<QString> categories;
+    for (int row = 0; row < m_table->rowCount(); ++row) {
+        QTableWidgetItem* item = m_table->item(row, 2);
+        if (item) categories.append(item->text());
+    }
+
+    const bool hasCatData = !categories.isEmpty();
+    const double modalFreq = Calculate::modalFrequency(categories);
+    const double simpsonIdx = Calculate::simpsonDiversityIndex(categories);
+    const double uniqueRatio = Calculate::uniqueValueRatio(categories);
+
     // Обновление интерфейса
     m_elementCountLabel->setText(QString::number(count));
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
@@ -310,6 +331,7 @@ void MainWindow::updateStatistics()
     m_weightedMeanLabel->setText(validCalculation ? QString::number(wMean, 'f', statsPrecision) : "—");
     m_rmsLabel->setText((!values.isEmpty() && !std::isnan(rms)) ? QString::number(rms, 'f', statsPrecision) : "—");
     m_trimmedMeanLabel->setText((!values.isEmpty() && !std::isnan(tMean)) ? QString::number(tMean, 'f', statsPrecision) : "—");
+    m_robustStdLabel->setText((!values.isEmpty() && !std::isnan(robustStd)) ? QString::number(robustStd, 'f', statsPrecision) : "—");
     m_madLabel->setText((!values.isEmpty() && !std::isnan(mad)) ? QString::number(mad, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
@@ -319,6 +341,9 @@ void MainWindow::updateStatistics()
     m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
     m_maxLabel->setText(hasData ? QString::number(maxValue, 'f', statsPrecision) : "—");
     m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");
+    m_modalFreqLabel->setText(hasCatData ? QString::number(modalFreq, 'f', statsPrecision) : "—");
+    m_simpsonIndexLabel->setText(hasCatData ? QString::number(simpsonIdx, 'f', statsPrecision) : "—");
+    m_uniqueRatioLabel->setText(hasCatData ? QString::number(uniqueRatio, 'f', statsPrecision) : "—");
 
     qDebug() << "Weights:" << weights;
     qDebug() << "Weighted mean:" << wMean;

@@ -3,6 +3,8 @@
 
 #include <QVector>
 #include <QTableWidgetItem>
+#include <QHash>
+#include <QSet>
 
 #include <limits>
 #include <cmath>
@@ -257,6 +259,49 @@ namespace Calculate
 
         // Медиана отклонений
         return getMedian(deviations);
+    }
+
+    double robustStandardDeviation(const QVector<double>& values) {
+        const double mad = medianAbsoluteDeviation(values);
+        return (mad != 0.0 && !std::isnan(mad)) ? 1.4826 * mad
+                                                : std::numeric_limits<double>::quiet_NaN();
+    }
+
+    double modalFrequency(const QVector<QString>& categories) {
+        if (categories.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+
+        QHash<QString, int> freqMap;
+        for (const auto& cat : categories) freqMap[cat]++;
+
+        int maxFreq = 0;
+        for (auto it = freqMap.begin(); it != freqMap.end(); ++it) {
+            if (it.value() > maxFreq) maxFreq = it.value();
+        }
+
+        return static_cast<double>(maxFreq) / categories.size();
+    }
+
+    double simpsonDiversityIndex(const QVector<QString>& categories) {
+        if (categories.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+
+        QHash<QString, int> freqMap;
+        for (const auto& cat : categories) freqMap[cat]++;
+
+        double sum = 0.0;
+        const double total = categories.size();
+        for (auto it = freqMap.begin(); it != freqMap.end(); ++it) {
+            const double p = it.value() / total;
+            sum += p * p;
+        }
+
+        return 1.0 - sum; // Индекс Симпсона (1 - сумма квадратов долей)
+    }
+
+    double uniqueValueRatio(const QVector<QString>& categories) {
+        if (categories.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+
+        QSet<QString> unique(categories.begin(), categories.end());
+        return static_cast<double>(unique.size()) / categories.size();
     }
 };
 
