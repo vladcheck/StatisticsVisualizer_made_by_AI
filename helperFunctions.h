@@ -9,6 +9,9 @@
 #include <QPixmap>
 #include <QTableWidget>
 
+const unsigned int buttonSize = 36;
+const unsigned int buttonIconSize = static_cast<int>(buttonSize * 0.7);
+
 struct TableActions
 {
     QPushButton *addRowBtn;
@@ -95,13 +98,13 @@ namespace Helper
         QPushButton *btn = new QPushButton();
 
         // Загрузка изображения через QPixmap
-        QPixmap pixmap(":/icons/" + iconName + ".png");
+        QPixmap pixmap(":/" + iconName + ".png");
         btn->setIcon(QIcon(pixmap));
-        btn->setIconSize(QSize(28, 28)); // Размер иконки
+        btn->setIconSize(QSize(buttonIconSize, buttonIconSize)); // Размер иконки
 
         // Настройка внешнего вида
         btn->setToolTip(tooltip);
-        btn->setFixedSize(32, 32); // Размер кнопки
+        btn->setFixedSize(buttonSize, buttonSize); // Размер кнопки
 
         return btn;
     }

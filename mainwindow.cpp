@@ -111,7 +111,7 @@ QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table)
                          .addColBtn = Helper::createToolButton("Добавить столбец", "add-column"),
                          .delRowBtn = Helper::createToolButton("Удалить строку", "delete-row"),
                          .delColBtn = Helper::createToolButton("Удалить столбец", "delete-column"),
-                         .clearButton = Helper::createToolButton("Очистить", "clear-button"),
+                         .clearButton = Helper::createToolButton("Очистить", "clear"),
                          .autoSizeBtn = Helper::createToolButton("Авторазмер", "auto-size"),
                          .table = table,
                          .rowSpin = rowSpinBox,
@@ -449,18 +449,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     mainLayout->addWidget(dataSection, 1);
 
     // Проверка инициализации перед подключением сигналов
-    if (m_table)
-    {
+    if (m_table) {
         connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
         connect(m_table, &QTableWidget::cellChanged, this, &MainWindow::updateStatistics);
         updateStatistics();
-    }
-    else
-    {
+    } else {
         qFatal("Table initialization failed!");
     }
 
     this->setWindowState(Qt::WindowMaximized);
+    this->setWindowIcon(QIcon(":/logo.png"));
 }
 
 MainWindow::~MainWindow() {}
