@@ -333,16 +333,39 @@ bool MainWindow::hasCatData(const QVector<QString>& categories) const {
     return !categories.isEmpty();
 }
 
+bool MainWindow::areAllLabelsDefined() {
+    return (m_table &&
+            m_elementCountLabel &&
+            m_sumLabel &&
+            m_averageLabel &&
+            m_geometricMeanLabel &&
+            m_medianLabel &&
+            m_modeLabel &&
+            m_stdDevLabel &&
+            m_minLabel &&
+            m_maxLabel &&
+            m_rangeLabel &&
+            m_skewnessLabel &&
+            m_kurtosisLabel &&
+            m_harmonicMeanLabel &&
+            m_weightedMeanLabel &&
+            m_rmsLabel &&
+            m_trimmedMeanLabel &&
+            m_robustStdLabel &&
+            m_madLabel &&
+            m_modalFreqLabel &&
+            m_simpsonIndexLabel &&
+            m_uniqueRatioLabel &&
+            m_covarianceLabel &&
+            m_spearmanLabel &&
+            m_kendallLabel &&
+            m_pearsonLabel);
+}
+
 void MainWindow::updateStatistics()
 {
-    // Проверка всех указателей на метки
-    if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
-                !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
-                !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
-                !m_kurtosisLabel || !m_harmonicMeanLabel || !m_weightedMeanLabel ||
-                !m_rmsLabel || !m_trimmedMeanLabel || !m_robustStdLabel || !m_madLabel ||
-                !m_modalFreqLabel || !m_simpsonIndexLabel || !m_uniqueRatioLabel ||
-        !m_covarianceLabel || !m_spearmanLabel || !m_kendallLabel){
+    if (!areAllLabelsDefined()) {
+        qWarning() << "Some labels are not initialized!";
         return;
     }
 

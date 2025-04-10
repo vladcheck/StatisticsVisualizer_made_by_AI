@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #include <QMap>
 #include <limits>
-#include "iostream"
+#include <iostream>
 
 class MainWindow : public QMainWindow
 {
@@ -61,5 +61,6 @@ private:
     bool hasValidSpearman(const QVector<double>& xData) const;
     bool hasValidKendall(const QVector<double>& xData) const;
     bool hasCatData(const QVector<QString>& categories) const;
+    bool areAllLabelsDefined();
 };
 #endif // MAINWINDOW_H
