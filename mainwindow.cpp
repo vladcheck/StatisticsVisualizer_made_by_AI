@@ -4,14 +4,14 @@
 #include "calculate.h"
 #include "tableactions.h"
 
-void MainWindow::createStatsHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
+void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 {
     QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
     mainHeader->setStyleSheet("font-size: 32px; font-weight: 600; color: #ddd;");
     statsLayout->addWidget(mainHeader);
 }
 
-QWidget* MainWindow::createBasicStatsSection(QWidget *parent, QLabel **elementCountLabel,
+QWidget* MainWindow::createBasicDataSection(QWidget *parent, QLabel **elementCountLabel,
                                              QLabel **sumLabel, QLabel **averageLabel)
 {
     QWidget *section = Draw::createStatSection(parent, "Основные метрики");
@@ -96,7 +96,7 @@ QWidget* MainWindow::createCorrelationSection(QWidget *parent)
     return section;
 }
 
-QWidget* MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel,
+QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
                                      QLabel **sumLabel, QLabel **averageLabel)
 {
     QWidget *statsPanel = new QWidget(parent);
@@ -107,8 +107,8 @@ QWidget* MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     statsLayout->setContentsMargins(12, 8, 12, 8);
     statsLayout->setSpacing(8);
 
-    createStatsHeader(statsPanel, statsLayout);
-    statsLayout->addWidget(createBasicStatsSection(statsPanel, elementCountLabel, sumLabel, averageLabel));
+    createDataHeader(statsPanel, statsLayout);
+    statsLayout->addWidget(createBasicDataSection(statsPanel, elementCountLabel, sumLabel, averageLabel));
     statsLayout->addWidget(createMeansSection(statsPanel));
     statsLayout->addWidget(createDistributionSection(statsPanel));
     statsLayout->addWidget(createExtremesSection(statsPanel));
@@ -136,7 +136,7 @@ QWidget *MainWindow::setupDataSection(QWidget *parent) {
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
     // Создаем панель статистики
-    QWidget *statsPanel = setupStatsPanel(dataSection, &m_elementCountLabel,
+    QWidget *statsPanel = setupDataPanel(dataSection, &m_elementCountLabel,
                                           &m_sumLabel, &m_averageLabel);
 
     // Создаем scroll area и настраиваем

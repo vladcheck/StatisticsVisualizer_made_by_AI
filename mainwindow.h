@@ -61,8 +61,8 @@ private:
     QLabel* m_kolmogorovLabel = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);
-    QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
-    QWidget* createBasicStatsSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
+    QWidget *setupDataPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
+    QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
     QWidget* createMeansSection(QWidget *parent);
     QWidget* createDistributionSection(QWidget *parent);
     QWidget* createExtremesSection(QWidget *parent);
@@ -75,7 +75,7 @@ private:
     bool hasValidSpearman(const QVector<double>& xData) const;
     bool hasValidKendall(const QVector<double>& xData) const;
     bool hasCatData(const QVector<QString>& categories) const;
-    void createStatsHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
+    void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     bool areAllLabelsDefined();
 };
 #endif // MAINWINDOW_H
