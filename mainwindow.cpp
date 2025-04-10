@@ -1,19 +1,7 @@
 #include "mainwindow.h"
 #include "draw.h"
 #include "calculate.h"
-
-struct TableActions
-{
-    QPushButton *addRowBtn;
-    QPushButton *addColBtn;
-    QPushButton *delRowBtn;
-    QPushButton *delColBtn;
-    QPushButton *clearButton;
-    QPushButton *autoSizeBtn;
-    QTableWidget *table;
-    QSpinBox *rowSpin;
-    QSpinBox *colSpin;
-};
+#include "tableactions.h"
 
 const QString fontName = "Arial";
 const QString na = "—";
