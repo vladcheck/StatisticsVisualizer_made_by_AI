@@ -2,6 +2,19 @@
 #include "draw.h"
 #include "calculate.h"
 
+struct TableActions
+{
+    QPushButton *addRowBtn;
+    QPushButton *addColBtn;
+    QPushButton *delRowBtn;
+    QPushButton *delColBtn;
+    QPushButton *clearButton;
+    QPushButton *autoSizeBtn;
+    QTableWidget *table;
+    QSpinBox *rowSpin;
+    QSpinBox *colSpin;
+};
+
 const QString fontName = "Arial";
 const QString na = "—";
 const unsigned int initialRowCount = 1;
