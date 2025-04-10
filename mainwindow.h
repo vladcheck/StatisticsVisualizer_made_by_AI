@@ -40,6 +40,8 @@ private:
     QLabel* m_kurtosisLabel = nullptr;
     QLabel* m_harmonicMeanLabel = nullptr;
     QLabel* m_weightedMeanLabel = nullptr;
+    QLabel* m_trimmedMeanLabel = nullptr;
+    QLabel* m_madLabel = nullptr;
     QLabel* m_rmsLabel = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);

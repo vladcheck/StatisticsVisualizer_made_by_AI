@@ -218,6 +218,46 @@ namespace Calculate
         const double term = sumFourthDeviations / std::pow(stdDev, 4);
         return biasCorrection * term - 3 * std::pow(n - 1, 2) / static_cast<double>((n - 2) * (n - 3));
     }
+
+    double trimmedMean(const QVector<double>& values, double trimFraction = 0.1) {
+        if (values.isEmpty() || trimFraction < 0 || trimFraction >= 0.5)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        QVector<double> sorted = values;
+        std::sort(sorted.begin(), sorted.end());
+
+        const int removeCount = static_cast<int>(sorted.size() * trimFraction);
+        const int start = removeCount;
+        const int end = sorted.size() - removeCount;
+
+        if (start >= end) return std::numeric_limits<double>::quiet_NaN();
+
+        double sum = 0.0;
+        for (int i = start; i < end; ++i) {
+            sum += sorted[i];
+        }
+
+        return sum / (end - start);
+    }
+
+    double medianAbsoluteDeviation(const QVector<double>& values) {
+        if (values.isEmpty())
+            return std::numeric_limits<double>::quiet_NaN();
+
+        // Вычисляем медиану исходных данных
+        QVector<double> sorted = values;
+        std::sort(sorted.begin(), sorted.end());
+        const double median = getMedian(sorted);
+
+        // Вычисляем абсолютные отклонения
+        QVector<double> deviations;
+        for (double value : values) {
+            deviations.append(std::abs(value - median));
+        }
+
+        // Медиана отклонений
+        return getMedian(deviations);
+    }
 };
 
 #endif // CALCULATIONS_H

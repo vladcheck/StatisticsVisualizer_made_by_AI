@@ -6,6 +6,7 @@ const QString fontName = "Arial";
 const unsigned int initialRowCount = 1;
 const unsigned int initialColCount = 20;
 const int statsPrecision = 3;
+const float trimmedMeanPercentage = 0.1;
 
 QWidget *setupHeader(QWidget *parent, const int fontSize)
 {
@@ -187,6 +188,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_harmonicMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Гарм. среднее", "—", "harmonicMeanLabel");
     m_weightedMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Взвеш. среднее", "—", "weightedMeanLabel");
     m_rmsLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Квадр. среднее", "—", "rmsLabel");
+    m_trimmedMeanLabel = Helper::createAndRegisterStatRow(meansSection, meansLayout, "Усеч. среднее", "—", "trimmedMeanLabel");
     statsLayout->addWidget(meansSection);
 
     // Секция распределения
@@ -194,9 +196,10 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     QVBoxLayout *distributionLayout = qobject_cast<QVBoxLayout *>(distributionSection->layout());
     m_medianLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
     m_modeLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
-    m_stdDevLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
+    m_stdDevLabel = Helper::createAFndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
     m_skewnessLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Асимметрия", "—", "skewnessLabel");
     m_kurtosisLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Эксцесс", "—", "kurtosisLabel");
+    m_madLabel = Helper::createAndRegisterStatRow(distributionSection, distributionLayout, "Медианное абсолютное отклонение", "—", "madLabel");
     statsLayout->addWidget(distributionSection);
 
     // Секция экстремумов
@@ -275,9 +278,11 @@ void MainWindow::updateStatistics()
     const double harmonicMean = Calculate::harmonicMean(values);
     const double wMean = Calculate::weightedMean(values, weights);
     const double rms = Calculate::rootMeanSquare(values);
+    const double mad = Calculate::medianAbsoluteDeviation(values);
     const double median = hasData ? Calculate::getMedian(values) : 0.0;
     const double mode = hasData ? Calculate::getMode(values) : 0.0;
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
+    const double tMean = Calculate::trimmedMean(values, trimmedMeanPercentage);
     const double skew = Calculate::skewness(values, mean, stdDev);
     const double kurt = Calculate::kurtosis(values, mean, stdDev);
 
@@ -303,7 +308,9 @@ void MainWindow::updateStatistics()
     m_geometricMeanLabel->setText((hasData && !std::isnan(geomMean)) ? QString::number(geomMean, 'f', statsPrecision) : "—");
     m_harmonicMeanLabel->setText((hasData && !std::isnan(harmonicMean)) ? QString::number(harmonicMean, 'f', statsPrecision) : "—");
     m_weightedMeanLabel->setText(validCalculation ? QString::number(wMean, 'f', statsPrecision) : "—");
-    m_rmsLabel->setText((!values.isEmpty() && !std::isnan(rms)) ? QString::number(rms, 'f', 2) : "—");
+    m_rmsLabel->setText((!values.isEmpty() && !std::isnan(rms)) ? QString::number(rms, 'f', statsPrecision) : "—");
+    m_trimmedMeanLabel->setText((!values.isEmpty() && !std::isnan(tMean)) ? QString::number(tMean, 'f', statsPrecision) : "—");
+    m_madLabel->setText((!values.isEmpty() && !std::isnan(mad)) ? QString::number(mad, 'f', statsPrecision) : "—");
     m_medianLabel->setText(hasData ? QString::number(median) : "-");
     m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
     m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
