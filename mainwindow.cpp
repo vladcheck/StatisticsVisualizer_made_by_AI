@@ -1,164 +1,8 @@
 #include "mainwindow.h"
+#include "globals.h"
 #include "draw.h"
 #include "calculate.h"
 #include "tableactions.h"
-
-const QString fontName = "Arial";
-const QString na = "—";
-const unsigned int initialRowCount = 1;
-const unsigned int initialColCount = 20;
-const int statsPrecision = 3;
-const float trimmedMeanPercentage = 0.1;
-
-QWidget *setupHeader(QWidget *parent, const int fontSize)
-{
-    const QFont headerFont(fontName, fontSize);
-
-    QWidget *header = new QWidget(parent);
-    header->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
-    QLabel *h1 = new QLabel("Statistics Visualizer", header);
-    h1->setFont(headerFont);
-
-    QHBoxLayout *headerAlignment = new QHBoxLayout(header);
-    headerAlignment->setContentsMargins(0, 0, 0, 0);
-    headerAlignment->addWidget(h1, 0, Qt::AlignCenter);
-    return header;
-}
-
-void setupTableActions(const TableActions &actions)
-{
-    // Добавление строки
-    Draw::connect(actions.addRowBtn, [=]()
-                    {
-                        actions.table->setRowCount(actions.table->rowCount() + 1);
-                        actions.rowSpin->setValue(actions.table->rowCount()); });
-
-    // Добавление столбца
-    Draw::connect(actions.addColBtn, [=]()
-                    {
-                        actions.table->setColumnCount(actions.table->columnCount() + 1);
-                        actions.colSpin->setValue(actions.table->columnCount()); });
-
-    // Удаление строки
-    Draw::connect(actions.delRowBtn, [=]()
-                    {
-                        if(actions.table->rowCount() > 1) {
-                            actions.table->setRowCount(actions.table->rowCount() - 1);
-                            actions.rowSpin->setValue(actions.table->rowCount());
-                        } });
-
-    // Удаление столбца
-    Draw::connect(actions.delColBtn, [=]()
-                    {
-                        if(actions.table->columnCount() > 1) {
-                            actions.table->setColumnCount(actions.table->columnCount() - 1);
-                            actions.colSpin->setValue(actions.table->columnCount());
-                        } });
-
-    // Очистка таблицы
-    Draw::connect(actions.clearButton, [=]()
-                    {
-                        auto reply = QMessageBox::question(
-                            actions.table,
-                            "Очистка таблицы",
-                            "Удалить все данные?",
-                            QMessageBox::Yes | QMessageBox::No
-                            );
-
-                        if (reply == QMessageBox::Yes) {
-                            actions.table->clearContents();
-                            actions.rowSpin->setValue(actions.rowSpin->minimum());
-                            actions.colSpin->setValue(actions.colSpin->minimum());
-                        } });
-
-    // Авторазмер
-    Draw::connect(actions.autoSizeBtn, [=]()
-                    {
-                        actions.table->resizeColumnsToContents();
-                        actions.table->resizeRowsToContents(); });
-
-    // Обработка изменения спинбокса строк
-    Draw::connect(actions.rowSpin, [=](int value)
-                    {
-                        if (value >= actions.rowSpin->minimum()) {
-                            actions.table->setRowCount(value);
-                        } });
-
-    // Обработка изменения спинбокса столбцов
-    Draw::connect(actions.colSpin, [=](int value)
-                    {
-                        if (value >= actions.colSpin->minimum()) {
-                            actions.table->setColumnCount(value);
-                        } });
-}
-
-QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table)
-{
-    QWidget *toolbar = new QWidget(parent);
-    toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
-    toolbarLayout->setSpacing(5);
-
-    // Спинбоксы
-    auto *rowsContainer = Draw::createSpinBoxWithLabel(toolbar, "Строки", 10, initialRowCount);
-    auto *columnsContainer = Draw::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
-    QSpinBox *rowSpinBox = qobject_cast<QSpinBox *>(rowsContainer->layout()->itemAt(1)->widget());
-    QSpinBox *colSpinBox = qobject_cast<QSpinBox *>(columnsContainer->layout()->itemAt(1)->widget());
-
-    // Создаем и настраиваем структуру
-    TableActions actions{
-                         .addRowBtn = Draw::createToolButton("Добавить строку", "add-row"),
-                         .addColBtn = Draw::createToolButton("Добавить столбец", "add-column"),
-                         .delRowBtn = Draw::createToolButton("Удалить строку", "delete-row"),
-                         .delColBtn = Draw::createToolButton("Удалить столбец", "delete-column"),
-                         .clearButton = Draw::createToolButton("Очистить", "clear"),
-                         .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
-                         .table = table,
-                         .rowSpin = rowSpinBox,
-                         .colSpin = colSpinBox};
-
-    // Подключение функционала
-    setupTableActions(actions);
-
-    // Группируем элементы
-    for (auto *item : {rowsContainer, columnsContainer})
-    {
-        toolbarLayout->addLayout(item);
-    }
-    for (auto *item : {actions.addRowBtn, actions.addColBtn, actions.delRowBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton})
-    {
-        toolbarLayout->addWidget(item);
-    }
-    toolbarLayout->addStretch();
-
-    return toolbar;
-}
-
-QTableWidget *setupTable(QWidget *parent)
-{
-    // Правая часть - таблица
-    QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
-    Draw::setSizePolicyExpanding(table);
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); // Колонки на всю ширину
-    table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);   // Строки на всю высоту
-    table->resizeColumnsToContents();
-    return table;
-}
-
-QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable)
-{
-    QWidget *tableSection = new QWidget(parent);
-
-    *outTable = setupTable(tableSection); // Создаем таблицу и возвращаем через outTable
-    auto *tableToolbar = setupTableToolbar(tableSection, *outTable);
-
-    QVBoxLayout *tableSectionLayout = new QVBoxLayout(tableSection);
-    tableSectionLayout->addWidget(tableToolbar);
-    tableSectionLayout->addWidget(*outTable);
-
-    return tableSection;
-}
 
 QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel,
                                      QLabel **sumLabel, QLabel **averageLabel)
@@ -247,7 +91,7 @@ QWidget *MainWindow::setupDataSection(QWidget *parent)
 
     // Создаем tablePanel и получаем таблицу
     QTableWidget *table = nullptr;
-    auto *tablePanel = setupTablePanel(dataSection, &table);
+    auto *tablePanel = Draw::setupTablePanel(dataSection, &table);
     m_table = table; // Сохраняем таблицу
 
     dataSectionLayout->addWidget(statsPanel, 1);
@@ -441,7 +285,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
-    auto *header = setupHeader(mainWidget, 20);
+    auto *header = Draw::setupHeader(mainWidget, 20);
     auto *dataSection = setupDataSection(mainWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
