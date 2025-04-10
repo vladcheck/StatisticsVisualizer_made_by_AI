@@ -55,5 +55,11 @@ private:
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
     void getTableValues(QVector<double>& values, int& count, double& sum);
+    void getCategorialData(QVector<QString> &categories);
+    void getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn = 0, int yColumn = 1);
+    bool hasPairs(const QVector<double>& xData) const;
+    bool hasValidSpearman(const QVector<double>& xData) const;
+    bool hasValidKendall(const QVector<double>& xData) const;
+    bool hasCatData(const QVector<QString>& categories) const;
 };
 #endif // MAINWINDOW_H
