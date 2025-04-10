@@ -171,7 +171,7 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     statsLayout->setSpacing(8);
 
     QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
-    mainHeader->setStyleSheet("font-size: 16px; font-weight: 600; color: #2c3e50;");
+    mainHeader->setStyleSheet("font-size: 32px; font-weight: 600; color: #ddd;");
     statsLayout->addWidget(mainHeader);
 
     // Секция базовой статистики

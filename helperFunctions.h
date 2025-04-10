@@ -143,7 +143,7 @@ namespace Helper
         QVBoxLayout *layout = new QVBoxLayout(section); // Создаем layout сразу
 
         QLabel *header = new QLabel(title, section);
-        header->setStyleSheet("font-weight: 600; color: #444; margin-bottom: 4px;");
+        header->setStyleSheet("font-weight: 600; font-size: 20px; color: #ddd;");
 
         layout->addWidget(header);
         layout->addWidget(createSeparator(true));
