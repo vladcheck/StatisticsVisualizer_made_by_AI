@@ -54,6 +54,6 @@ private:
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
-    QVector<double> getValues(int count, double sum);
+    void getTableValues(QVector<double>& values, int& count, double& sum);
 };
 #endif // MAINWINDOW_H

@@ -254,8 +254,11 @@ QWidget *MainWindow::setupDataSection(QWidget *parent)
     return dataSection;
 }
 
-QVector<double> MainWindow::getValues(int count, double sum) {
-    QVector<double> values;
+void MainWindow::getTableValues(QVector<double>& values, int& count, double& sum) {
+    values.clear();
+    count = 0;
+    sum = 0.0;
+
     for (int row = 0; row < m_table->rowCount(); ++row) {
         QTableWidgetItem* item = m_table->item(row, 0);
         if (item && !item->text().isEmpty()) {
@@ -268,7 +271,6 @@ QVector<double> MainWindow::getValues(int count, double sum) {
             }
         }
     }
-    return values;
 }
 
 void MainWindow::updateStatistics()
@@ -285,9 +287,10 @@ void MainWindow::updateStatistics()
     }
 
     // Сбор данных только из первого столбца (значения)
+    QVector<double> values;
     int count = 0;
     double sum = 0.0;
-    QVector<double> values = getValues(count, sum);
+    getTableValues(values, count, sum);
 
     // Получение весов с проверкой размера
     const QVector<double> weights = Calculate::findWeights(m_table);
@@ -298,8 +301,7 @@ void MainWindow::updateStatistics()
     const double mean = hasData ? sum / count : 0.0;
     const double geomMean = Calculate::geometricMean(values);
     const double harmonicMean = Calculate::harmonicMean(values);
-    const double wMean = validWeights ? Calculate::weightedMean(values, weights)
-                                      : std::numeric_limits<double>::quiet_NaN();
+    const double wMean = validWeights ? Calculate::weightedMean(values, weights) : std::numeric_limits<double>::quiet_NaN();
     const double rms = Calculate::rootMeanSquare(values);
     const double mad = Calculate::medianAbsoluteDeviation(values);
     const double median = Calculate::getMedian(values);
