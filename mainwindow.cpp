@@ -74,6 +74,7 @@ QWidget* MainWindow::createCategoricalSection(QWidget *parent)
     m_modalFreqLabel = Draw::createAndRegisterStatRow(section, layout, "Модальная частота", "—", "modalFreqLabel");
     m_simpsonIndexLabel = Draw::createAndRegisterStatRow(section, layout, "Индекс Симпсона", "—", "simpsonIndexLabel");
     m_uniqueRatioLabel = Draw::createAndRegisterStatRow(section, layout, "Доля уникальных", "—", "uniqueRatioLabel");
+    m_entropyLabel = Draw::createAndRegisterStatRow(section, layout, "Энтропия", "—", "entropyLabel");
 
     return section;
 }
@@ -216,31 +217,12 @@ bool MainWindow::hasCatData(const QVector<QString>& categories) const {
 
 bool MainWindow::areAllLabelsDefined() {
     return (m_table &&
-            m_elementCountLabel &&
-            m_sumLabel &&
-            m_averageLabel &&
-            m_geometricMeanLabel &&
-            m_medianLabel &&
-            m_modeLabel &&
-            m_stdDevLabel &&
-            m_minLabel &&
-            m_maxLabel &&
-            m_rangeLabel &&
-            m_skewnessLabel &&
-            m_kurtosisLabel &&
-            m_harmonicMeanLabel &&
-            m_weightedMeanLabel &&
-            m_rmsLabel &&
-            m_trimmedMeanLabel &&
-            m_robustStdLabel &&
-            m_madLabel &&
-            m_modalFreqLabel &&
-            m_simpsonIndexLabel &&
-            m_uniqueRatioLabel &&
-            m_covarianceLabel &&
-            m_spearmanLabel &&
-            m_kendallLabel &&
-            m_pearsonLabel);
+            m_elementCountLabel && m_sumLabel && m_averageLabel && m_geometricMeanLabel &&
+            m_medianLabel && m_modeLabel && m_stdDevLabel && m_minLabel && m_maxLabel &&
+            m_rangeLabel && m_skewnessLabel && m_kurtosisLabel && m_harmonicMeanLabel && m_weightedMeanLabel &&
+            m_rmsLabel && m_trimmedMeanLabel && m_robustStdLabel && m_madLabel && m_modalFreqLabel &&
+            m_simpsonIndexLabel && m_uniqueRatioLabel && m_covarianceLabel && m_spearmanLabel && m_kendallLabel &&
+            m_pearsonLabel && m_entropyLabel);
 }
 
 void MainWindow::updateStatistics()
@@ -278,6 +260,7 @@ void MainWindow::updateStatistics()
     // Расчёты для категориальных данных (столбец 2)
     QVector<QString> categories;
     getCategorialData(categories);
+    const double entropyValue = Calculate::entropy(categories);
 
     // Расчёты для корреляций (столбцы 0 и 1)
     QVector<double> xData, yData;
@@ -304,6 +287,7 @@ void MainWindow::updateStatistics()
     m_modalFreqLabel->setText(hasCatData(categories) ? QString::number(Calculate::modalFrequency(categories), 'f', statsPrecision) : na);
     m_simpsonIndexLabel->setText(hasCatData(categories) ? QString::number(Calculate::simpsonDiversityIndex(categories), 'f', statsPrecision) : na);
     m_uniqueRatioLabel->setText(hasCatData(categories) ? QString::number(Calculate::uniqueValueRatio(categories), 'f', statsPrecision) : na);
+    m_entropyLabel->setText(hasCatData(categories) ? QString::number(entropyValue, 'f', statsPrecision) : na);
 
     // Обновление корреляций
     const double pearson = hasPairs(xData) ? Calculate::pearsonCorrelation(xData, yData) : NAN;

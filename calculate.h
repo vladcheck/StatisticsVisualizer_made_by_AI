@@ -30,6 +30,7 @@ namespace Calculate
     double pearsonCorrelation(const QVector<double>& x, const QVector<double>& y);
     double spearmanCorrelation(const QVector<double>& x, const QVector<double>& y); // Корреляция Спирмена
     double kendallCorrelation(const QVector<double>& x, const QVector<double>& y); // Корреляция Кендалла
+    double entropy(const QVector<QString>& categories);
 };
 
 #endif // CALCULATIONS_H

@@ -393,4 +393,22 @@ namespace Calculate
         const double total = concordant + discordant;
         return total > 0 ? (concordant - discordant) / total : 0;
     }
+
+    double entropy(const QVector<QString>& categories) {
+        if (categories.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+
+        QHash<QString, int> freqMap;
+        for (const auto& cat : categories) {
+            freqMap[cat]++;
+        }
+
+        double entropy = 0.0;
+        const double total = categories.size();
+        for (auto it = freqMap.begin(); it != freqMap.end(); ++it) {
+            const double p = it.value() / total;
+            if (p > 0) entropy += -p * std::log2(p);
+        }
+
+        return entropy;
+    }
 };
