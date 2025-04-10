@@ -3,6 +3,7 @@
 #include "calculate.h"
 
 const QString fontName = "Arial";
+const QString na = "—";
 const unsigned int initialRowCount = 1;
 const unsigned int initialColCount = 20;
 const int statsPrecision = 3;
@@ -379,7 +380,6 @@ void MainWindow::updateStatistics()
     getCorrelationalData(xData,yData,0,1);
 
     // Обновление интерфейса
-    const QString na = "—";
     m_elementCountLabel->setText(hasData ? QString::number(count) : na);
     m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : na);
     m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : na);
