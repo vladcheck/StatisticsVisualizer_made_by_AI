@@ -1,5 +1,5 @@
-#ifndef HELPERFUNCTIONS_H
-#define HELPERFUNCTIONS_H
+#ifndef DRAW_H
+#define DRAW_H
 
 #include <QHBoxLayout>
 #include <QSpinBox>
@@ -25,7 +25,7 @@ struct TableActions
     QSpinBox *colSpin;
 };
 
-namespace Helper
+namespace Draw
 {
     void setSizePolicyExpanding(QWidget *w)
     {
@@ -109,7 +109,7 @@ namespace Helper
         return btn;
     }
 
-    static QWidget *createStatRow(QWidget *parent,
+    QWidget *createStatRow(QWidget *parent,
                                   const QString &title,
                                   const QString &value = "—",
                                   const QString &objectName = "")
@@ -130,7 +130,7 @@ namespace Helper
     QLabel *createAndRegisterStatRow(QWidget *parent, QLayout *layout,
                                      const QString &title, const QString &defaultValue, const QString &objectName)
     {
-        QWidget *row = Helper::createStatRow(parent, title, defaultValue, objectName);
+        QWidget *row = createStatRow(parent, title, defaultValue, objectName);
         QLabel *label = row->findChild<QLabel *>(objectName);
         layout->addWidget(row);
         return label;
@@ -175,4 +175,4 @@ namespace Helper
     }
 };
 
-#endif // HELPERFUNCTIONS_H
+#endif // DRAW_H
