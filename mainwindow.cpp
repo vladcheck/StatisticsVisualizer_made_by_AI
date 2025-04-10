@@ -119,24 +119,37 @@ QWidget* MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     return statsPanel;
 }
 
-QWidget *MainWindow::setupDataSection(QWidget *parent)
-{
-    QWidget *dataSection = new QWidget(parent);
-    dataSection->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // Убрана фиксированная высота
+QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll) {
+    QScrollArea *scrollArea = new QScrollArea(parent);
+    scrollArea->setWidget(toScroll);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    scrollArea->setFrameShape(QFrame::NoFrame); // Убираем рамку
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    return scrollArea;
+}
 
+QWidget *MainWindow::setupDataSection(QWidget *parent) {
+    QWidget *dataSection = new QWidget(parent);
     QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto *statsPanel = setupStatsPanel(dataSection, &m_elementCountLabel,
-                                       &m_sumLabel, &m_averageLabel);
+    // Создаем панель статистики
+    QWidget *statsPanel = setupStatsPanel(dataSection, &m_elementCountLabel,
+                                          &m_sumLabel, &m_averageLabel);
 
-    // Создаем tablePanel и получаем таблицу
+    // Создаем scroll area и настраиваем
+    QScrollArea *scrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
+
+    // Добавляем таблицу и панель статистики
     QTableWidget *table = nullptr;
     auto *tablePanel = Draw::setupTablePanel(dataSection, &table);
-    m_table = table; // Сохраняем таблицу
+    m_table = table;
 
-    dataSectionLayout->addWidget(statsPanel, 1);
+    dataSectionLayout->addWidget(scrollArea, 1); // Заменяем statsPanel на scrollArea
     dataSectionLayout->addWidget(tablePanel, 1);
+    QScroller::grabGesture(scrollArea, QScroller::LeftMouseButtonGesture);
 
     return dataSection;
 }

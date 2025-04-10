@@ -12,6 +12,9 @@
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QMap>
+#include <QScrollArea>
+#include <QScroller>
+
 #include <limits>
 #include <iostream>
 
