@@ -54,6 +54,12 @@ private:
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
+    QWidget* createBasicStatsSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
+    QWidget* createMeansSection(QWidget *parent);
+    QWidget* createDistributionSection(QWidget *parent);
+    QWidget* createExtremesSection(QWidget *parent);
+    QWidget* createCategoricalSection(QWidget *parent);
+    QWidget* createCorrelationSection(QWidget *parent);
     void getTableValues(QVector<double>& values, int& count, double& sum);
     void getCategorialData(QVector<QString> &categories);
     void getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn = 0, int yColumn = 1);
@@ -61,6 +67,7 @@ private:
     bool hasValidSpearman(const QVector<double>& xData) const;
     bool hasValidKendall(const QVector<double>& xData) const;
     bool hasCatData(const QVector<QString>& categories) const;
+    void createStatsHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     bool areAllLabelsDefined();
 };
 #endif // MAINWINDOW_H

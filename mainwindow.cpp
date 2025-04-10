@@ -4,7 +4,94 @@
 #include "calculate.h"
 #include "tableactions.h"
 
-QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel,
+void MainWindow::createStatsHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
+{
+    QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
+    mainHeader->setStyleSheet("font-size: 32px; font-weight: 600; color: #ddd;");
+    statsLayout->addWidget(mainHeader);
+}
+
+QWidget* MainWindow::createBasicStatsSection(QWidget *parent, QLabel **elementCountLabel,
+                                             QLabel **sumLabel, QLabel **averageLabel)
+{
+    QWidget *section = Draw::createStatSection(parent, "Основные метрики");
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+    *elementCountLabel = Draw::createAndRegisterStatRow(section, layout, "Количество элементов", "0", "elementCountLabel");
+    *sumLabel = Draw::createAndRegisterStatRow(section, layout, "Сумма", "0", "sumLabel");
+    *averageLabel = Draw::createAndRegisterStatRow(section, layout, "Среднее арифметическое", "—", "averageLabel");
+
+    return section;
+}
+
+QWidget* MainWindow::createMeansSection(QWidget *parent)
+{
+    QWidget *section = Draw::createStatSection(parent, "Средние");
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+    m_geometricMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Геом. среднее", "—", "geometricMeanLabel");
+    m_harmonicMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Гарм. среднее", "—", "harmonicMeanLabel");
+    m_weightedMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Взвеш. среднее", "—", "weightedMeanLabel");
+    m_rmsLabel = Draw::createAndRegisterStatRow(section, layout, "Квадр. среднее", "—", "rmsLabel");
+    m_trimmedMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Усеч. среднее", "—", "trimmedMeanLabel");
+
+    return section;
+}
+
+QWidget* MainWindow::createDistributionSection(QWidget *parent)
+{
+    QWidget *section = Draw::createStatSection(parent, "Распределение");
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+    m_medianLabel = Draw::createAndRegisterStatRow(section, layout, "Медиана", "—", "medianLabel");
+    m_modeLabel = Draw::createAndRegisterStatRow(section, layout, "Мода", "—", "modeLabel");
+    m_stdDevLabel = Draw::createAndRegisterStatRow(section, layout, "Стандартное отклонение", "—", "stdDevLabel");
+    m_skewnessLabel = Draw::createAndRegisterStatRow(section, layout, "Асимметрия", "—", "skewnessLabel");
+    m_kurtosisLabel = Draw::createAndRegisterStatRow(section, layout, "Эксцесс", "—", "kurtosisLabel");
+    m_madLabel = Draw::createAndRegisterStatRow(section, layout, "Медианное абсолютное отклонение", "—", "madLabel");
+    m_robustStdLabel = Draw::createAndRegisterStatRow(section, layout, "Робастный стандартный разброс", "—", "robustStdLabel");
+
+    return section;
+}
+
+QWidget* MainWindow::createExtremesSection(QWidget *parent)
+{
+    QWidget *section = Draw::createStatSection(parent, "Экстремумы");
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+    m_minLabel = Draw::createAndRegisterStatRow(section, layout, "Минимум", "—", "minLabel");
+    m_maxLabel = Draw::createAndRegisterStatRow(section, layout, "Максимум", "—", "maxLabel");
+    m_rangeLabel = Draw::createAndRegisterStatRow(section, layout, "Размах", "—", "rangeLabel");
+
+    return section;
+}
+
+QWidget* MainWindow::createCategoricalSection(QWidget *parent)
+{
+    QWidget *section = Draw::createStatSection(parent, "Категориальные данные");
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+    m_modalFreqLabel = Draw::createAndRegisterStatRow(section, layout, "Модальная частота", "—", "modalFreqLabel");
+    m_simpsonIndexLabel = Draw::createAndRegisterStatRow(section, layout, "Индекс Симпсона", "—", "simpsonIndexLabel");
+    m_uniqueRatioLabel = Draw::createAndRegisterStatRow(section, layout, "Доля уникальных", "—", "uniqueRatioLabel");
+
+    return section;
+}
+
+QWidget* MainWindow::createCorrelationSection(QWidget *parent)
+{
+    QWidget *section = Draw::createStatSection(parent, "Анализ взаимосвязей");
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+    m_covarianceLabel = Draw::createAndRegisterStatRow(section, layout, "Ковариация", "—", "covarianceLabel");
+    m_pearsonLabel = Draw::createAndRegisterStatRow(section, layout, "Пирсон", "—", "pearsonLabel");
+    m_spearmanLabel = Draw::createAndRegisterStatRow(section, layout, "Спирмен", "—", "spearmanLabel");
+    m_kendallLabel = Draw::createAndRegisterStatRow(section, layout, "Кендалл", "—", "kendallLabel");
+
+    return section;
+}
+
+QWidget* MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel,
                                      QLabel **sumLabel, QLabel **averageLabel)
 {
     QWidget *statsPanel = new QWidget(parent);
@@ -15,64 +102,13 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     statsLayout->setContentsMargins(12, 8, 12, 8);
     statsLayout->setSpacing(8);
 
-    QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
-    mainHeader->setStyleSheet("font-size: 32px; font-weight: 600; color: #ddd;");
-    statsLayout->addWidget(mainHeader);
-
-    // Секция базовой статистики
-    QWidget *basicSection = Draw::createStatSection(statsPanel, "Основные метрики");
-    QVBoxLayout *basicLayout = qobject_cast<QVBoxLayout *>(basicSection->layout());
-    *elementCountLabel = Draw::createAndRegisterStatRow(basicSection, basicLayout, "Количество элементов", "0", "elementCountLabel");
-    *sumLabel = Draw::createAndRegisterStatRow(basicSection, basicLayout, "Сумма", "0", "sumLabel");
-    *averageLabel = Draw::createAndRegisterStatRow(basicSection, basicLayout, "Среднее арифметическое", "—", "averageLabel");
-    statsLayout->addWidget(basicSection);
-
-    // Секция средних
-    QWidget *meansSection = Draw::createStatSection(statsPanel, "Средние");
-    QVBoxLayout *meansLayout = qobject_cast<QVBoxLayout *>(meansSection->layout());
-    m_geometricMeanLabel = Draw::createAndRegisterStatRow(meansSection, meansLayout, "Геом. среднее", "—", "geometricMeanLabel");
-    m_harmonicMeanLabel = Draw::createAndRegisterStatRow(meansSection, meansLayout, "Гарм. среднее", "—", "harmonicMeanLabel");
-    m_weightedMeanLabel = Draw::createAndRegisterStatRow(meansSection, meansLayout, "Взвеш. среднее", "—", "weightedMeanLabel");
-    m_rmsLabel = Draw::createAndRegisterStatRow(meansSection, meansLayout, "Квадр. среднее", "—", "rmsLabel");
-    m_trimmedMeanLabel = Draw::createAndRegisterStatRow(meansSection, meansLayout, "Усеч. среднее", "—", "trimmedMeanLabel");
-    statsLayout->addWidget(meansSection);
-
-    // Секция распределения
-    QWidget *distributionSection = Draw::createStatSection(statsPanel, "Распределение");
-    QVBoxLayout *distributionLayout = qobject_cast<QVBoxLayout *>(distributionSection->layout());
-    m_medianLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Медиана", "—", "medianLabel");
-    m_modeLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Мода", "—", "modeLabel");
-    m_stdDevLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Стандартное отклонение", "—", "stdDevLabel");
-    m_skewnessLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Асимметрия", "—", "skewnessLabel");
-    m_kurtosisLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Эксцесс", "—", "kurtosisLabel");
-    m_madLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Медианное абсолютное отклонение", "—", "madLabel");
-    m_robustStdLabel = Draw::createAndRegisterStatRow(distributionSection, distributionLayout, "Робастный стандартный разброс", "—", "robustStdLabel");
-    statsLayout->addWidget(distributionSection);
-
-    // Секция экстремумов
-    QWidget *extremesSection = Draw::createStatSection(statsPanel, "Экстремумы");
-    QVBoxLayout *extremesLayout = qobject_cast<QVBoxLayout *>(extremesSection->layout());
-    m_minLabel = Draw::createAndRegisterStatRow(extremesSection, extremesLayout, "Минимум", "—", "minLabel");
-    m_maxLabel = Draw::createAndRegisterStatRow(extremesSection, extremesLayout, "Максимум", "—", "maxLabel");
-    m_rangeLabel = Draw::createAndRegisterStatRow(extremesSection, extremesLayout, "Размах", "—", "rangeLabel");
-    statsLayout->addWidget(extremesSection);
-
-    // Секция категориальных данных
-    QWidget* categoricalSection = Draw::createStatSection(statsPanel, "Категориальные данные");
-    QVBoxLayout* categoricalLayout = qobject_cast<QVBoxLayout*>(categoricalSection->layout());
-    m_modalFreqLabel = Draw::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Модальная частота", "—", "modalFreqLabel");
-    m_simpsonIndexLabel = Draw::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Индекс Симпсона", "—", "simpsonIndexLabel");
-    m_uniqueRatioLabel = Draw::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Доля уникальных", "—", "uniqueRatioLabel");
-    statsLayout->addWidget(categoricalSection);
-
-    // Секция анализа взаимосвязий
-    QWidget* correlationSection = Draw::createStatSection(statsPanel, "Анализ взаимосвязей");
-    QVBoxLayout* correlationLayout = qobject_cast<QVBoxLayout*>(correlationSection->layout());
-    m_covarianceLabel = Draw::createAndRegisterStatRow(correlationSection, correlationLayout, "Ковариация", "—", "covarianceLabel");
-    m_pearsonLabel = Draw::createAndRegisterStatRow(correlationSection, correlationLayout, "Пирсон", "—", "pearsonLabel");
-    m_spearmanLabel = Draw::createAndRegisterStatRow(correlationSection, correlationLayout, "Спирмен", "—", "spearmanLabel");
-    m_kendallLabel = Draw::createAndRegisterStatRow(correlationSection, correlationLayout, "Кендалл", "—", "kendallLabel");
-    statsLayout->addWidget(correlationSection);
+    createStatsHeader(statsPanel, statsLayout);
+    statsLayout->addWidget(createBasicStatsSection(statsPanel, elementCountLabel, sumLabel, averageLabel));
+    statsLayout->addWidget(createMeansSection(statsPanel));
+    statsLayout->addWidget(createDistributionSection(statsPanel));
+    statsLayout->addWidget(createExtremesSection(statsPanel));
+    statsLayout->addWidget(createCategoricalSection(statsPanel));
+    statsLayout->addWidget(createCorrelationSection(statsPanel));
 
     statsLayout->addStretch();
     return statsPanel;
