@@ -52,6 +52,10 @@ private:
     QLabel* m_kendallLabel = nullptr;           // Кендалл
     QLabel* m_pearsonLabel = nullptr;           // Пирсон
     QLabel* m_entropyLabel = nullptr;           // Энтропия
+    QLabel* m_shapiroWilkLabel = nullptr;
+    QLabel* m_densityLabel = nullptr;
+    QLabel* m_chiSquareLabel = nullptr;
+    QLabel* m_kolmogorovLabel = nullptr;
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);

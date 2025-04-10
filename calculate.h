@@ -31,6 +31,10 @@ namespace Calculate
     double spearmanCorrelation(const QVector<double>& x, const QVector<double>& y); // Корреляция Спирмена
     double kendallCorrelation(const QVector<double>& x, const QVector<double>& y); // Корреляция Кендалла
     double entropy(const QVector<QString>& categories);
+    double shapiroWilkTest(const QVector<double>& data);
+    double calculateDensity(const QVector<double>& data, double point);
+    double chiSquareTest(const QVector<double>& data);
+    double kolmogorovSmirnovTest(const QVector<double>& data);
 };
 
 #endif // CALCULATIONS_H

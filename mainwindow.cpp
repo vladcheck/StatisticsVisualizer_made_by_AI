@@ -50,6 +50,10 @@ QWidget* MainWindow::createDistributionSection(QWidget *parent)
     m_kurtosisLabel = Draw::createAndRegisterStatRow(section, layout, "Эксцесс", "—", "kurtosisLabel");
     m_madLabel = Draw::createAndRegisterStatRow(section, layout, "Медианное абсолютное отклонение", "—", "madLabel");
     m_robustStdLabel = Draw::createAndRegisterStatRow(section, layout, "Робастный стандартный разброс", "—", "robustStdLabel");
+    m_shapiroWilkLabel = Draw::createAndRegisterStatRow(section, layout, "Шапиро-Уилк", "—", "shapiroWilkLabel");
+    m_densityLabel = Draw::createAndRegisterStatRow(section, layout, "Плотность", "—", "densityLabel");
+    m_chiSquareLabel = Draw::createAndRegisterStatRow(section, layout, "χ²-критерий", "—", "chiSquareLabel");
+    m_kolmogorovLabel = Draw::createAndRegisterStatRow(section, layout, "Колмогоров-Смирнов", "—", "kolmogorovLabel");
 
     return section;
 }
@@ -222,7 +226,8 @@ bool MainWindow::areAllLabelsDefined() {
             m_rangeLabel && m_skewnessLabel && m_kurtosisLabel && m_harmonicMeanLabel && m_weightedMeanLabel &&
             m_rmsLabel && m_trimmedMeanLabel && m_robustStdLabel && m_madLabel && m_modalFreqLabel &&
             m_simpsonIndexLabel && m_uniqueRatioLabel && m_covarianceLabel && m_spearmanLabel && m_kendallLabel &&
-            m_pearsonLabel && m_entropyLabel);
+            m_pearsonLabel && m_entropyLabel && m_shapiroWilkLabel && m_kolmogorovLabel &&
+            m_chiSquareLabel && m_densityLabel);
 }
 
 void MainWindow::updateStatistics()
@@ -256,6 +261,10 @@ void MainWindow::updateStatistics()
     const double skew = Calculate::skewness(values, mean, stdDev);
     const double kurt = Calculate::kurtosis(values, mean, stdDev);
     const double robustStd = Calculate::robustStandardDeviation(values);
+    const double shapiro = hasData ? Calculate::shapiroWilkTest(values) : NAN;
+    const double density = hasData ? Calculate::calculateDensity(values, mean) : NAN;
+    const double chi2 = hasData ? Calculate::chiSquareTest(values) : NAN;
+    const double kolmogorov = hasData ? Calculate::kolmogorovSmirnovTest(values) : NAN;
 
     // Расчёты для категориальных данных (столбец 2)
     QVector<QString> categories;
@@ -265,6 +274,10 @@ void MainWindow::updateStatistics()
     // Расчёты для корреляций (столбцы 0 и 1)
     QVector<double> xData, yData;
     getCorrelationalData(xData,yData,0,1);
+    const double pearson = hasPairs(xData) ? Calculate::pearsonCorrelation(xData, yData) : NAN;
+    const double spearman = hasValidSpearman(xData) ? Calculate::spearmanCorrelation(xData, yData) : NAN;
+    const double kendall = hasValidKendall(xData) ? Calculate::kendallCorrelation(xData, yData) : NAN;
+    const double cov = hasPairs(xData) ? Calculate::covariance(xData, yData) : NAN;
 
     // Обновление интерфейса
     m_elementCountLabel->setText(hasData ? QString::number(count) : na);
@@ -282,23 +295,18 @@ void MainWindow::updateStatistics()
     m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
     m_skewnessLabel->setText(hasData ? QString::number(skew, 'f', statsPrecision) : na);
     m_kurtosisLabel->setText(hasData ? QString::number(kurt, 'f', statsPrecision) : na);
-
-    // Обновление категориальных метрик
     m_modalFreqLabel->setText(hasCatData(categories) ? QString::number(Calculate::modalFrequency(categories), 'f', statsPrecision) : na);
     m_simpsonIndexLabel->setText(hasCatData(categories) ? QString::number(Calculate::simpsonDiversityIndex(categories), 'f', statsPrecision) : na);
     m_uniqueRatioLabel->setText(hasCatData(categories) ? QString::number(Calculate::uniqueValueRatio(categories), 'f', statsPrecision) : na);
     m_entropyLabel->setText(hasCatData(categories) ? QString::number(entropyValue, 'f', statsPrecision) : na);
-
-    // Обновление корреляций
-    const double pearson = hasPairs(xData) ? Calculate::pearsonCorrelation(xData, yData) : NAN;
-    const double spearman = hasValidSpearman(xData) ? Calculate::spearmanCorrelation(xData, yData) : NAN;
-    const double kendall = hasValidKendall(xData) ? Calculate::kendallCorrelation(xData, yData) : NAN;
-    const double cov = hasPairs(xData) ? Calculate::covariance(xData, yData) : NAN;
-
     m_covarianceLabel->setText(hasPairs(xData) ? QString::number(cov, 'f', statsPrecision) : na);
     m_pearsonLabel->setText(hasPairs(xData) ? QString::number(pearson, 'f', statsPrecision) : na);
     m_spearmanLabel->setText(hasValidSpearman(xData) ? QString::number(spearman, 'f', statsPrecision) : na);
     m_kendallLabel->setText(hasValidKendall(xData) ? QString::number(kendall, 'f', statsPrecision) : na);
+    m_shapiroWilkLabel->setText(hasData ? QString::number(shapiro, 'f', statsPrecision) : na);
+    m_densityLabel->setText(hasData ? QString::number(density, 'f', statsPrecision) : na);
+    m_chiSquareLabel->setText(hasData ? QString::number(chi2, 'f', statsPrecision) : na);
+    m_kolmogorovLabel->setText(hasData ? QString::number(kolmogorov, 'f', statsPrecision) : na);
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {

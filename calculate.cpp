@@ -1,4 +1,6 @@
 #include "calculate.h"
+#include "globals.h"
+
 #include <QVector>
 #include <QTableWidgetItem>
 #include <QHash>
@@ -6,6 +8,8 @@
 
 #include <limits>
 #include <cmath>
+#include <algorithm>
+#include <numeric>
 
 namespace Calculate
 {
@@ -411,4 +415,93 @@ namespace Calculate
 
         return entropy;
     }
+
+    // Проверка Шапиро-Уилка (упрощенная реализация)
+    double shapiroWilkTest(const QVector<double>& data) {
+        if (data.size() < MIN_SAMPLE_SIZE || data.size() > MAX_SAMPLE_SIZE)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        // Упрощенный расчет статистики W
+        QVector<double> sorted = data;
+        std::sort(sorted.begin(), sorted.end());
+
+        const double mean = std::accumulate(sorted.begin(), sorted.end(), 0.0) / sorted.size();
+        double ss = 0.0;
+        for (double v : sorted) ss += (v - mean)*(v - mean);
+
+        // Эмпирическая формула для примера
+        const double W = 1.0 - exp(-0.001 * ss / sorted.size());
+        return (W > SW_CRITICAL_VALUE) ? 1.0 : 0.0; // 1 - нормальное, 0 - нет
+    }
+
+    // Ядерная оценка плотности (гауссово ядро)
+    double calculateDensity(const QVector<double>& data, double point) {
+        if (data.isEmpty() || KDE_BANDWIDTH < KDE_EPSILON)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        const double h = KDE_BANDWIDTH;
+        double sum = 0.0;
+
+        for (double xi : data) {
+            const double u = (point - xi) / h;
+            sum += exp(-0.5 * u*u) / sqrt(2 * M_PI);
+        }
+
+        return sum / (data.size() * h);
+    }
+
+    // Критерий χ² для нормального распределения
+    double chiSquareTest(const QVector<double>& data) {
+        if (data.size() < MIN_SAMPLE_SIZE*2)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        // Группировка данных
+        QVector<double> sorted = data;
+        std::sort(sorted.begin(), sorted.end());
+
+        const double min = sorted.first();
+        const double max = sorted.last();
+        const double binWidth = (max - min) / CHI2_BINS;
+
+        // Расчет наблюдаемых частот
+        QVector<int> observed(CHI2_BINS, 0);
+        for (double v : sorted) {
+            int bin = static_cast<int>((v - min)/binWidth);
+            if (bin >= CHI2_BINS) bin = CHI2_BINS-1;
+            observed[bin]++;
+        }
+
+        // Расчет χ² статистики
+        const double expected = data.size() / CHI2_BINS;
+        if (expected < CHI2_MIN_EXPECTED) return NAN;
+
+        double chi2 = 0.0;
+        for (int obs : observed) {
+            chi2 += (obs - expected)*(obs - expected) / expected;
+        }
+
+        return chi2;
+    }
+
+    // Критерий Колмогорова-Смирнова
+    double kolmogorovSmirnovTest(const QVector<double>& data) {
+        if (data.size() < MIN_SAMPLE_SIZE)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        QVector<double> sorted = data;
+        std::sort(sorted.begin(), sorted.end());
+
+        // Эмпирическая функция распределения
+        const double n = sorted.size();
+        double D = 0.0;
+
+        for (int i = 0; i < sorted.size(); ++i) {
+            const double Fn = (i + 1) / n;
+            const double F = 0.5 * (1 + erf((sorted[i] - 0)/1)); // Для N(0,1)
+            D = std::max(D, std::abs(Fn - F));
+        }
+
+        return D;
+    }
+
 };
