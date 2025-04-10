@@ -47,8 +47,13 @@ private:
     QLabel* m_modalFreqLabel = nullptr;    // Модальная частота
     QLabel* m_simpsonIndexLabel = nullptr; // Индекс Симпсона
     QLabel* m_uniqueRatioLabel = nullptr;  // Доля уникальных
+    QLabel* m_covarianceLabel = nullptr;     // Ковариация
+    QLabel* m_spearmanLabel = nullptr;       // Спирмен
+    QLabel* m_kendallLabel = nullptr;        // Кендалл
+    QLabel* m_pearsonLabel = nullptr;        // Пирсон
 
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupStatsPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
+    QVector<double> getValues(int count, double sum);
 };
 #endif // MAINWINDOW_H

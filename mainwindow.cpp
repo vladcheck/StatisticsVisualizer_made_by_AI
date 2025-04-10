@@ -219,6 +219,15 @@ QWidget *MainWindow::setupStatsPanel(QWidget *parent, QLabel **elementCountLabel
     m_uniqueRatioLabel = Helper::createAndRegisterStatRow(categoricalSection, categoricalLayout, "Доля уникальных", "—", "uniqueRatioLabel");
     statsLayout->addWidget(categoricalSection);
 
+    // Секция анализа взаимосвязий
+    QWidget* correlationSection = Helper::createStatSection(statsPanel, "Анализ взаимосвязей");
+    QVBoxLayout* correlationLayout = qobject_cast<QVBoxLayout*>(correlationSection->layout());
+    m_covarianceLabel = Helper::createAndRegisterStatRow(correlationSection, correlationLayout, "Ковариация", "—", "covarianceLabel");
+    m_pearsonLabel = Helper::createAndRegisterStatRow(correlationSection, correlationLayout, "Пирсон", "—", "pearsonLabel");
+    m_spearmanLabel = Helper::createAndRegisterStatRow(correlationSection, correlationLayout, "Спирмен", "—", "spearmanLabel");
+    m_kendallLabel = Helper::createAndRegisterStatRow(correlationSection, correlationLayout, "Кендалл", "—", "kendallLabel");
+    statsLayout->addWidget(correlationSection);
+
     statsLayout->addStretch();
     return statsPanel;
 }
@@ -245,109 +254,134 @@ QWidget *MainWindow::setupDataSection(QWidget *parent)
     return dataSection;
 }
 
-void MainWindow::updateStatistics()
-{
-    if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
-        !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
-        !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
-        !m_kurtosisLabel || !m_harmonicMeanLabel || !m_weightedMeanLabel ||
-        !m_rmsLabel)
-        return;
-
-    // Сбор данных
+QVector<double> MainWindow::getValues(int count, double sum) {
     QVector<double> values;
-    int count = 0;
-    double sum = 0.0;
-    bool conversionOK;
-
-    for (int row = 0; row < m_table->rowCount(); ++row)
-    {
-        for (int col = 0; col < m_table->columnCount(); ++col)
-        {
-            QTableWidgetItem *item = m_table->item(row, col);
-            if (item && !item->text().isEmpty())
-            {
-                double value = item->text().toDouble(&conversionOK);
-                if (conversionOK)
-                {
-                    values.append(value);
-                    sum += value;
-                    count++;
-                }
+    for (int row = 0; row < m_table->rowCount(); ++row) {
+        QTableWidgetItem* item = m_table->item(row, 0);
+        if (item && !item->text().isEmpty()) {
+            bool ok;
+            double value = item->text().toDouble(&ok);
+            if (ok) {
+                values.append(value);
+                sum += value;
+                count++;
             }
         }
     }
+    return values;
+}
 
-    // Расчёты
-    const QVector<double> weights = Calculate::findWeights(m_table); // Автопоиск столбца
+void MainWindow::updateStatistics()
+{
+    // Проверка всех указателей на метки
+    if (!m_table || !m_elementCountLabel || !m_sumLabel || !m_averageLabel ||
+                !m_geometricMeanLabel || !m_medianLabel || !m_modeLabel || !m_stdDevLabel ||
+                !m_minLabel || !m_maxLabel || !m_rangeLabel || !m_skewnessLabel ||
+                !m_kurtosisLabel || !m_harmonicMeanLabel || !m_weightedMeanLabel ||
+                !m_rmsLabel || !m_trimmedMeanLabel || !m_robustStdLabel || !m_madLabel ||
+                !m_modalFreqLabel || !m_simpsonIndexLabel || !m_uniqueRatioLabel ||
+        !m_covarianceLabel || !m_spearmanLabel || !m_kendallLabel){
+        return;
+    }
 
+    // Сбор данных только из первого столбца (значения)
+    int count = 0;
+    double sum = 0.0;
+    QVector<double> values = getValues(count, sum);
+
+    // Получение весов с проверкой размера
+    const QVector<double> weights = Calculate::findWeights(m_table);
+    const bool validWeights = (weights.size() == values.size()) && !weights.isEmpty();
+
+    // Основные расчёты
     const bool hasData = count > 0;
-    const double mean = hasData ? Calculate::getMean(sum, count) : 0.0;
+    const double mean = hasData ? sum / count : 0.0;
     const double geomMean = Calculate::geometricMean(values);
     const double harmonicMean = Calculate::harmonicMean(values);
-    const double wMean = Calculate::weightedMean(values, weights);
+    const double wMean = validWeights ? Calculate::weightedMean(values, weights)
+                                      : std::numeric_limits<double>::quiet_NaN();
     const double rms = Calculate::rootMeanSquare(values);
     const double mad = Calculate::medianAbsoluteDeviation(values);
-    const double median = hasData ? Calculate::getMedian(values) : 0.0;
-    const double mode = hasData ? Calculate::getMode(values) : 0.0;
-    const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
-    const double tMean = Calculate::trimmedMean(values, trimmedMeanPercentage);
+    const double median = Calculate::getMedian(values);
+    const double mode = Calculate::getMode(values);
+    const double stdDev = Calculate::getStandardDeviation(values, mean);
+    const double tMean = Calculate::trimmedMean(values, 0.1);
     const double skew = Calculate::skewness(values, mean, stdDev);
     const double kurt = Calculate::kurtosis(values, mean, stdDev);
     const double robustStd = Calculate::robustStandardDeviation(values);
 
-    const bool validCalculation = !std::isnan(wMean) &&
-                                  (values.size() == weights.size()) &&
-                                  !values.isEmpty();
-
-    double minValue = std::numeric_limits<double>::quiet_NaN();
-    double maxValue = std::numeric_limits<double>::quiet_NaN();
-    double range = std::numeric_limits<double>::quiet_NaN();
-    if (hasData)
-    {
-        auto [minIt, maxIt] = std::minmax_element(values.begin(), values.end());
-        minValue = *minIt;
-        maxValue = *maxIt;
-        range = maxValue - minValue;
-    }
-
+    // Расчёты для категориальных данных (столбец 2)
     QVector<QString> categories;
-    for (int row = 0; row < m_table->rowCount(); ++row) {
-        QTableWidgetItem* item = m_table->item(row, 2);
-        if (item) categories.append(item->text());
+    if (m_table->columnCount() > 2) {
+        for (int row = 0; row < m_table->rowCount(); ++row) {
+            QTableWidgetItem* item = m_table->item(row, 2);
+            if (item) categories.append(item->text());
+        }
     }
 
-    const bool hasCatData = !categories.isEmpty();
-    const double modalFreq = Calculate::modalFrequency(categories);
-    const double simpsonIdx = Calculate::simpsonDiversityIndex(categories);
-    const double uniqueRatio = Calculate::uniqueValueRatio(categories);
+    // Расчёты для корреляций (столбцы 0 и 1)
+    const int xColumn = 0; // Данные X
+    const int yColumn = 1; // Данные Y
+    QVector<double> xData, yData;
+    if (m_table->columnCount() > qMax(xColumn, yColumn)) {
+        for (int row = 0; row < m_table->rowCount(); ++row) {
+            bool okX = false, okY = false;
+            double x = 0, y = 0;
+
+            QTableWidgetItem* itemX = m_table->item(row, xColumn);
+            QTableWidgetItem* itemY = m_table->item(row, yColumn);
+
+            if (itemX && itemY) {
+                x = itemX->text().toDouble(&okX);
+                y = itemY->text().toDouble(&okY);
+            }
+
+            if (okX && okY) {
+                xData.append(x);
+                yData.append(y);
+            }
+        }
+    }
+
+    // Проверки для корреляций
+    const bool hasPairs = xData.size() >= 2;
+    const bool hasValidSpearman = xData.size() >= 3;
+    const bool hasValidKendall = xData.size() >= 2; // Кендалл требует минимум 2 пары
 
     // Обновление интерфейса
-    m_elementCountLabel->setText(QString::number(count));
-    m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : "—");
-    m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : "—");
-    m_geometricMeanLabel->setText((hasData && !std::isnan(geomMean)) ? QString::number(geomMean, 'f', statsPrecision) : "—");
-    m_harmonicMeanLabel->setText((hasData && !std::isnan(harmonicMean)) ? QString::number(harmonicMean, 'f', statsPrecision) : "—");
-    m_weightedMeanLabel->setText(validCalculation ? QString::number(wMean, 'f', statsPrecision) : "—");
-    m_rmsLabel->setText((!values.isEmpty() && !std::isnan(rms)) ? QString::number(rms, 'f', statsPrecision) : "—");
-    m_trimmedMeanLabel->setText((!values.isEmpty() && !std::isnan(tMean)) ? QString::number(tMean, 'f', statsPrecision) : "—");
-    m_robustStdLabel->setText((!values.isEmpty() && !std::isnan(robustStd)) ? QString::number(robustStd, 'f', statsPrecision) : "—");
-    m_madLabel->setText((!values.isEmpty() && !std::isnan(mad)) ? QString::number(mad, 'f', statsPrecision) : "—");
-    m_medianLabel->setText(hasData ? QString::number(median) : "-");
-    m_modeLabel->setText(hasData && !std::isnan(mode) ? QString::number(mode, 'f', statsPrecision) : "—");
-    m_stdDevLabel->setText(hasData && !std::isnan(stdDev) ? QString::number(stdDev, 'f', statsPrecision) : "—");
-    m_skewnessLabel->setText((hasData && !std::isnan(skew)) ? QString::number(skew, 'f', statsPrecision) : "—");
-    m_kurtosisLabel->setText((hasData && !std::isnan(kurt)) ? QString::number(kurt, 'f', statsPrecision) : "—");
-    m_minLabel->setText(hasData ? QString::number(minValue, 'f', statsPrecision) : "—");
-    m_maxLabel->setText(hasData ? QString::number(maxValue, 'f', statsPrecision) : "—");
-    m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : "—");
-    m_modalFreqLabel->setText(hasCatData ? QString::number(modalFreq, 'f', statsPrecision) : "—");
-    m_simpsonIndexLabel->setText(hasCatData ? QString::number(simpsonIdx, 'f', statsPrecision) : "—");
-    m_uniqueRatioLabel->setText(hasCatData ? QString::number(uniqueRatio, 'f', statsPrecision) : "—");
+    const QString na = "—";
+    m_elementCountLabel->setText(hasData ? QString::number(count) : na);
+    m_sumLabel->setText(hasData ? QString::number(sum, 'f', statsPrecision) : na);
+    m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : na);
+    m_geometricMeanLabel->setText(hasData ? QString::number(geomMean, 'f', statsPrecision) : na);
+    m_harmonicMeanLabel->setText(hasData ? QString::number(harmonicMean, 'f', statsPrecision) : na);
+    m_weightedMeanLabel->setText(validWeights ? QString::number(wMean, 'f', statsPrecision) : na);
+    m_rmsLabel->setText(hasData ? QString::number(rms, 'f', statsPrecision) : na);
+    m_trimmedMeanLabel->setText(hasData ? QString::number(tMean, 'f', statsPrecision) : na);
+    m_robustStdLabel->setText(hasData ? QString::number(robustStd, 'f', statsPrecision) : na);
+    m_madLabel->setText(hasData ? QString::number(mad, 'f', statsPrecision) : na);
+    m_medianLabel->setText(hasData ? QString::number(median, 'f', statsPrecision) : na);
+    m_modeLabel->setText(hasData ? QString::number(mode, 'f', statsPrecision) : na);
+    m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
+    m_skewnessLabel->setText(hasData ? QString::number(skew, 'f', statsPrecision) : na);
+    m_kurtosisLabel->setText(hasData ? QString::number(kurt, 'f', statsPrecision) : na);
 
-    qDebug() << "Weights:" << weights;
-    qDebug() << "Weighted mean:" << wMean;
-    qDebug() << "Sum weights:" << std::accumulate(weights.begin(), weights.end(), 0.0);
+    // Обновление категориальных метрик
+    const bool hasCatData = !categories.isEmpty();
+    m_modalFreqLabel->setText(hasCatData ? QString::number(Calculate::modalFrequency(categories), 'f', statsPrecision) : na);
+    m_simpsonIndexLabel->setText(hasCatData ? QString::number(Calculate::simpsonDiversityIndex(categories), 'f', statsPrecision) : na);
+    m_uniqueRatioLabel->setText(hasCatData ? QString::number(Calculate::uniqueValueRatio(categories), 'f', statsPrecision) : na);
+
+    // Обновление корреляций
+    const double pearson = hasPairs ? Calculate::pearsonCorrelation(xData, yData) : NAN;
+    const double spearman = hasValidSpearman ? Calculate::spearmanCorrelation(xData, yData) : NAN;
+    const double kendall = hasValidKendall ? Calculate::kendallCorrelation(xData, yData) : NAN;
+    const double cov = hasPairs ? Calculate::covariance(xData, yData) : NAN;
+
+    m_covarianceLabel->setText(hasPairs ? QString::number(cov, 'f', statsPrecision) : na);
+    m_pearsonLabel->setText(hasPairs ? QString::number(pearson, 'f', statsPrecision) : na);
+    m_spearmanLabel->setText(hasValidSpearman ? QString::number(spearman, 'f', statsPrecision) : na);
+    m_kendallLabel->setText(hasValidKendall ? QString::number(kendall, 'f', statsPrecision) : na);
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)

@@ -114,37 +114,31 @@ namespace Calculate
         qDebug() << "Values:" << values;
         qDebug() << "Weights:" << weights;
 
+        // Проверка на равенство размеров
         if (values.size() != weights.size()) {
-            qDebug() << "Error: Size mismatch (values:" << values.size() << "weights:" << weights.size() << ")";
+            qDebug() << "Error: Values and weights size mismatch";
             return std::numeric_limits<double>::quiet_NaN();
         }
 
-        if (values.isEmpty()) {
-            qDebug() << "Error: Empty data";
+        // Проверка на пустые данные
+        if (values.isEmpty() || weights.isEmpty()) {
+            qDebug() << "Error: Empty input data";
             return std::numeric_limits<double>::quiet_NaN();
         }
 
         double sumProducts = 0.0, sumWeights = 0.0;
         for (int i = 0; i < values.size(); ++i) {
-            if (std::isnan(values[i]) || std::isnan(weights[i])) {
-                qDebug() << "NaN detected at index" << i;
-                return std::numeric_limits<double>::quiet_NaN();
-            }
             sumProducts += values[i] * weights[i];
             sumWeights += weights[i];
         }
 
-        qDebug() << "Sum products:" << sumProducts;
-        qDebug() << "Sum weights:" << sumWeights;
-
+        // Проверка на нулевые веса
         if (sumWeights <= 0) {
-            qDebug() << "Error: Non-positive sum of weights";
+            qDebug() << "Error: Sum of weights is zero";
             return std::numeric_limits<double>::quiet_NaN();
         }
 
-        const double result = sumProducts / sumWeights;
-        qDebug() << "Result:" << result;
-        return result;
+        return sumProducts / sumWeights;
     }
 
     // 2. Автоматический поиск столбца с весами
@@ -178,8 +172,9 @@ namespace Calculate
             }
         }
 
-        qDebug() << "No valid weights column found";
-        return QVector<double>();
+        qDebug() << "No valid weights column found. Using uniform weights.";
+        // Возвращаем единичные веса, если столбец не найден
+        return QVector<double>(table->rowCount(), 1.0);
     }
 
     double rootMeanSquare(const QVector<double>& values) {
@@ -302,6 +297,103 @@ namespace Calculate
 
         QSet<QString> unique(categories.begin(), categories.end());
         return static_cast<double>(unique.size()) / categories.size();
+    }
+
+    // Ковариация
+    double covariance(const QVector<double>& x, const QVector<double>& y) {
+        const size_t n = x.size();
+        if (n != y.size() || n < 2) return NAN;
+
+        double sum_x = std::accumulate(x.begin(), x.end(), 0.0);
+        double sum_y = std::accumulate(y.begin(), y.end(), 0.0);
+        double sum_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
+
+        return (sum_xy - sum_x * sum_y / n) / (n - 1); // Исправленная формула
+    }
+
+    // Ранги для Спирмена
+    QVector<double> calculateRanks(const QVector<double>& data) {
+        QVector<std::pair<double, int>> sorted;
+        for (int i = 0; i < data.size(); ++i) {
+            sorted.append({data[i], i});
+        }
+        std::sort(sorted.begin(), sorted.end());
+
+        QVector<double> ranks(data.size());
+        for (int i = 0; i < sorted.size(); ++i) {
+            int j = i;
+            while (j < sorted.size() && sorted[j].first == sorted[i].first) j++;
+            const double rank = (i + j - 1) / 2.0;
+            for (int k = i; k < j; ++k) {
+                ranks[sorted[k].second] = rank + 1; // Ранги от 1
+            }
+            i = j - 1;
+        }
+        return ranks;
+    }
+
+    double pearsonCorrelation(const QVector<double>& x, const QVector<double>& y) {
+        const size_t n = x.size();
+        if (n != y.size() || n < 2) return NAN;
+
+        // Вычисляем ковариацию и стандартные отклонения
+        const double cov = covariance(x, y);
+        const double std_x = getStandardDeviation(x, getMean(std::accumulate(x.begin(), x.end(), 0.0), n));
+        const double std_y = getStandardDeviation(y, getMean(std::accumulate(y.begin(), y.end(), 0.0), n));
+
+        if (std_x == 0 || std_y == 0) return NAN;
+
+        return cov / (std_x * std_y);
+    }
+
+    // Корреляция Спирмена
+    double spearmanCorrelation(const QVector<double>& x, const QVector<double>& y) {
+        if (x.size() != y.size() || x.size() < 3) return NAN;
+
+        // Ранжирование с учётом одинаковых значений
+        auto rank = [](const QVector<double>& data) {
+            QVector<size_t> indexes(data.size());
+            std::iota(indexes.begin(), indexes.end(), 0);
+            std::sort(indexes.begin(), indexes.end(),
+                      [&data](size_t a, size_t b) { return data[a] < data[b]; });
+
+            QVector<double> ranks(data.size());
+            for (size_t i = 0; i < indexes.size();) {
+                size_t j = i;
+                while (j < indexes.size() && data[indexes[j]] == data[indexes[i]]) ++j;
+                const double average_rank = 0.5 * (i + j - 1);
+                for (size_t k = i; k < j; ++k) {
+                    ranks[indexes[k]] = average_rank;
+                }
+                i = j;
+            }
+            return ranks;
+        };
+
+        QVector<double> rank_x = rank(x);
+        QVector<double> rank_y = rank(y);
+        return pearsonCorrelation(rank_x, rank_y);
+    }
+
+    // Корреляция Кендалла
+    double kendallCorrelation(const QVector<double>& x, const QVector<double>& y) {
+        const size_t n = x.size();
+        if (n < 2 || n != y.size()) return NAN;
+
+        size_t concordant = 0, discordant = 0;
+        for (size_t i = 0; i < n; ++i) {
+            for (size_t j = i+1; j < n; ++j) {
+                const double x_diff = x[j] - x[i];
+                const double y_diff = y[j] - y[i];
+                const double product = x_diff * y_diff;
+
+                if (product > 0) concordant++;
+                else if (product < 0) discordant++;
+            }
+        }
+
+        const double total = concordant + discordant;
+        return total > 0 ? (concordant - discordant) / total : 0;
     }
 };
 
