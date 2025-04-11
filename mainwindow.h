@@ -53,10 +53,6 @@ private:
     QLabel* m_modalFreqLabel = nullptr;         // Модальная частота
     QLabel* m_simpsonIndexLabel = nullptr;      // Индекс Симпсона
     QLabel* m_uniqueRatioLabel = nullptr;       // Доля уникальных
-    QLabel* m_covarianceLabel = nullptr;        // Ковариация
-    QLabel* m_spearmanLabel = nullptr;          // Спирмен
-    QLabel* m_kendallLabel = nullptr;           // Кендалл
-    QLabel* m_pearsonLabel = nullptr;           // Пирсон
     QLabel* m_entropyLabel = nullptr;           // Энтропия
     QLabel* m_shapiroWilkLabel = nullptr;
     QLabel* m_densityLabel = nullptr;
@@ -76,7 +72,6 @@ private:
     void getTableValues(QVector<double>& values, int& count, double& sum);
     void getCategorialData(QVector<QString> &categories);
     void getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn = 0, int yColumn = 1);
-    bool hasPairs(const QVector<double>& xData) const;
     bool hasValidSpearman(const QVector<double>& xData) const;
     bool hasValidKendall(const QVector<double>& xData) const;
     bool hasCatData(const QVector<QString>& categories) const;

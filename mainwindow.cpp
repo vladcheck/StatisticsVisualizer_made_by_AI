@@ -10,10 +10,6 @@ bool areWeightsValid(const QVector<double>& weights, const QVector<double>& valu
     return (weights.size() == values.size()) && !weights.isEmpty();
 }
 
-bool MainWindow::hasPairs(const QVector<double>& xData) const {
-    return xData.size() >= 2;
-}
-
 bool MainWindow::hasValidSpearman(const QVector<double>& xData) const {
     return xData.size() >= 3;
 }
@@ -106,19 +102,6 @@ QWidget* MainWindow::createCategoricalSection(QWidget *parent)
     return section;
 }
 
-QWidget* MainWindow::createCorrelationSection(QWidget *parent)
-{
-    QWidget *section = Draw::createStatSection(parent, "Анализ взаимосвязей");
-    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
-
-    m_covarianceLabel = Draw::createAndRegisterStatRow(section, layout, "Ковариация", "—", "covarianceLabel");
-    m_pearsonLabel = Draw::createAndRegisterStatRow(section, layout, "Пирсон", "—", "pearsonLabel");
-    m_spearmanLabel = Draw::createAndRegisterStatRow(section, layout, "Спирмен", "—", "spearmanLabel");
-    m_kendallLabel = Draw::createAndRegisterStatRow(section, layout, "Кендалл", "—", "kendallLabel");
-
-    return section;
-}
-
 QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
                                      QLabel **sumLabel, QLabel **averageLabel)
 {
@@ -136,7 +119,6 @@ QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
     statsLayout->addWidget(createDistributionSection(statsPanel));
     statsLayout->addWidget(createExtremesSection(statsPanel));
     statsLayout->addWidget(createCategoricalSection(statsPanel));
-    statsLayout->addWidget(createCorrelationSection(statsPanel));
 
     statsLayout->addStretch();
     return statsPanel;
@@ -213,8 +195,7 @@ bool MainWindow::areAllLabelsDefined() {
             m_medianLabel && m_modeLabel && m_stdDevLabel && m_minLabel && m_maxLabel &&
             m_rangeLabel && m_skewnessLabel && m_kurtosisLabel && m_harmonicMeanLabel && m_weightedMeanLabel &&
             m_rmsLabel && m_trimmedMeanLabel && m_robustStdLabel && m_madLabel && m_modalFreqLabel &&
-            m_simpsonIndexLabel && m_uniqueRatioLabel && m_covarianceLabel && m_spearmanLabel && m_kendallLabel &&
-            m_pearsonLabel && m_entropyLabel && m_shapiroWilkLabel && m_kolmogorovLabel &&
+            m_simpsonIndexLabel && m_uniqueRatioLabel && m_entropyLabel && m_shapiroWilkLabel && m_kolmogorovLabel &&
             m_chiSquareLabel && m_densityLabel);
 }
 
@@ -261,9 +242,6 @@ TableRow MainWindow::parseCurrentRow() const {
 void MainWindow::updateUI(const TableRow& rowData) {
     const bool hasData = rowData.isValid;
     const bool hasCat = !rowData.categories.isEmpty();
-    const bool hasPairs = this->hasPairs(rowData.xData);
-    const bool validSpearman = this->hasValidSpearman(rowData.xData);
-    const bool validKendall = this->hasValidKendall(rowData.xData);
 
     // Основные метрики
     m_elementCountLabel->setText(hasData ? QString::number(rowData.count) : na);
@@ -302,12 +280,6 @@ void MainWindow::updateUI(const TableRow& rowData) {
     m_simpsonIndexLabel->setText(hasCat ? QString::number(Calculate::simpsonDiversityIndex(rowData.categories), 'f', statsPrecision) : na);
     m_uniqueRatioLabel->setText(hasCat ? QString::number(Calculate::uniqueValueRatio(rowData.categories), 'f', statsPrecision) : na);
     m_entropyLabel->setText(hasCat ? QString::number(Calculate::entropy(rowData.categories), 'f', statsPrecision) : na);
-
-    // Корреляции
-    m_covarianceLabel->setText(hasPairs ? QString::number(Calculate::covariance(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
-    m_pearsonLabel->setText(hasPairs ? QString::number(Calculate::pearsonCorrelation(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
-    m_spearmanLabel->setText(validSpearman ? QString::number(Calculate::spearmanCorrelation(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
-    m_kendallLabel->setText(validKendall ? QString::number(Calculate::kendallCorrelation(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
 }
 
 void MainWindow::updateStatistics() {

@@ -23,8 +23,6 @@ struct TableRow {
     QVector<double> values;
     QVector<double> weights;
     QVector<QString> categories;
-    QVector<double> xData;
-    QVector<double> yData;
     bool isValid = false;
     int count = 0;
     double sum = 0.0;

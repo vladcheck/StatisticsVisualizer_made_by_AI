@@ -9,7 +9,6 @@ namespace Calculate
 {
     QVector<double> getWeights(const QTableWidget* table, int weightColumn);
     QVector<double> findWeights(const QTableWidget* table); // Автоматический поиск столбца с весами
-    QVector<double> calculateRanks(const QVector<double>& data); // Ранги для Спирмена
     double getMean(double sum, double count);
     double getMedian(const QVector<double>& values);
     double getMode(const QVector<double> &values);
@@ -26,10 +25,6 @@ namespace Calculate
     double modalFrequency(const QVector<QString>& categories);
     double simpsonDiversityIndex(const QVector<QString>& categories);
     double uniqueValueRatio(const QVector<QString>& categories);
-    double covariance(const QVector<double>& x, const QVector<double>& y); // Ковариация
-    double pearsonCorrelation(const QVector<double>& x, const QVector<double>& y);
-    double spearmanCorrelation(const QVector<double>& x, const QVector<double>& y); // Корреляция Спирмена
-    double kendallCorrelation(const QVector<double>& x, const QVector<double>& y); // Корреляция Кендалла
     double entropy(const QVector<QString>& categories);
     double shapiroWilkTest(const QVector<double>& data);
     double calculateDensity(const QVector<double>& data, double point);
