@@ -29,7 +29,15 @@ namespace Calculate
         return weights;
     }
 
-    double getMean(double sum, double count) { return sum / count; }
+    double getSum(const QVector<double>& values) {
+        double sum = 0;
+        for (auto n : values) {sum += n;}
+        return sum;
+    }
+
+    double getMean(const QVector<double>& values) {
+        return getSum(values) / values.size();
+    }
 
     double getMedian(const QVector<double>& values) {
         if (values.isEmpty())

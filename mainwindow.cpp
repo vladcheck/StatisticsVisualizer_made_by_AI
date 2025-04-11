@@ -4,24 +4,9 @@
 #include "calculate.h"
 #include "structs.h"
 
-int MainWindow::currentLine = 0;
-
 bool areWeightsValid(const QVector<double>& weights, const QVector<double>& values) {
     return (weights.size() == values.size()) && !weights.isEmpty();
 }
-
-bool MainWindow::hasValidSpearman(const QVector<double>& xData) const {
-    return xData.size() >= 3;
-}
-
-bool MainWindow::hasValidKendall(const QVector<double>& xData) const {
-    return xData.size() >= 2;
-}
-
-bool MainWindow::hasCatData(const QVector<QString>& categories) const {
-    return !categories.isEmpty();
-}
-
 
 void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 {
@@ -50,7 +35,6 @@ QWidget* MainWindow::createMeansSection(QWidget *parent)
 
     m_geometricMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Геом. среднее", "—", "geometricMeanLabel");
     m_harmonicMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Гарм. среднее", "—", "harmonicMeanLabel");
-    m_weightedMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Взвеш. среднее", "—", "weightedMeanLabel");
     m_rmsLabel = Draw::createAndRegisterStatRow(section, layout, "Квадр. среднее", "—", "rmsLabel");
     m_trimmedMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Усеч. среднее", "—", "trimmedMeanLabel");
 
@@ -89,19 +73,6 @@ QWidget* MainWindow::createExtremesSection(QWidget *parent)
     return section;
 }
 
-QWidget* MainWindow::createCategoricalSection(QWidget *parent)
-{
-    QWidget *section = Draw::createStatSection(parent, "Категориальные данные");
-    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
-
-    m_modalFreqLabel = Draw::createAndRegisterStatRow(section, layout, "Модальная частота", "—", "modalFreqLabel");
-    m_simpsonIndexLabel = Draw::createAndRegisterStatRow(section, layout, "Индекс Симпсона", "—", "simpsonIndexLabel");
-    m_uniqueRatioLabel = Draw::createAndRegisterStatRow(section, layout, "Доля уникальных", "—", "uniqueRatioLabel");
-    m_entropyLabel = Draw::createAndRegisterStatRow(section, layout, "Энтропия", "—", "entropyLabel");
-
-    return section;
-}
-
 QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
                                      QLabel **sumLabel, QLabel **averageLabel)
 {
@@ -118,7 +89,6 @@ QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
     statsLayout->addWidget(createMeansSection(statsPanel));
     statsLayout->addWidget(createDistributionSection(statsPanel));
     statsLayout->addWidget(createExtremesSection(statsPanel));
-    statsLayout->addWidget(createCategoricalSection(statsPanel));
 
     statsLayout->addStretch();
     return statsPanel;
@@ -159,80 +129,26 @@ QWidget *MainWindow::setupDataSection(QWidget *parent) {
     return dataSection;
 }
 
-void MainWindow::getCategorialData(QVector<QString> &categories) {
-    if (m_table->columnCount() > 2) {
-        for (int row = 0; row < m_table->rowCount(); ++row) {
-            QTableWidgetItem* item = m_table->item(row, 2);
-            if (item) categories.append(item->text());
-        }
-    }
-}
-
-void MainWindow::getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn, int yColumn) {
-    xData.clear();
-    yData.clear();
-
-    if (m_table && m_table->columnCount() > qMax(xColumn, yColumn)) {
-        QTableWidgetItem* itemX = m_table->item(currentLine, xColumn);
-        QTableWidgetItem* itemY = m_table->item(currentLine, yColumn);
-
-        if (itemX && itemY) {
-            bool okX, okY;
-            double x = itemX->text().toDouble(&okX);
-            double y = itemY->text().toDouble(&okY);
-
-            if (okX && okY) {
-                xData.append(x);
-                yData.append(y);
-            }
-        }
-    }
-}
-
 bool MainWindow::areAllLabelsDefined() {
     return (m_table &&
             m_elementCountLabel && m_sumLabel && m_averageLabel && m_geometricMeanLabel &&
             m_medianLabel && m_modeLabel && m_stdDevLabel && m_minLabel && m_maxLabel &&
-            m_rangeLabel && m_skewnessLabel && m_kurtosisLabel && m_harmonicMeanLabel && m_weightedMeanLabel &&
-            m_rmsLabel && m_trimmedMeanLabel && m_robustStdLabel && m_madLabel && m_modalFreqLabel &&
-            m_simpsonIndexLabel && m_uniqueRatioLabel && m_entropyLabel && m_shapiroWilkLabel && m_kolmogorovLabel &&
-            m_chiSquareLabel && m_densityLabel);
+            m_rangeLabel && m_skewnessLabel && m_kurtosisLabel && m_harmonicMeanLabel &&
+            m_rmsLabel && m_trimmedMeanLabel && m_robustStdLabel && m_madLabel &&
+            m_shapiroWilkLabel && m_kolmogorovLabel && m_chiSquareLabel && m_densityLabel);
 }
 
-TableRow MainWindow::parseCurrentRow() const {
+TableRow MainWindow::parse() const {
     TableRow result;
     result.isValid = false;
 
-    if (!m_table || currentLine < 0 || currentLine >= m_table->rowCount())
-        return result;
-
-    // Сбор данных из текущей строки
     for (int col = 0; col < m_table->columnCount(); ++col) {
-        QTableWidgetItem* item = m_table->item(currentLine, col);
+        QTableWidgetItem* item = m_table->item(0, col);
         if (!item || item->text().isEmpty()) continue;
 
-        switch(col) {
-        case 0: { // Основные значения
-            bool ok;
-            double value = item->text().toDouble(&ok);
-            if (ok) {
-                result.values.append(value);
-                result.sum += value;
-                result.count++;
-            }
-            break;
-        }
-        case 1: { // Веса
-            bool ok;
-            double weight = item->text().toDouble(&ok);
-            if (ok) result.weights.append(weight);
-            break;
-        }
-        case 2: { // Категории
-            result.categories.append(item->text());
-            break;
-        }
-        }
+        bool ok;
+        double value = item->text().toDouble(&ok);
+        if (ok) result.values.append(value);
     }
 
     result.isValid = !result.values.isEmpty();
@@ -241,28 +157,23 @@ TableRow MainWindow::parseCurrentRow() const {
 
 void MainWindow::updateUI(const TableRow& rowData) {
     const bool hasData = rowData.isValid;
-    const bool hasCat = !rowData.categories.isEmpty();
+    double mean = hasData ? Calculate::getMean(rowData.values) : 0.0;
+    double stdDev = hasData ? Calculate::getStandardDeviation(rowData.values, mean) : 0.0;
 
     // Основные метрики
-    m_elementCountLabel->setText(hasData ? QString::number(rowData.count) : na);
-    m_sumLabel->setText(hasData ? QString::number(rowData.sum, 'f', statsPrecision) : na);
-    m_averageLabel->setText(hasData ? QString::number((rowData.count > 0) ? (rowData.sum / rowData.count) : 0.0, 'f', statsPrecision) : na);
+    m_elementCountLabel->setText(hasData ? QString::number(rowData.values.size()) : na);
+    m_sumLabel->setText(hasData ? QString::number(Calculate::getSum(rowData.values), 'f', statsPrecision) : na);
+    m_averageLabel->setText(hasData ? QString::number(hasData ? mean : 0.0, 'f', statsPrecision) : na);
 
     // Средние значения
     m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(rowData.values), 'f', statsPrecision) : na);
     m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(rowData.values), 'f', statsPrecision) : na);
-    m_weightedMeanLabel->setText(areWeightsValid(rowData.weights, rowData.values) ?
-                                     QString::number(Calculate::weightedMean(rowData.values, rowData.weights), 'f', statsPrecision) : na);
     m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(rowData.values), 'f', statsPrecision) : na);
     m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(rowData.values, trimmedMeanPercentage), 'f', statsPrecision) : na);
 
     // Распределение
     m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(rowData.values), 'f', statsPrecision) : na);
     m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(rowData.values), 'f', statsPrecision) : na);
-
-    double mean = hasData ? (rowData.sum / rowData.count) : 0.0;
-    double stdDev = hasData ? Calculate::getStandardDeviation(rowData.values, mean) : 0.0;
-
     m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
     m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(rowData.values, mean, stdDev), 'f', statsPrecision) : na);
     m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(rowData.values, mean, stdDev), 'f', statsPrecision) : na);
@@ -274,18 +185,12 @@ void MainWindow::updateUI(const TableRow& rowData) {
     m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(rowData.values, mean), 'f', statsPrecision) : na);
     m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(rowData.values), 'f', statsPrecision) : na);
     m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(rowData.values), 'f', statsPrecision) : na);
-
-    // Категориальные данные
-    m_modalFreqLabel->setText(hasCat ? QString::number(Calculate::modalFrequency(rowData.categories), 'f', statsPrecision) : na);
-    m_simpsonIndexLabel->setText(hasCat ? QString::number(Calculate::simpsonDiversityIndex(rowData.categories), 'f', statsPrecision) : na);
-    m_uniqueRatioLabel->setText(hasCat ? QString::number(Calculate::uniqueValueRatio(rowData.categories), 'f', statsPrecision) : na);
-    m_entropyLabel->setText(hasCat ? QString::number(Calculate::entropy(rowData.categories), 'f', statsPrecision) : na);
 }
 
 void MainWindow::updateStatistics() {
     if (!areAllLabelsDefined()) return;
 
-    const TableRow rowData = parseCurrentRow();
+    const TableRow rowData = parse();
     updateUI(rowData);
 }
 
@@ -306,7 +211,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     if (m_table) {
         // Обработчик изменения текущей ячейки
         connect(m_table, &QTableWidget::currentCellChanged, [this](int row, int, int, int) {
-            currentLine = row;
             updateStatistics();
         });
 

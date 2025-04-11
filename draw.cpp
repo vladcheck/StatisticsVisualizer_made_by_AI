@@ -66,7 +66,6 @@ namespace Draw {
 
                           if (reply == QMessageBox::Yes) {
                               actions.table->clearContents();
-                              actions.rowSpin->setValue(actions.rowSpin->minimum());
                               actions.colSpin->setValue(actions.colSpin->minimum());
                           } });
 

@@ -9,7 +9,8 @@ namespace Calculate
 {
     QVector<double> getWeights(const QTableWidget* table, int weightColumn);
     QVector<double> findWeights(const QTableWidget* table); // Автоматический поиск столбца с весами
-    double getMean(double sum, double count);
+    double getSum(const QVector<double>& values);
+    double getMean(const QVector<double>& values);
     double getMedian(const QVector<double>& values);
     double getMode(const QVector<double> &values);
     double getStandardDeviation(const QVector<double> &values, double mean);

@@ -29,8 +29,6 @@ private slots:
     void updateStatistics();
 
 private:
-    static int currentLine;
-
     QTableWidget *m_table = nullptr;
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;
@@ -45,36 +43,24 @@ private:
     QLabel* m_skewnessLabel = nullptr;
     QLabel* m_kurtosisLabel = nullptr;
     QLabel* m_harmonicMeanLabel = nullptr;
-    QLabel* m_weightedMeanLabel = nullptr;
     QLabel* m_trimmedMeanLabel = nullptr;
     QLabel* m_madLabel = nullptr;
     QLabel* m_rmsLabel = nullptr;
     QLabel* m_robustStdLabel = nullptr;
-    QLabel* m_modalFreqLabel = nullptr;         // Модальная частота
-    QLabel* m_simpsonIndexLabel = nullptr;      // Индекс Симпсона
-    QLabel* m_uniqueRatioLabel = nullptr;       // Доля уникальных
-    QLabel* m_entropyLabel = nullptr;           // Энтропия
     QLabel* m_shapiroWilkLabel = nullptr;
     QLabel* m_densityLabel = nullptr;
     QLabel* m_chiSquareLabel = nullptr;
     QLabel* m_kolmogorovLabel = nullptr;
 
-    TableRow parseCurrentRow() const;
+    TableRow parse() const;
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupDataPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
     QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
     QWidget* createMeansSection(QWidget *parent);
     QWidget* createDistributionSection(QWidget *parent);
     QWidget* createExtremesSection(QWidget *parent);
-    QWidget* createCategoricalSection(QWidget *parent);
     QWidget* createCorrelationSection(QWidget *parent);
     void updateUI(const TableRow& rowData);
-    void getTableValues(QVector<double>& values, int& count, double& sum);
-    void getCategorialData(QVector<QString> &categories);
-    void getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn = 0, int yColumn = 1);
-    bool hasValidSpearman(const QVector<double>& xData) const;
-    bool hasValidKendall(const QVector<double>& xData) const;
-    bool hasCatData(const QVector<QString>& categories) const;
     void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     bool areAllLabelsDefined();
 };
