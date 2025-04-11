@@ -113,7 +113,7 @@ namespace Draw {
             .clearButton = Draw::createToolButton("Очистить", "clear"),
             .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
             .colSpin = colSpinBox,
-            .importButton = Draw::createToolButton("Импорт CSV", "import-csv")
+            .importButton = Draw::createToolButton("Импортировать данные", "import-file")
         };
 
         // Подключение функционала
