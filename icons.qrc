@@ -6,5 +6,6 @@
         <file>clear.png</file>
         <file>auto-size.png</file>
         <file>import-file.png</file>
+        <file>export-file.png</file>
     </qresource>
 </RCC>
