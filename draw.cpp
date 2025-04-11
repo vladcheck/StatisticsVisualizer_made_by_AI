@@ -1,5 +1,5 @@
 #include "draw.h"
-#include "file.h"
+#include "import.h"
 #include "globals.h"
 
 #include <QHBoxLayout>
@@ -91,7 +91,7 @@ namespace Draw {
 
         // Импорт CSV
         QObject::connect(actions.importButton, &QPushButton::clicked, [=]() {
-            File::importFileData(actions.table);
+            Import::importFileData(actions.table);
         });
     }
 

@@ -37,8 +37,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         icons.qrc
         structs.h
         globals.h
-        file.cpp
-        file.h
+        import.cpp
+        import.h
         samples/gen.py samples/random_numbers.csv
         samples/gen.py samples/random_numbers.csv samples/random_numbers.txt
     )
