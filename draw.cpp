@@ -1,5 +1,6 @@
 #include "draw.h"
 #include "import.h"
+#include "export.h"
 #include "globals.h"
 
 #include <QHBoxLayout>
@@ -89,9 +90,14 @@ namespace Draw {
                               actions.table->setColumnCount(value);
                           } });
 
-        // Импорт CSV
+        // Импорт файлов
         QObject::connect(actions.importButton, &QPushButton::clicked, [=]() {
-            Import::importFileData(actions.table);
+            Import::importFile(actions.table);
+        });
+
+        // Импорт файлов
+        QObject::connect(actions.exportButton, &QPushButton::clicked, [=]() {
+            Export::exportData(actions.table);
         });
     }
 
@@ -113,18 +119,26 @@ namespace Draw {
             .clearButton = Draw::createToolButton("Очистить", "clear"),
             .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
             .colSpin = colSpinBox,
-            .importButton = Draw::createToolButton("Импортировать данные", "import-file")
+            .importButton = Draw::createToolButton("Импортировать данные", "import-file"),
+            .exportButton = Draw::createToolButton("Экспортировать данные", "export-file")
         };
 
-        // Подключение функционала
         setupTableActions(actions);
-
-        // Группируем элементы
         toolbarLayout->addLayout(columnsContainer);
-        for (auto *item : {actions.addColBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton,actions.importButton})
-        {
-            toolbarLayout->addWidget(item);
+
+        QList<QWidget*> toolbarWidgets = {
+            actions.addColBtn,
+            actions.delColBtn,
+            actions.autoSizeBtn,
+            actions.clearButton,
+            actions.importButton
+        };
+
+        // Добавляем элементы в layout
+        for (QWidget *widget : toolbarWidgets) {
+            toolbarLayout->addWidget(widget);
         }
+
         toolbarLayout->addStretch();
 
         return toolbar;
