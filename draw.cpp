@@ -16,6 +16,8 @@
 #include <QStringList>
 
 namespace Draw {
+    QRegularExpression csvRegex("[;, \\t-]+");
+
     void setSizePolicyExpanding(QWidget *w)
     {
         w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -78,7 +80,7 @@ namespace Draw {
 
         for (int i = 0; i < lines.size(); ++i) {
             QString line = lines[i];
-            QStringList values = line.split(' ');
+            QStringList values = line.split(csvRegex, Qt::SkipEmptyParts);
             if (i == 0) {
                 if (values.size() > table->columnCount()) {
                     table->setColumnCount(values.size());
