@@ -82,7 +82,7 @@ CMakeLists.txt.user*
 /build*/
 
 # Git
-_BACKUP_
-_BASE_
-_LOCAL_
-_REMOTE_
+*_BACKUP_*
+*_BASE_*
+*_LOCAL_*
+*_REMOTE_*
