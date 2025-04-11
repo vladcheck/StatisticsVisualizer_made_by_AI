@@ -2,7 +2,30 @@
 #include "globals.h"
 #include "draw.h"
 #include "calculate.h"
-#include "tableactions.h"
+#include "structs.h"
+
+int MainWindow::currentLine = 0;
+
+bool areWeightsValid(const QVector<double>& weights, const QVector<double>& values) {
+    return (weights.size() == values.size()) && !weights.isEmpty();
+}
+
+bool MainWindow::hasPairs(const QVector<double>& xData) const {
+    return xData.size() >= 2;
+}
+
+bool MainWindow::hasValidSpearman(const QVector<double>& xData) const {
+    return xData.size() >= 3;
+}
+
+bool MainWindow::hasValidKendall(const QVector<double>& xData) const {
+    return xData.size() >= 2;
+}
+
+bool MainWindow::hasCatData(const QVector<QString>& categories) const {
+    return !categories.isEmpty();
+}
+
 
 void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 {
@@ -154,29 +177,6 @@ QWidget *MainWindow::setupDataSection(QWidget *parent) {
     return dataSection;
 }
 
-void MainWindow::getTableValues(QVector<double>& values, int& count, double& sum) {
-    values.clear();
-    count = 0;
-    sum = 0.0;
-
-    for (int row = 0; row < m_table->rowCount(); ++row) {
-        QTableWidgetItem* item = m_table->item(row, 0);
-        if (item && !item->text().isEmpty()) {
-            bool ok;
-            double value = item->text().toDouble(&ok);
-            if (ok) {
-                values.append(value);
-                sum += value;
-                count++;
-            }
-        }
-    }
-}
-
-bool areWeightsValid(QVector<double> weights, QVector<double> values) {
-    return (weights.size() == values.size()) && !weights.isEmpty();
-}
-
 void MainWindow::getCategorialData(QVector<QString> &categories) {
     if (m_table->columnCount() > 2) {
         for (int row = 0; row < m_table->rowCount(); ++row) {
@@ -186,50 +186,25 @@ void MainWindow::getCategorialData(QVector<QString> &categories) {
     }
 }
 
-void MainWindow::getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn, int yColumn)
-{
+void MainWindow::getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn, int yColumn) {
     xData.clear();
     yData.clear();
 
-    if (m_table && m_table->columnCount() > qMax(xColumn, yColumn))
-    {
-        for (int row = 0; row < m_table->rowCount(); ++row)
-        {
-            bool okX = false, okY = false;
-            double x = 0.0, y = 0.0;
+    if (m_table && m_table->columnCount() > qMax(xColumn, yColumn)) {
+        QTableWidgetItem* itemX = m_table->item(currentLine, xColumn);
+        QTableWidgetItem* itemY = m_table->item(currentLine, yColumn);
 
-            QTableWidgetItem* itemX = m_table->item(row, xColumn);
-            QTableWidgetItem* itemY = m_table->item(row, yColumn);
+        if (itemX && itemY) {
+            bool okX, okY;
+            double x = itemX->text().toDouble(&okX);
+            double y = itemY->text().toDouble(&okY);
 
-            if (itemX && itemY)
-            {
-                x = itemX->text().toDouble(&okX);
-                y = itemY->text().toDouble(&okY);
-            }
-
-            if (okX && okY)
-            {
+            if (okX && okY) {
                 xData.append(x);
                 yData.append(y);
             }
         }
     }
-}
-
-bool MainWindow::hasPairs(const QVector<double>& xData) const {
-    return xData.size() >= 2;
-}
-
-bool MainWindow::hasValidSpearman(const QVector<double>& xData) const {
-    return xData.size() >= 3;
-}
-
-bool MainWindow::hasValidKendall(const QVector<double>& xData) const {
-    return xData.size() >= 2;
-}
-
-bool MainWindow::hasCatData(const QVector<QString>& categories) const {
-    return !categories.isEmpty();
 }
 
 bool MainWindow::areAllLabelsDefined() {
@@ -243,80 +218,105 @@ bool MainWindow::areAllLabelsDefined() {
             m_chiSquareLabel && m_densityLabel);
 }
 
-MainWindow::StatisticalData MainWindow::collectStatisticalData() {
-    StatisticalData result;
+TableRow MainWindow::parseCurrentRow() const {
+    TableRow result;
+    result.isValid = false;
 
-    // Сбор основных данных
-    getTableValues(result.values, result.count, result.sum);
-    result.weights = Calculate::findWeights(m_table);
-    result.hasData = result.count > 0;
+    if (!m_table || currentLine < 0 || currentLine >= m_table->rowCount())
+        return result;
 
-    // Сбор категориальных данных
-    getCategorialData(result.categories);
+    // Сбор данных из текущей строки
+    for (int col = 0; col < m_table->columnCount(); ++col) {
+        QTableWidgetItem* item = m_table->item(currentLine, col);
+        if (!item || item->text().isEmpty()) continue;
 
-    // Сбор данных для корреляций
-    getCorrelationalData(result.xData, result.yData, 0, 1);
+        switch(col) {
+        case 0: { // Основные значения
+            bool ok;
+            double value = item->text().toDouble(&ok);
+            if (ok) {
+                result.values.append(value);
+                result.sum += value;
+                result.count++;
+            }
+            break;
+        }
+        case 1: { // Веса
+            bool ok;
+            double weight = item->text().toDouble(&ok);
+            if (ok) result.weights.append(weight);
+            break;
+        }
+        case 2: { // Категории
+            result.categories.append(item->text());
+            break;
+        }
+        }
+    }
 
+    result.isValid = !result.values.isEmpty();
     return result;
 }
 
-void MainWindow::updateUI(const StatisticalData& data) {
-    const bool hasData = data.hasData;
-    const QString na = "—";
-    const double mean = hasData ? data.sum / data.count : 0.0;
+void MainWindow::updateUI(const TableRow& rowData) {
+    const bool hasData = rowData.isValid;
+    const bool hasCat = !rowData.categories.isEmpty();
+    const bool hasPairs = this->hasPairs(rowData.xData);
+    const bool validSpearman = this->hasValidSpearman(rowData.xData);
+    const bool validKendall = this->hasValidKendall(rowData.xData);
 
     // Основные метрики
-    m_elementCountLabel->setText(hasData ? QString::number(data.count) : na);
-    m_sumLabel->setText(hasData ? QString::number(data.sum, 'f', statsPrecision) : na);
-    m_averageLabel->setText(hasData ? QString::number(mean, 'f', statsPrecision) : na);
+    m_elementCountLabel->setText(hasData ? QString::number(rowData.count) : na);
+    m_sumLabel->setText(hasData ? QString::number(rowData.sum, 'f', statsPrecision) : na);
+    m_averageLabel->setText(hasData ? QString::number((rowData.count > 0) ? (rowData.sum / rowData.count) : 0.0, 'f', statsPrecision) : na);
 
     // Средние значения
-    m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(data.values), 'f', statsPrecision) : na);
-    m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(data.values), 'f', statsPrecision) : na);
-    m_weightedMeanLabel->setText(areWeightsValid(data.weights, data.values) ? QString::number(Calculate::weightedMean(data.values, data.weights), 'f', statsPrecision) : na);
-    m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(data.values), 'f', statsPrecision) : na);
-    m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(data.values, trimmedMeanPercentage), 'f', statsPrecision) : na);
+    m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(rowData.values), 'f', statsPrecision) : na);
+    m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(rowData.values), 'f', statsPrecision) : na);
+    m_weightedMeanLabel->setText(areWeightsValid(rowData.weights, rowData.values) ?
+                                     QString::number(Calculate::weightedMean(rowData.values, rowData.weights), 'f', statsPrecision) : na);
+    m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(rowData.values), 'f', statsPrecision) : na);
+    m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(rowData.values, trimmedMeanPercentage), 'f', statsPrecision) : na);
 
     // Распределение
-    m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(data.values), 'f', statsPrecision) : na);
-    m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(data.values), 'f', statsPrecision) : na);
-    m_stdDevLabel->setText(hasData ? QString::number(Calculate::getStandardDeviation(data.values, mean), 'f', statsPrecision) : na);
-    m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(data.values, mean, Calculate::getStandardDeviation(data.values, mean)), 'f', statsPrecision) : na);
-    m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(data.values, mean, Calculate::getStandardDeviation(data.values, mean)), 'f', statsPrecision) : na);
-    m_madLabel->setText(hasData ? QString::number(Calculate::medianAbsoluteDeviation(data.values), 'f', statsPrecision) : na);
-    m_robustStdLabel->setText(hasData ? QString::number(Calculate::robustStandardDeviation(data.values), 'f', statsPrecision) : na);
+    m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(rowData.values), 'f', statsPrecision) : na);
+    m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(rowData.values), 'f', statsPrecision) : na);
+
+    double mean = hasData ? (rowData.sum / rowData.count) : 0.0;
+    double stdDev = hasData ? Calculate::getStandardDeviation(rowData.values, mean) : 0.0;
+
+    m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
+    m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(rowData.values, mean, stdDev), 'f', statsPrecision) : na);
+    m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(rowData.values, mean, stdDev), 'f', statsPrecision) : na);
+    m_madLabel->setText(hasData ? QString::number(Calculate::medianAbsoluteDeviation(rowData.values), 'f', statsPrecision) : na);
+    m_robustStdLabel->setText(hasData ? QString::number(Calculate::robustStandardDeviation(rowData.values), 'f', statsPrecision) : na);
 
     // Статистические тесты
-    m_shapiroWilkLabel->setText(hasData ? QString::number(Calculate::shapiroWilkTest(data.values), 'f', statsPrecision) : na);
-    m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(data.values, mean), 'f', statsPrecision) : na);
-    m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(data.values), 'f', statsPrecision) : na);
-    m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(data.values), 'f', statsPrecision) : na);
+    m_shapiroWilkLabel->setText(hasData ? QString::number(Calculate::shapiroWilkTest(rowData.values), 'f', statsPrecision) : na);
+    m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(rowData.values, mean), 'f', statsPrecision) : na);
+    m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(rowData.values), 'f', statsPrecision) : na);
+    m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(rowData.values), 'f', statsPrecision) : na);
 
     // Категориальные данные
-    const bool hasCatData = !data.categories.isEmpty();
-    m_modalFreqLabel->setText(hasCatData ? QString::number(Calculate::modalFrequency(data.categories), 'f', statsPrecision) : na);
-    m_simpsonIndexLabel->setText(hasCatData ? QString::number(Calculate::simpsonDiversityIndex(data.categories), 'f', statsPrecision) : na);
-    m_uniqueRatioLabel->setText(hasCatData ? QString::number(Calculate::uniqueValueRatio(data.categories), 'f', statsPrecision) : na);
-    m_entropyLabel->setText(hasCatData ? QString::number(Calculate::entropy(data.categories), 'f', statsPrecision) : na);
+    m_modalFreqLabel->setText(hasCat ? QString::number(Calculate::modalFrequency(rowData.categories), 'f', statsPrecision) : na);
+    m_simpsonIndexLabel->setText(hasCat ? QString::number(Calculate::simpsonDiversityIndex(rowData.categories), 'f', statsPrecision) : na);
+    m_uniqueRatioLabel->setText(hasCat ? QString::number(Calculate::uniqueValueRatio(rowData.categories), 'f', statsPrecision) : na);
+    m_entropyLabel->setText(hasCat ? QString::number(Calculate::entropy(rowData.categories), 'f', statsPrecision) : na);
 
     // Корреляции
-    const bool hasPairs = data.xData.size() >= 2;
-    const bool hasValidSpearman = data.xData.size() >= 3;
-    m_covarianceLabel->setText(hasPairs ? QString::number(Calculate::covariance(data.xData, data.yData), 'f', statsPrecision) : na);
-    m_pearsonLabel->setText(hasPairs ? QString::number(Calculate::pearsonCorrelation(data.xData, data.yData), 'f', statsPrecision) : na);
-    m_spearmanLabel->setText(hasValidSpearman ? QString::number(Calculate::spearmanCorrelation(data.xData, data.yData), 'f', statsPrecision) : na);
-    m_kendallLabel->setText(hasPairs ? QString::number(Calculate::kendallCorrelation(data.xData, data.yData), 'f', statsPrecision) : na);
+    m_covarianceLabel->setText(hasPairs ? QString::number(Calculate::covariance(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
+    m_pearsonLabel->setText(hasPairs ? QString::number(Calculate::pearsonCorrelation(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
+    m_spearmanLabel->setText(validSpearman ? QString::number(Calculate::spearmanCorrelation(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
+    m_kendallLabel->setText(validKendall ? QString::number(Calculate::kendallCorrelation(rowData.xData, rowData.yData), 'f', statsPrecision) : na);
 }
 
 void MainWindow::updateStatistics() {
-    if (!areAllLabelsDefined()) {
-        qWarning() << "Some labels are not initialized!";
-        return;
-    }
+    if (!areAllLabelsDefined()) return;
 
-    const auto statisticalData = collectStatisticalData();
-    updateUI(statisticalData);
+    const TableRow rowData = parseCurrentRow();
+    updateUI(rowData);
 }
+
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
@@ -332,8 +332,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // Проверка инициализации перед подключением сигналов
     if (m_table) {
+        // Обработчик изменения текущей ячейки
+        connect(m_table, &QTableWidget::currentCellChanged, [this](int row, int, int, int) {
+            currentLine = row;
+            updateStatistics();
+        });
+
+        // Обработчик изменения данных
         connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
-        connect(m_table, &QTableWidget::cellChanged, this, &MainWindow::updateStatistics);
         updateStatistics();
     } else {
         qFatal("Table initialization failed!");

@@ -8,7 +8,7 @@
 #include <QIcon>
 #include <QPixmap>
 #include <QTableWidget>
-#include "tableactions.h"
+#include "structs.h"
 
 namespace Draw
 {

@@ -1,15 +1,17 @@
+#pragma once
+
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
 #include <QString>
 
 // Таблица
-const unsigned int initialRowCount = 1;
-const unsigned int initialColCount = 20;
+constexpr unsigned int initialRowCount = 1;
+constexpr unsigned int initialColCount = 20;
 
 // Расчёты
-const int statsPrecision = 3;
-const float trimmedMeanPercentage = 0.1;
+constexpr int statsPrecision = 3;
+constexpr float trimmedMeanPercentage = 0.1;
 constexpr int MIN_SAMPLE_SIZE = 5;
 constexpr int MAX_SAMPLE_SIZE = 5000;
 constexpr double SW_CRITICAL_VALUE = 0.95; // Шапиро-Уилк
@@ -24,7 +26,7 @@ constexpr double ALPHA_LEVEL = 0.05; // Уровни значимости
 // Интерфейс
 const QString na = "—";
 const QString fontName = "Arial";
-const unsigned int buttonSize = 36;
-const unsigned int buttonIconSize = static_cast<int>(buttonSize * 0.7);
+constexpr unsigned int buttonSize = 36;
+constexpr unsigned int buttonIconSize = static_cast<int>(buttonSize * 0.7);
 
 #endif // GLOBALS_H

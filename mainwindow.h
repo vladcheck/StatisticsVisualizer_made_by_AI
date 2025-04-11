@@ -17,6 +17,7 @@
 
 #include <limits>
 #include <iostream>
+#include "structs.h"
 
 class MainWindow : public QMainWindow
 {
@@ -28,16 +29,7 @@ private slots:
     void updateStatistics();
 
 private:
-    struct StatisticalData {
-        QVector<double> values;
-        QVector<double> weights;
-        QVector<QString> categories;
-        QVector<double> xData;
-        QVector<double> yData;
-        int count = 0;
-        double sum = 0.0;
-        bool hasData = false;
-    };
+    static int currentLine;
 
     QTableWidget *m_table = nullptr;
     QLabel *m_elementCountLabel = nullptr;
@@ -71,7 +63,7 @@ private:
     QLabel* m_chiSquareLabel = nullptr;
     QLabel* m_kolmogorovLabel = nullptr;
 
-    StatisticalData collectStatisticalData();
+    TableRow parseCurrentRow() const;
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupDataPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
     QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
@@ -80,7 +72,7 @@ private:
     QWidget* createExtremesSection(QWidget *parent);
     QWidget* createCategoricalSection(QWidget *parent);
     QWidget* createCorrelationSection(QWidget *parent);
-    void updateUI(const StatisticalData& data);
+    void updateUI(const TableRow& rowData);
     void getTableValues(QVector<double>& values, int& count, double& sum);
     void getCategorialData(QVector<QString> &categories);
     void getCorrelationalData(QVector<double>& xData, QVector<double>& yData, int xColumn = 0, int yColumn = 1);

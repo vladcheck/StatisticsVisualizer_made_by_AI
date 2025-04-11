@@ -105,8 +105,7 @@ namespace Draw {
                           } });
     }
 
-    QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table)
-    {
+    QWidget* setupTableToolbar(QWidget* parent, QTableWidget* table) {
         QWidget *toolbar = new QWidget(parent);
         toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
@@ -120,15 +119,16 @@ namespace Draw {
 
         // Создаем и настраиваем структуру
         TableActions actions{
-                             .addRowBtn = Draw::createToolButton("Добавить строку", "add-row"),
-                             .addColBtn = Draw::createToolButton("Добавить столбец", "add-column"),
-                             .delRowBtn = Draw::createToolButton("Удалить строку", "delete-row"),
-                             .delColBtn = Draw::createToolButton("Удалить столбец", "delete-column"),
-                             .clearButton = Draw::createToolButton("Очистить", "clear"),
-                             .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
-                             .table = table,
-                             .rowSpin = rowSpinBox,
-                             .colSpin = colSpinBox};
+            .table = table,
+            .addRowBtn = Draw::createToolButton("Добавить строку", "add-row"),
+            .addColBtn = Draw::createToolButton("Добавить столбец", "add-column"),
+            .delRowBtn = Draw::createToolButton("Удалить строку", "delete-row"),
+            .delColBtn = Draw::createToolButton("Удалить столбец", "delete-column"),
+            .clearButton = Draw::createToolButton("Очистить", "clear"),
+            .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
+            .rowSpin = rowSpinBox,
+            .colSpin = colSpinBox
+        };
 
         // Подключение функционала
         setupTableActions(actions);
@@ -147,8 +147,7 @@ namespace Draw {
         return toolbar;
     }
 
-    QTableWidget *setupTable(QWidget *parent)
-    {
+    QTableWidget *setupTable(QWidget *parent) {
         // Правая часть - таблица
         QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
         Draw::setSizePolicyExpanding(table);
@@ -158,8 +157,7 @@ namespace Draw {
         return table;
     }
 
-    QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable)
-    {
+    QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable) {
         QWidget *tableSection = new QWidget(parent);
 
         *outTable = setupTable(tableSection); // Создаем таблицу и возвращаем через outTable

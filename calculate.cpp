@@ -1,5 +1,6 @@
 #include "calculate.h"
 #include "globals.h"
+#include "structs.h"
 
 #include <QVector>
 #include <QTableWidgetItem>
@@ -31,9 +32,10 @@ namespace Calculate
     double getMean(double sum, double count) { return sum / count; }
 
     double getMedian(const QVector<double>& values) {
-        if (values.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
+        if (values.isEmpty())
+            return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = values; // Создаем копию для сортировки
+        QVector<double> sorted = values;
         std::sort(sorted.begin(), sorted.end());
 
         const int size = sorted.size();
@@ -336,16 +338,26 @@ namespace Calculate
 
     double pearsonCorrelation(const QVector<double>& x, const QVector<double>& y) {
         const size_t n = x.size();
-        if (n != y.size() || n < 2) return NAN;
+        if (n != y.size() || n < 2)
+            return NAN;
 
-        // Вычисляем ковариацию и стандартные отклонения
-        const double cov = covariance(x, y);
-        const double std_x = getStandardDeviation(x, getMean(std::accumulate(x.begin(), x.end(), 0.0), n));
-        const double std_y = getStandardDeviation(y, getMean(std::accumulate(y.begin(), y.end(), 0.0), n));
+        // Calculate means
+        double mean_x = std::accumulate(x.begin(), x.end(), 0.0) / n;
+        double mean_y = std::accumulate(y.begin(), y.end(), 0.0) / n;
 
-        if (std_x == 0 || std_y == 0) return NAN;
+        double numerator = 0.0, denominator_x = 0.0, denominator_y = 0.0;
+        for (size_t i = 0; i < n; ++i) {
+            double x_diff = x[i] - mean_x;
+            double y_diff = y[i] - mean_y;
+            numerator += x_diff * y_diff;
+            denominator_x += x_diff * x_diff;
+            denominator_y += y_diff * y_diff;
+        }
 
-        return cov / (std_x * std_y);
+        if (denominator_x == 0 || denominator_y == 0)
+            return NAN;
+
+        return numerator / (std::sqrt(denominator_x) * std::sqrt(denominator_y));
     }
 
     // Корреляция Спирмена

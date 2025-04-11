@@ -25,13 +25,17 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(StatisticsVisualizer
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        globals.cpp
+        ${TS_FILES}
         draw.h
         draw.cpp
         calculate.h
         calculate.cpp
         icons.qrc
-        tableactions.h
-        globals.cpp
+        structs.h
         globals.h
     )
 # Define target properties for Android with Qt 6 as:
