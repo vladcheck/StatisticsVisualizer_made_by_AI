@@ -11,7 +11,7 @@ namespace Import {
     QString readSingleLineFile(const QString &filePath, QWidget *parent); // Возвращает одну строку
     QStringList parseData(const QString &line, const QRegularExpression &regex);
     void updateTableWithData(QTableWidget *table, const QStringList &data);
-    void importFileData(QTableWidget *table);
+    void importFile(QTableWidget *table);
 }
 
 #endif // IMPORT_H

@@ -62,7 +62,7 @@ namespace Import {
         table->resizeColumnsToContents();
     }
 
-    void importFileData(QTableWidget *table) {
+    void importFile(QTableWidget *table) {
         const QString filePath = getFilePath(table);
         if (filePath.isEmpty()) return;
 
