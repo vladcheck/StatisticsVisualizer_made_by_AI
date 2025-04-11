@@ -14,6 +14,7 @@ struct TableActions {
     QPushButton* clearButton;
     QPushButton* autoSizeBtn;
     QSpinBox* colSpin;
+    QPushButton* importButton;
 };
 
 struct TableRow {

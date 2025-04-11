@@ -10,6 +10,10 @@
 #include <QTableWidget>
 #include <QMessageBox>
 #include <QHeaderView>
+#include <QFileDialog>
+#include <QFile>
+#include <QTextStream>
+#include <QStringList>
 
 namespace Draw {
     void setSizePolicyExpanding(QWidget *w)
@@ -36,6 +40,59 @@ namespace Draw {
         headerAlignment->setContentsMargins(0, 0, 0, 0);
         headerAlignment->addWidget(h1, 0, Qt::AlignCenter);
         return header;
+    }
+
+    void importCsvData(QTableWidget *table)
+    {
+        QString filePath = QFileDialog::getOpenFileName(
+            table,
+            "Импорт CSV файла",
+            "",
+            "CSV файлы (*.csv);;Все файлы (*)"
+            );
+
+        if (filePath.isEmpty()) {
+            return;
+        }
+
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QMessageBox::critical(table, "Ошибка", "Не удалось открыть файл.");
+            return;
+        }
+
+        QTextStream in(&file);
+        QStringList lines;
+        while (!in.atEnd()) {
+            lines.append(in.readLine());
+        }
+        file.close();
+
+        if (lines.isEmpty()) {
+            return;
+        }
+
+        table->clearContents();
+        table->setRowCount(0);
+        table->setColumnCount(0);
+
+        for (int i = 0; i < lines.size(); ++i) {
+            QString line = lines[i];
+            QStringList values = line.split(' ');
+            if (i == 0) {
+                if (values.size() > table->columnCount()) {
+                    table->setColumnCount(values.size());
+                }
+            }
+            table->insertRow(i);
+            for (int j = 0; j < values.size(); ++j) {
+                if (j < table->columnCount()) {
+                    QTableWidgetItem *item = new QTableWidgetItem(values[j]);
+                    table->setItem(i, j, item);
+                } else break;  // Игнорирование данных, если столбцов в файле больше, чем может вместить таблица
+            }
+        }
+        table->resizeColumnsToContents();
     }
 
     void setupTableActions(const TableActions &actions)
@@ -81,6 +138,11 @@ namespace Draw {
                           if (value >= actions.colSpin->minimum()) {
                               actions.table->setColumnCount(value);
                           } });
+
+        // Импорт CSV
+        QObject::connect(actions.importButton, &QPushButton::clicked, [=]() {
+            importCsvData(actions.table);
+        });
     }
 
     QWidget* setupTableToolbar(QWidget* parent, QTableWidget* table) {
@@ -100,7 +162,8 @@ namespace Draw {
             .delColBtn = Draw::createToolButton("Удалить столбец", "delete-column"),
             .clearButton = Draw::createToolButton("Очистить", "clear"),
             .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
-            .colSpin = colSpinBox
+            .colSpin = colSpinBox,
+            .importButton = Draw::createToolButton("Импорт CSV", "import-csv")
         };
 
         // Подключение функционала
@@ -108,7 +171,7 @@ namespace Draw {
 
         // Группируем элементы
         toolbarLayout->addLayout(columnsContainer);
-        for (auto *item : {actions.addColBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton})
+        for (auto *item : {actions.addColBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton,actions.importButton})
         {
             toolbarLayout->addWidget(item);
         }
@@ -140,7 +203,6 @@ namespace Draw {
         return tableSection;
     }
 
-    // Улучшенный разделитель (horizontal = false для вертикального)
     QWidget *createSeparator(bool horizontal = true)
     {
         QFrame *line = new QFrame();
