@@ -131,7 +131,8 @@ namespace Draw {
             actions.delColBtn,
             actions.autoSizeBtn,
             actions.clearButton,
-            actions.importButton
+            actions.importButton,
+            actions.exportButton
         };
 
         // Добавляем элементы в layout

@@ -26,21 +26,19 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
+        mainwindow.cpp mainwindow.h
         globals.cpp
         ${TS_FILES}
-        draw.h
-        draw.cpp
-        calculate.h
-        calculate.cpp
+        draw.h draw.cpp
+        calculate.h calculate.cpp
         icons.qrc
         structs.h
         globals.h
-        import.cpp
-        import.h
+        import.cpp import.h
         samples/gen.py samples/random_numbers.csv
         samples/gen.py samples/random_numbers.csv samples/random_numbers.txt
+        export.cpp export.h
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET StatisticsVisualizer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
