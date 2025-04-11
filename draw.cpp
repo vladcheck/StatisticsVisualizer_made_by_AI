@@ -91,7 +91,7 @@ namespace Draw {
 
         // Импорт CSV
         QObject::connect(actions.importButton, &QPushButton::clicked, [=]() {
-            File::importCsvData(actions.table);
+            File::importFileData(actions.table);
         });
     }
 
