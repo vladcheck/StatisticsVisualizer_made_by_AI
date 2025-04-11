@@ -40,25 +40,11 @@ namespace Draw {
 
     void setupTableActions(const TableActions &actions)
     {
-        // Добавление строки
-        Draw::connect(actions.addRowBtn, [=]()
-                      {
-                          actions.table->setRowCount(actions.table->rowCount() + 1);
-                          actions.rowSpin->setValue(actions.table->rowCount()); });
-
         // Добавление столбца
         Draw::connect(actions.addColBtn, [=]()
                       {
                           actions.table->setColumnCount(actions.table->columnCount() + 1);
                           actions.colSpin->setValue(actions.table->columnCount()); });
-
-        // Удаление строки
-        Draw::connect(actions.delRowBtn, [=]()
-                      {
-                          if(actions.table->rowCount() > 1) {
-                              actions.table->setRowCount(actions.table->rowCount() - 1);
-                              actions.rowSpin->setValue(actions.table->rowCount());
-                          } });
 
         // Удаление столбца
         Draw::connect(actions.delColBtn, [=]()
@@ -90,13 +76,6 @@ namespace Draw {
                           actions.table->resizeColumnsToContents();
                           actions.table->resizeRowsToContents(); });
 
-        // Обработка изменения спинбокса строк
-        Draw::connect(actions.rowSpin, [=](int value)
-                      {
-                          if (value >= actions.rowSpin->minimum()) {
-                              actions.table->setRowCount(value);
-                          } });
-
         // Обработка изменения спинбокса столбцов
         Draw::connect(actions.colSpin, [=](int value)
                       {
@@ -112,21 +91,16 @@ namespace Draw {
         toolbarLayout->setSpacing(5);
 
         // Спинбоксы
-        auto *rowsContainer = Draw::createSpinBoxWithLabel(toolbar, "Строки", 10, initialRowCount);
         auto *columnsContainer = Draw::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
-        QSpinBox *rowSpinBox = qobject_cast<QSpinBox *>(rowsContainer->layout()->itemAt(1)->widget());
         QSpinBox *colSpinBox = qobject_cast<QSpinBox *>(columnsContainer->layout()->itemAt(1)->widget());
 
         // Создаем и настраиваем структуру
         TableActions actions{
             .table = table,
-            .addRowBtn = Draw::createToolButton("Добавить строку", "add-row"),
             .addColBtn = Draw::createToolButton("Добавить столбец", "add-column"),
-            .delRowBtn = Draw::createToolButton("Удалить строку", "delete-row"),
             .delColBtn = Draw::createToolButton("Удалить столбец", "delete-column"),
             .clearButton = Draw::createToolButton("Очистить", "clear"),
             .autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size"),
-            .rowSpin = rowSpinBox,
             .colSpin = colSpinBox
         };
 
@@ -134,11 +108,8 @@ namespace Draw {
         setupTableActions(actions);
 
         // Группируем элементы
-        for (auto *item : {rowsContainer, columnsContainer})
-        {
-            toolbarLayout->addLayout(item);
-        }
-        for (auto *item : {actions.addRowBtn, actions.addColBtn, actions.delRowBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton})
+        toolbarLayout->addLayout(columnsContainer);
+        for (auto *item : {actions.addColBtn, actions.delColBtn, actions.autoSizeBtn, actions.clearButton})
         {
             toolbarLayout->addWidget(item);
         }
