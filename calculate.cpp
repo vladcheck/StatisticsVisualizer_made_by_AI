@@ -11,32 +11,65 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include <QtDebug>
+
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
+
 
 namespace Calculate
 {
     QVector<double> getWeights(const QTableWidget* table, int weightColumn = 1) {
         QVector<double> weights;
-        if (!table || weightColumn >= table->columnCount()) return weights;
+        if (!table || weightColumn >= table->columnCount() || weightColumn < 0) return weights; // Добавлена проверка < 0
 
         for (int row = 0; row < table->rowCount(); ++row) {
             QTableWidgetItem* item = table->item(row, weightColumn);
             if (item && !item->text().isEmpty()) {
                 bool ok;
                 double weight = item->text().toDouble(&ok);
-                if (ok && weight >= 0) weights.append(weight);
+                // Проверяем на валидность и неотрицательность веса
+                if (ok && weight >= 0 && std::isfinite(weight)) {
+                    weights.append(weight);
+                } else {
+                    // Если хотя бы один вес некорректен, лучше вернуть пустой вектор
+                    // или обработать ошибку по-другому, в зависимости от требований.
+                    qWarning() << "Invalid weight found in row" << row << "column" << weightColumn;
+                    return QVector<double>(); // Возвращаем пустой вектор при ошибке
+                }
+            } else {
+                // Если ячейка пуста, считать ли это ошибкой? Зависит от требований.
+                // Пока считаем ошибкой, если ожидаются веса для всех строк данных.
+                qWarning() << "Empty weight cell found in row" << row << "column" << weightColumn;
+                return QVector<double>();
             }
         }
         return weights;
     }
 
     double getSum(const QVector<double>& values) {
-        double sum = 0;
-        for (auto n : values) {sum += n;}
-        return sum;
+        // Используем long double для суммы для большей точности
+        long double sum = 0.0L;
+        for (double n : values) {
+            if (!std::isfinite(n)) return std::numeric_limits<double>::quiet_NaN(); // Проверка на NaN/inf
+            sum += static_cast<long double>(n);
+        }
+        if (!std::isfinite(sum)) return std::numeric_limits<double>::quiet_NaN();
+        return static_cast<double>(sum);
     }
 
     double getMean(const QVector<double>& values) {
-        return getSum(values) / values.size();
+        if (values.isEmpty()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+        double sum = getSum(values); // Использует getSum с long double
+        if (std::isnan(sum)) return std::numeric_limits<double>::quiet_NaN();
+
+        long double mean_ld = static_cast<long double>(sum) / values.size();
+        if (!std::isfinite(mean_ld)) return std::numeric_limits<double>::quiet_NaN();
+        return static_cast<double>(mean_ld);
     }
 
     double getMedian(const QVector<double>& values) {
@@ -44,14 +77,25 @@ namespace Calculate
             return std::numeric_limits<double>::quiet_NaN();
 
         QVector<double> sorted = values;
+        // Удаляем NaN перед сортировкой, если они могут присутствовать
+        sorted.erase(std::remove_if(sorted.begin(), sorted.end(), [](double d){ return !std::isfinite(d); }), sorted.end());
+
+        if (sorted.isEmpty()) // Если остались только NaN
+            return std::numeric_limits<double>::quiet_NaN();
+
         std::sort(sorted.begin(), sorted.end());
 
         const int size = sorted.size();
         const int mid = size / 2;
 
-        return (size % 2 == 0)
-                   ? (sorted[mid - 1] + sorted[mid]) / 2.0
-                   : sorted[mid];
+        if (size % 2 == 0) {
+            // Используем long double для среднего двух элементов
+            long double median_val = (static_cast<long double>(sorted[mid - 1]) + static_cast<long double>(sorted[mid])) / 2.0L;
+            if (!std::isfinite(median_val)) return std::numeric_limits<double>::quiet_NaN();
+            return static_cast<double>(median_val);
+        } else {
+            return sorted[mid]; // Один центральный элемент
+        }
     }
 
     double getMode(const QVector<double> &values)
@@ -60,65 +104,137 @@ namespace Calculate
             return std::numeric_limits<double>::quiet_NaN();
 
         QMap<double, int> frequencyMap;
+        int validCount = 0;
         for (double value : values)
         {
-            frequencyMap[value]++;
+            if (std::isfinite(value)) { // Считаем только конечные числа
+                frequencyMap[value]++;
+                validCount++;
+            }
         }
 
+        if (validCount == 0) // Если не было валидных чисел
+            return std::numeric_limits<double>::quiet_NaN();
+
         int maxFrequency = 0;
-        double mode = std::numeric_limits<double>::quiet_NaN();
+        double mode = std::numeric_limits<double>::quiet_NaN(); // Инициализируем как NaN
+        bool multipleModes = false;
+
         for (auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it)
         {
             if (it.value() > maxFrequency)
             {
                 maxFrequency = it.value();
                 mode = it.key();
+                multipleModes = false; // Нашли новую максимальную частоту
+            } else if (it.value() == maxFrequency) {
+                multipleModes = true; // Нашли еще одно значение с такой же частотой
             }
         }
 
-        // Считаем моду существующей только если частота > 1
-        return (maxFrequency > 1) ? mode : std::numeric_limits<double>::quiet_NaN();
+        // Если все значения уникальны (макс частота = 1) или есть несколько мод,
+        // часто считается, что моды нет (возвращаем NaN).
+        // Ваш старый код требовал maxFrequency > 1. Оставим это требование.
+        if (maxFrequency <= 1 || multipleModes) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        return mode;
     }
 
     double getStandardDeviation(const QVector<double> &values, double mean)
     {
-        if (values.size() < 2)
+        const int n = values.size();
+        if (n < 2 || std::isnan(mean)) // Проверка на NaN mean
             return std::numeric_limits<double>::quiet_NaN();
 
-        double sumSqDifferences = 0.0;
+        long double sumSqDifferences = 0.0L; // long double
+        long double mean_ld = static_cast<long double>(mean);
+        int validCount = 0;
+
         for (double value : values)
         {
-            sumSqDifferences += std::pow(value - mean, 2);
+            if (std::isfinite(value)) { // Обработка только конечных чисел
+                long double diff = static_cast<long double>(value) - mean_ld;
+                sumSqDifferences += diff * diff;
+                validCount++;
+            }
         }
 
-        // Несмещённая оценка (n-1)
-        return std::sqrt(sumSqDifferences / (values.size() - 1));
+        if (validCount < 2) // Нужно хотя бы 2 валидных значения
+            return std::numeric_limits<double>::quiet_NaN();
+
+        // Используем validCount в знаменателе
+        long double variance = sumSqDifferences / (validCount - 1);
+
+        if (variance < 0.0L || !std::isfinite(variance)) { // Проверка на отрицательную или бесконечную дисперсию
+            // variance может быть очень близка к нулю, но отрицательной быть не должна
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        long double stdDev_ld = std::sqrt(variance);
+
+        if (!std::isfinite(stdDev_ld)) return std::numeric_limits<double>::quiet_NaN();
+        return static_cast<double>(stdDev_ld);
     }
 
     double geometricMean(const QVector<double>& values) {
         if (values.isEmpty())
             return std::numeric_limits<double>::quiet_NaN();
 
-        double product = 1.0;
+        long double logSum = 0.0L; // Используем сумму логарифмов для стабильности и точности
         for (double value : values) {
-            if (value <= 0)
+            if (value <= 0) // Геометрическое среднее не определено для <= 0
                 return std::numeric_limits<double>::quiet_NaN();
-            product *= value;
+            logSum += std::log(static_cast<long double>(value));
         }
 
-        return std::pow(product, 1.0 / values.size());
+        // Проверка на случай, если сумма логарифмов слишком мала/велика
+        if (!std::isfinite(logSum)) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        // Среднее логарифмов
+        long double meanLog = logSum / values.size();
+
+        // Экспонента от среднего логарифма
+        long double result = std::exp(meanLog);
+
+        // Возвращаем как double, проверяя на переполнение/underflow
+        if (!std::isfinite(result) || result > std::numeric_limits<double>::max() || result < std::numeric_limits<double>::lowest()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        return static_cast<double>(result);
     }
 
     double harmonicMean(const QVector<double>& values) {
         if (values.isEmpty()) return std::numeric_limits<double>::quiet_NaN();
 
-        double reciprocalSum = 0.0;
+        long double reciprocalSum = 0.0L; // Используем long double
         for (double value : values) {
-            if (value <= 0) return std::numeric_limits<double>::quiet_NaN();
-            reciprocalSum += 1.0 / value;
+            if (value <= 0) // Гармоническое среднее не определено для <= 0
+                return std::numeric_limits<double>::quiet_NaN();
+            if (value < std::numeric_limits<double>::epsilon()) { // Избегаем деления на очень малое число
+                qWarning() << "Harmonic mean calculation: value near zero encountered.";
+                return std::numeric_limits<double>::quiet_NaN();
+            }
+            reciprocalSum += 1.0L / static_cast<long double>(value);
         }
 
-        return values.size() / reciprocalSum;
+        // Проверяем сумму обратных величин
+        if (reciprocalSum < std::numeric_limits<long double>::epsilon() || !std::isfinite(reciprocalSum)) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        // Вычисляем результат как long double
+        long double result = static_cast<long double>(values.size()) / reciprocalSum;
+
+        if (!std::isfinite(result)) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+        // Возвращаем как double
+        return static_cast<double>(result);
     }
 
     double weightedMean(const QVector<double>& values, const QVector<double>& weights) {
@@ -216,16 +332,46 @@ namespace Calculate
 
     double kurtosis(const QVector<double>& values, double mean, double stdDev) {
         const int n = values.size();
-        if (n < 4 || stdDev == 0) return std::numeric_limits<double>::quiet_NaN();
+        // Используем long double для n для точности в коэффициентах
+        const long double n_ld = static_cast<long double>(n);
 
-        double sumFourthDeviations = 0.0;
+        if (n < 4 || stdDev == 0 || std::abs(stdDev) < std::numeric_limits<double>::epsilon())
+            return std::numeric_limits<double>::quiet_NaN();
+
+        long double sumFourthDeviations = 0.0L; // Используем long double
+        const long double mean_ld = static_cast<long double>(mean);
+
         for (double value : values) {
-            sumFourthDeviations += std::pow(value - mean, 4);
+            long double deviation = static_cast<long double>(value) - mean_ld;
+            // Используем pow с long double для точности
+            sumFourthDeviations += std::pow(deviation, 4.0L);
         }
 
-        const double biasCorrection = (n * (n + 1)) / static_cast<double>((n - 1) * (n - 2) * (n - 3));
-        const double term = sumFourthDeviations / std::pow(stdDev, 4);
-        return biasCorrection * term - 3 * std::pow(n - 1, 2) / static_cast<double>((n - 2) * (n - 3));
+        // Проверяем точность stdDev перед возведением в степень
+        const long double stdDev_ld = static_cast<long double>(stdDev);
+        if (stdDev_ld < std::numeric_limits<long double>::epsilon()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+        long double stdDevPow4 = std::pow(stdDev_ld, 4.0L);
+        if (stdDevPow4 < std::numeric_limits<long double>::epsilon()) {
+            return std::numeric_limits<double>::quiet_NaN(); // Избегаем деления на ноль/малое число
+        }
+
+
+        // Расчет с использованием long double для коэффициентов
+        // Формула для несмещенной оценки эксцесса выборки
+        long double term1 = (n_ld * (n_ld + 1.0L)) / ((n_ld - 1.0L) * (n_ld - 2.0L) * (n_ld - 3.0L));
+        long double term2 = sumFourthDeviations / stdDevPow4;
+        long double term3 = (3.0L * std::pow(n_ld - 1.0L, 2.0L)) / ((n_ld - 2.0L) * (n_ld - 3.0L));
+
+        long double kurt = term1 * term2 - term3;
+
+        if (!std::isfinite(kurt)) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        // Возвращаем как double
+        return static_cast<double>(kurt);
     }
 
     double trimmedMean(const QVector<double>& values, double trimFraction = 0.1) {
