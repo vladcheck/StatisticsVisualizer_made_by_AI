@@ -159,6 +159,9 @@ void MainWindow::updateUI(const TableRow& rowData) {
     const bool hasData = rowData.isValid;
     double mean = hasData ? Calculate::getMean(rowData.values) : 0.0;
     double stdDev = hasData ? Calculate::getStandardDeviation(rowData.values, mean) : 0.0;
+    double min = hasData ? *std::min_element(rowData.values.begin(), rowData.values.end()) : 0.0;
+    double max = hasData ? *std::max_element(rowData.values.begin(), rowData.values.end()) : 0.0;
+    double range = max - min;
 
     // Основные метрики
     m_elementCountLabel->setText(hasData ? QString::number(rowData.values.size()) : na);
@@ -185,6 +188,11 @@ void MainWindow::updateUI(const TableRow& rowData) {
     m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(rowData.values, mean), 'f', statsPrecision) : na);
     m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(rowData.values), 'f', statsPrecision) : na);
     m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(rowData.values), 'f', statsPrecision) : na);
+
+    // Экстремумы
+    m_minLabel->setText(hasData ? QString::number(min, 'f', statsPrecision) : na);
+    m_maxLabel->setText(hasData ? QString::number(max, 'f', statsPrecision) : na);
+    m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : na);
 }
 
 void MainWindow::updateStatistics() {
