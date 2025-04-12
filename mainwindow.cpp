@@ -96,8 +96,10 @@ QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll) {
     scrollArea->setWidgetResizable(true);
     scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     scrollArea->setFrameShape(QFrame::NoFrame); // Убираем рамку
-    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Горизонтальную отключаем
+    scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
+    scrollArea->verticalScrollBar()->setContextMenuPolicy(Qt::NoContextMenu);
     return scrollArea;
 }
 
@@ -114,20 +116,35 @@ QWidget* MainWindow::setupTablePanel(QWidget *parent) {
     return tableSection;
 }
 
-QWidget *MainWindow::setupDataSection(QWidget *parent) {
-    QWidget *dataSection = new QWidget(parent);
-    QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
+QWidget* MainWindow::setupDataSection(QWidget* parent) {
+    QWidget* dataSection = new QWidget(parent);
+    QHBoxLayout* dataSectionLayout = new QHBoxLayout(dataSection);
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
-    QWidget *statsPanel = setupDataPanel(dataSection, &m_elementCountLabel, &m_sumLabel, &m_averageLabel);
+    // Панель статистики с автоматическим растяжением
+    QWidget* statsPanel = setupDataPanel(dataSection, &m_elementCountLabel,
+                                         &m_sumLabel, &m_averageLabel);
+    statsPanel->setMinimumWidth(320); // Минимальная ширина для статистики
 
-    QScrollArea *scrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
+    // Область прокрутки с новыми настройками
+    QScrollArea* scrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
 
-    auto *tablePanel = setupTablePanel(dataSection);
+    // Панель таблицы с возможностью растяжения
+    QWidget* tablePanel = setupTablePanel(dataSection);
+    tablePanel->setMinimumWidth(400);
 
-    dataSectionLayout->addWidget(scrollArea, 1);
-    dataSectionLayout->addWidget(tablePanel, 1);
-    QScroller::grabGesture(scrollArea, QScroller::LeftMouseButtonGesture);
+    dataSectionLayout->addWidget(scrollArea, 1);  // Растягиваем сначала статистику
+    dataSectionLayout->addWidget(tablePanel, 2);  // Затем таблицу в соотношении 1:2
+
+    // Обработчик изменения размера для динамической прокрутки
+    QObject::connect(scrollArea->verticalScrollBar(), &QScrollBar::rangeChanged,
+                     [scrollArea](int min, int max) {
+                         if (max > 0) {
+                             scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+                         } else {
+                             scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+                         }
+                     });
 
     return dataSection;
 }

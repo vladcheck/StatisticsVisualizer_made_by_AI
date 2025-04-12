@@ -20,6 +20,7 @@
 #include <QMap>
 #include <QScrollArea>
 #include <QScroller>
+#include <QScrollBar>
 
 #include <limits>
 #include <iostream>
