@@ -1,8 +1,4 @@
 #include "mainwindow.h"
-#include "globals.h"
-#include "draw.h"
-#include "calculate.h"
-#include "structs.h"
 
 bool areWeightsValid(const QVector<double>& weights, const QVector<double>& values) {
     return (weights.size() == values.size()) && !weights.isEmpty();
@@ -105,28 +101,126 @@ QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll) {
     return scrollArea;
 }
 
+QWidget* MainWindow::setupTablePanel(QWidget *parent) {
+    QWidget *tableSection = new QWidget(parent);
+
+    this->m_table = Draw::setupTable(tableSection); // Создаем таблицу и возвращаем через outTable
+    auto *tableToolbar = setupTableToolbar(tableSection, m_table);
+
+    QVBoxLayout *tableSectionLayout = new QVBoxLayout(tableSection);
+    tableSectionLayout->addWidget(tableToolbar);
+    tableSectionLayout->addWidget(m_table);
+
+    return tableSection;
+}
+
 QWidget *MainWindow::setupDataSection(QWidget *parent) {
     QWidget *dataSection = new QWidget(parent);
     QHBoxLayout *dataSectionLayout = new QHBoxLayout(dataSection);
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Создаем панель статистики
-    QWidget *statsPanel = setupDataPanel(dataSection, &m_elementCountLabel,
-                                          &m_sumLabel, &m_averageLabel);
+    QWidget *statsPanel = setupDataPanel(dataSection, &m_elementCountLabel, &m_sumLabel, &m_averageLabel);
 
-    // Создаем scroll area и настраиваем
     QScrollArea *scrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
 
-    // Добавляем таблицу и панель статистики
-    QTableWidget *table = nullptr;
-    auto *tablePanel = Draw::setupTablePanel(dataSection, &table);
-    m_table = table;
+    auto *tablePanel = setupTablePanel(dataSection);
 
-    dataSectionLayout->addWidget(scrollArea, 1); // Заменяем statsPanel на scrollArea
+    dataSectionLayout->addWidget(scrollArea, 1);
     dataSectionLayout->addWidget(tablePanel, 1);
     QScroller::grabGesture(scrollArea, QScroller::LeftMouseButtonGesture);
 
     return dataSection;
+}
+
+QWidget* MainWindow::setupTableToolbar(QWidget* parent, QTableWidget* table) {
+    QWidget *toolbar = new QWidget(parent);
+    toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
+    toolbarLayout->setSpacing(5);
+
+    // Спинбоксы
+    auto *columnsContainer = Draw::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
+    QSpinBox *colSpinBox = qobject_cast<QSpinBox *>(columnsContainer->layout()->itemAt(1)->widget());
+
+    this->m_table = table;
+    this->m_addColBtn = Draw::createToolButton("Добавить столбец", "add-column");
+    this->m_delColBtn = Draw::createToolButton("Удалить столбец", "delete-column");
+    this->m_clearBtn = Draw::createToolButton("Очистить", "clear");
+    this->m_autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size");
+    this->m_colSpin = colSpinBox;
+    this->m_importBtn = Draw::createToolButton("Импортировать данные", "import-file");
+    this->m_exportBtn = Draw::createToolButton("Экспортировать данные", "export-file");
+
+    setupTableActions();
+    toolbarLayout->addLayout(columnsContainer);
+
+    QList<QWidget*> toolbarWidgets = {
+        m_addColBtn,
+        m_delColBtn,
+        m_autoSizeBtn,
+        m_clearBtn,
+        m_importBtn,
+        m_exportBtn
+    };
+
+    // Добавляем элементы в layout
+    for (QWidget *widget : toolbarWidgets) {
+        toolbarLayout->addWidget(widget);
+    }
+
+    toolbarLayout->addStretch();
+
+    return toolbar;
+}
+
+void MainWindow::setupTableActions()
+{
+    // Добавление столбца
+    Draw::connect(m_addColBtn, [=]()
+                  {
+                      m_table->setColumnCount(m_table->columnCount() + 1);
+                      m_colSpin->setValue(m_table->columnCount()); });
+
+    // Удаление столбца
+    Draw::connect(m_delColBtn, [=]()
+                  {
+                      if(m_table->columnCount() > 1) {
+                          m_table->setColumnCount(m_table->columnCount() - 1);
+                          m_colSpin->setValue(m_table->columnCount());
+                      } });
+
+    // Очистка таблицы
+    Draw::connect(m_clearBtn, [=]()
+                  {
+                      auto reply = QMessageBox::question(
+                          m_table,
+                          "Очистка таблицы",
+                          "Удалить все данные?",
+                          QMessageBox::Yes | QMessageBox::No
+                          );
+
+                      if (reply == QMessageBox::Yes) {
+                          m_table->clearContents();
+                          m_colSpin->setValue(m_colSpin->minimum());
+                      } });
+
+    // Авторазмер
+    Draw::connect(m_autoSizeBtn, [=]()
+                  {
+                      m_table->resizeColumnsToContents();
+                      m_table->resizeRowsToContents(); });
+
+    // Обработка изменения спинбокса столбцов
+    Draw::connect(m_colSpin, [=](int value)
+                  {
+                      if (value >= m_colSpin->minimum()) {
+                          m_table->setColumnCount(value);
+                      } });
+
+    // Импорт файлов
+    QObject::connect(m_importBtn, &QPushButton::clicked, [=]() {
+        Import::importFile(m_table);
+    });
 }
 
 bool MainWindow::areAllLabelsDefined() {

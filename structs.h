@@ -7,17 +7,6 @@
 #include <QPushButton>
 #include <QSpinBox>
 
-struct TableActions {
-    QTableWidget* table;
-    QPushButton* addColBtn;
-    QPushButton* delColBtn;
-    QPushButton* clearButton;
-    QPushButton* autoSizeBtn;
-    QSpinBox* colSpin;
-    QPushButton* importButton;
-    QPushButton* exportButton;
-};
-
 struct TableRow {
     QVector<double> values;
     bool isValid = false;

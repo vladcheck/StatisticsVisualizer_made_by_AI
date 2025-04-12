@@ -36,8 +36,7 @@ namespace Draw
     void setSizePolicyExpanding(QWidget *w);
     void setSizePolicyFixed(QWidget *w);
     QWidget *setupHeader(QWidget *parent, const int fontSize);
-    void setupTableActions(const TableActions &actions);
-    QWidget *setupTableToolbar(QWidget *parent, QTableWidget *table);
+    void setupTableActions();
     QTableWidget *setupTable(QWidget *parent);
     QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable);
     QWidget *createSeparator(bool horizontal);

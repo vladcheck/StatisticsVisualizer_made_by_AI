@@ -1,6 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "globals.h"
+#include "draw.h"
+#include "calculate.h"
+#include "structs.h"
+#include "import.h"
+
 #include <QMainWindow>
 #include <QTableWidget>
 #include <QHBoxLayout>
@@ -30,6 +36,14 @@ private slots:
 
 private:
     QTableWidget *m_table = nullptr;
+    QPushButton* m_addColBtn = nullptr;
+    QPushButton* m_delColBtn = nullptr;
+    QPushButton* m_clearBtn = nullptr;
+    QPushButton* m_autoSizeBtn = nullptr;
+    QSpinBox* m_colSpin = nullptr;
+    QPushButton* m_importBtn = nullptr;
+    QPushButton* m_exportBtn = nullptr;
+
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;
     QLabel *m_averageLabel = nullptr;
@@ -60,6 +74,9 @@ private:
     QWidget* createDistributionSection(QWidget *parent);
     QWidget* createExtremesSection(QWidget *parent);
     QWidget* createCorrelationSection(QWidget *parent);
+    QWidget* setupTableToolbar(QWidget* parent, QTableWidget* table);
+    QWidget* setupTablePanel(QWidget *parent);
+    void setupTableActions();
     void updateUI(const TableRow& rowData);
     void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     bool areAllLabelsDefined();
