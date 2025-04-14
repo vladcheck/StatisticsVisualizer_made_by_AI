@@ -1,39 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(StatisticsVisualizer VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
-
-set(SRC_DIR src)
-set(TS_FILES StatisticsVisualizer_ru_RU.ts)
-
-set(SOURCE_FILES
-    ${SRC_DIR}/main.cpp
-    ${SRC_DIR}/mainwindow.h
-    ${SRC_DIR}/mainwindow.cpp
-    ${SRC_DIR}/draw.h
-    ${SRC_DIR}/draw.cpp
-    ${SRC_DIR}/globals.h
-    ${SRC_DIR}/structs.h
-    ${SRC_DIR}/import.h
-    ${SRC_DIR}/import.cpp
-    ${SRC_DIR}/export.h
-    ${SRC_DIR}/export.cpp
-    ${SRC_DIR}/calculate.h
-    ${SRC_DIR}/calculate.cpp
+# Пути
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+file(GLOB SOURCE_FILES
+    "${SRC_DIR}/*.cpp"
+    "${SRC_DIR}/*.h"
 )
 
 set(RESOURCE_FILES
-    resources/icons.qrc
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/icons.qrc
 )
+
+set(TS_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/StatisticsVisualizer_ru_RU.ts
+)
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(StatisticsVisualizer
