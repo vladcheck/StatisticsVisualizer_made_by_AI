@@ -50,7 +50,6 @@ namespace Draw {
         // Правая часть - таблица
         QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
         Draw::setSizePolicyExpanding(table);
-        table->horizontalHeader()->setStretchLastSection(true);
         table->verticalHeader()->setVisible(false);
         table->resizeColumnsToContents();
         return table;
