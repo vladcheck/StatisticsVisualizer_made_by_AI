@@ -146,20 +146,28 @@ QWidget* MainWindow::setupTableToolbar(QWidget* parent, QTableWidget* table) {
     // Спинбоксы
     auto *columnsContainer = Draw::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
     QSpinBox *colSpinBox = qobject_cast<QSpinBox *>(columnsContainer->layout()->itemAt(1)->widget());
+    auto *rowsContainer = Draw::createSpinBoxWithLabel(toolbar, "Ряды", 512, initialRowCount);
+    QSpinBox *rowSpinBox = qobject_cast<QSpinBox *>(rowsContainer->layout()->itemAt(1)->widget());
 
-    this->m_table = table;
-    this->m_addColBtn = Draw::createToolButton("Добавить столбец", "add-column");
-    this->m_delColBtn = Draw::createToolButton("Удалить столбец", "delete-column");
-    this->m_clearBtn = Draw::createToolButton("Очистить", "clear");
-    this->m_autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size");
-    this->m_colSpin = colSpinBox;
-    this->m_importBtn = Draw::createToolButton("Импортировать данные", "import-file");
-    this->m_exportBtn = Draw::createToolButton("Экспортировать данные", "export-file");
+    m_table = table;
+    m_addColBtn = Draw::createToolButton("Добавить столбец", "add-column");
+    m_delColBtn = Draw::createToolButton("Удалить столбец", "delete-column");
+    m_clearBtn = Draw::createToolButton("Очистить", "clear");
+    m_autoSizeBtn = Draw::createToolButton("Авторазмер", "auto-size");
+    m_colSpin = colSpinBox;
+    m_rowSpin = rowSpinBox;
+    m_addRowBtn = Draw::createToolButton("Добавить ряд", "add-row");
+    m_delRowBtn = Draw::createToolButton("Удалить ряд", "delete-row");
+    m_importBtn = Draw::createToolButton("Импортировать данные", "import-file");
+    m_exportBtn = Draw::createToolButton("Экспортировать данные", "export-file");
 
     setupTableActions();
+    toolbarLayout->addLayout(rowsContainer);
     toolbarLayout->addLayout(columnsContainer);
 
     QList<QWidget*> toolbarWidgets = {
+        m_addRowBtn,
+        m_delRowBtn,
         m_addColBtn,
         m_delColBtn,
         m_autoSizeBtn,
@@ -225,6 +233,27 @@ void MainWindow::setupTableActions()
     // Импорт файлов
     QObject::connect(m_importBtn, &QPushButton::clicked, [=]() {
         Import::importFile(m_table);
+    });
+
+    // Добавление ряда
+    Draw::connect(m_addRowBtn, [=]() {
+        m_table->setRowCount(m_table->rowCount() + 1);
+        m_rowSpin->setValue(m_table->rowCount());
+    });
+
+    // Удаление ряда
+    Draw::connect(m_delRowBtn, [=]() {
+        if(m_table->rowCount() > 1) {
+            m_table->setRowCount(m_table->rowCount() - 1);
+            m_rowSpin->setValue(m_table->rowCount());
+        }
+    });
+
+    // Обработка изменения спиннера рядов
+    Draw::connect(m_rowSpin, [=](int value) {
+        if (value >= m_rowSpin->minimum()) {
+            m_table->setRowCount(value);
+        }
     });
 }
 

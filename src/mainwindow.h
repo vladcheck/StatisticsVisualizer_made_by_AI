@@ -48,8 +48,11 @@ private:
     QPushButton* m_clearBtn = nullptr;
     QPushButton* m_autoSizeBtn = nullptr;
     QSpinBox* m_colSpin = nullptr;
+    QSpinBox* m_rowSpin = nullptr;
     QPushButton* m_importBtn = nullptr;
     QPushButton* m_exportBtn = nullptr;
+    QPushButton* m_addRowBtn = nullptr;
+    QPushButton* m_delRowBtn = nullptr;
 
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;

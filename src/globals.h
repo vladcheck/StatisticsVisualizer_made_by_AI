@@ -7,7 +7,7 @@
 
 // Таблица
 constexpr unsigned int initialRowCount = 1;
-constexpr unsigned int initialColCount = 20;
+constexpr unsigned int initialColCount = 100;
 
 // Расчёты
 constexpr int statsPrecision = 3;
