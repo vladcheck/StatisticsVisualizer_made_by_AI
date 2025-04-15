@@ -7,5 +7,7 @@
         <file>auto-size.png</file>
         <file>import-file.png</file>
         <file>export-file.png</file>
+        <file>add-row.png</file>
+        <file>delete-row.png</file>
     </qresource>
 </RCC>
