@@ -13,22 +13,6 @@ namespace Draw {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
-    QWidget *setupHeader(QWidget *parent, const int fontSize)
-    {
-        const QFont headerFont(fontName, fontSize);
-
-        QWidget *header = new QWidget(parent);
-        header->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
-        QLabel *h1 = new QLabel("Statistics Visualizer", header);
-        h1->setFont(headerFont);
-
-        QHBoxLayout *headerAlignment = new QHBoxLayout(header);
-        headerAlignment->setContentsMargins(0, 0, 0, 0);
-        headerAlignment->addWidget(h1, 0, Qt::AlignCenter);
-        return header;
-    }
-
     QTableWidget *setupTable(QWidget *parent) {
         // Правая часть - таблица
         QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);

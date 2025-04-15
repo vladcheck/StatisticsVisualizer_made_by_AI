@@ -53,7 +53,6 @@ namespace Draw
     }
     void setSizePolicyExpanding(QWidget *w);
     void setSizePolicyFixed(QWidget *w);
-    QWidget *setupHeader(QWidget *parent, const int fontSize);
     void setupTableActions();
     QTableWidget *setupTable(QWidget *parent);
     QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable);

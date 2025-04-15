@@ -478,14 +478,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
-    QWidget *header = Draw::setupHeader(mainWidget, 20);
     QWidget *dataSection = setupDataSection(mainWidget);
     QWidget* graphSection = Draw::setupGraphSection(mainWidget);
     initializeChart(); // Инициализация графика один раз
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);
-    mainLayout->addWidget(header);
     mainLayout->addWidget(dataSection, 1);
     mainLayout->addWidget(graphSection, 1);
 
