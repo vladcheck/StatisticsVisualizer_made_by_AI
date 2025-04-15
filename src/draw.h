@@ -48,6 +48,7 @@ namespace Draw
     QWidget *createStatSection(QWidget *parent, const QString &title);     // Создание секции с заголовком
     void addStatRows(QWidget *parent, QLayout *layout, const std::initializer_list<QPair<QString, QString>> &rows);
     void updateStatValue(QWidget *section, const QString &title, const QString &value);
+    QWidget* setupGraphSection(QWidget* parent);
 };
 
 #endif // DRAW_H

@@ -320,11 +320,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     auto *header = Draw::setupHeader(mainWidget, 20);
     auto *dataSection = setupDataSection(mainWidget);
+    auto *graphSection = Draw::setupGraphSection(mainWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(header);
     mainLayout->addWidget(dataSection, 1);
+    mainLayout->addWidget(graphSection, 1);
 
     // Проверка инициализации перед подключением сигналов
     if (m_table) {

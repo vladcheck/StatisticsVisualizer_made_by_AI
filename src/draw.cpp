@@ -16,6 +16,8 @@
 #include <QFile>
 #include <QTextStream>
 #include <QStringList>
+#include <QWidget>
+#include <QVBoxLayout>
 
 namespace Draw {
     QRegularExpression csvRegex("[;, \\t-]+");
@@ -165,5 +167,17 @@ namespace Draw {
                 break;
             }
         }
+    }
+
+    QWidget* setupGraphSection(QWidget* parent) {
+        QWidget* widget = new QWidget(parent);
+
+        widget->setMinimumSize(400, 300);
+
+        QHBoxLayout* layout = new QHBoxLayout(widget);
+        layout->setContentsMargins(0, 0, 0, 0);
+        widget->setLayout(layout);
+
+        return widget;
     }
 }
