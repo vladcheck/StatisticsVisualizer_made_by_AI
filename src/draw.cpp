@@ -226,24 +226,46 @@ namespace Draw {
         return chartContainer;
     }
 
+    QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1 = 1, int stretch2 = 1) {
+        QSplitter* splitter = new QSplitter(Qt::Horizontal, parent);
+        splitter->setHandleWidth(10);
+        splitter->setChildrenCollapsible(false);
+
+        // Настройка политик размеров
+        w1->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        w1->setMinimumWidth(400);
+        setSizePolicyExpanding(w2);
+
+        splitter->addWidget(w1);
+        splitter->addWidget(w2);
+
+        // Правильное использование stretch factors
+        splitter->setStretchFactor(0, stretch1);
+        splitter->setStretchFactor(1, stretch2);
+
+        // Автоматическое начальное распределение
+        QTimer::singleShot(0, [=](){
+            int total = splitter->width() - splitter->handleWidth();
+            QList<int> sizes;
+            sizes << total * stretch1 / (stretch1 + stretch2)
+                  << total * stretch2 / (stretch1 + stretch2);
+            splitter->setSizes(sizes);
+        });
+
+        return splitter;
+    }
+
     QWidget* setupGraphSection(QWidget* parent) {
         QWidget* widget = new QWidget(parent);
-        widget->setMinimumSize(400, 300);
-
         QHBoxLayout* mainLayout = new QHBoxLayout(widget);
         mainLayout->setContentsMargins(0, 0, 0, 0);
 
-        QSplitter* splitter = new QSplitter(Qt::Horizontal, widget);
-        splitter->addWidget(createChartSettingsPanel(widget));
-        splitter->addWidget(createChartWidget(widget));
-        // Устанавливаем коэффициенты растяжения
-        splitter->setStretchFactor(0, 1);  // Настройки - 1 часть
-        splitter->setStretchFactor(1, 2);  // График - 2 части
-        QList<int> sizes;
-        sizes << widget->width()/3 << widget->width()*2/3;
-        splitter->setSizes(sizes);
+        auto* chartSettings = createChartSettingsPanel(widget);
+        auto* chartWidget = createChartWidget(widget);
 
+        QSplitter* splitter = Draw::addSplitter(widget, chartSettings, chartWidget, 1, 2);
         mainLayout->addWidget(splitter);
+
         return widget;
     }
 }

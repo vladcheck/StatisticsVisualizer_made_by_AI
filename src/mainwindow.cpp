@@ -121,29 +121,17 @@ QWidget* MainWindow::setupDataSection(QWidget* parent) {
     QHBoxLayout* dataSectionLayout = new QHBoxLayout(dataSection);
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Панель статистики с автоматическим растяжением
-    QWidget* statsPanel = setupDataPanel(dataSection, &m_elementCountLabel,
-                                         &m_sumLabel, &m_averageLabel);
-    statsPanel->setMinimumWidth(320); // Минимальная ширина для статистики
-
-    // Область прокрутки с новыми настройками
-    QScrollArea* scrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
-
-    // Панель таблицы с возможностью растяжения
+    QWidget* statsPanel = setupDataPanel(dataSection, &m_elementCountLabel, &m_sumLabel, &m_averageLabel);
+    QScrollArea* statsScrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
     QWidget* tablePanel = setupTablePanel(dataSection);
-    tablePanel->setMinimumWidth(400);
+    QSplitter* splitter = Draw::addSplitter(dataSection, statsScrollArea, tablePanel, 1, 2);
 
-    dataSectionLayout->addWidget(scrollArea, 1);  // Растягиваем сначала статистику
-    dataSectionLayout->addWidget(tablePanel, 2);  // Затем таблицу в соотношении 1:2
+    dataSectionLayout->addWidget(splitter);
 
-    // Обработчик изменения размера для динамической прокрутки
-    QObject::connect(scrollArea->verticalScrollBar(), &QScrollBar::rangeChanged,
-                     [scrollArea](int min, int max) {
-                         if (max > 0) {
-                             scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-                         } else {
-                             scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-                         }
+    // Обработчик прокрутки
+    QObject::connect(statsScrollArea->verticalScrollBar(), &QScrollBar::rangeChanged,
+                     [statsScrollArea](int min, int max) {
+                         statsScrollArea->setVerticalScrollBarPolicy(max > min ? Qt::ScrollBarAsNeeded : Qt::ScrollBarAlwaysOff);
                      });
 
     return dataSection;

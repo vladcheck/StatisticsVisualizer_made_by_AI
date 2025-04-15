@@ -22,6 +22,7 @@
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QGroupBox>
+#include <QTimer>
 #include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QValueAxis>
@@ -66,6 +67,7 @@ namespace Draw
     void addStatRows(QWidget *parent, QLayout *layout, const std::initializer_list<QPair<QString, QString>> &rows);
     void updateStatValue(QWidget *section, const QString &title, const QString &value);
     QWidget* setupGraphSection(QWidget* parent);
+    QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1, int stretch2);
 };
 
 #endif // DRAW_H
