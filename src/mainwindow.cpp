@@ -7,7 +7,7 @@ bool areWeightsValid(const QVector<double>& weights, const QVector<double>& valu
 void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 {
     QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
-    mainHeader->setStyleSheet("font-size: 32px; font-weight: 600; color: #ddd;");
+    mainHeader->setStyleSheet("font-size: 32px; font-weight: 600;");
     statsLayout->addWidget(mainHeader);
 }
 
@@ -503,6 +503,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     this->setWindowState(Qt::WindowMaximized);
     this->setWindowIcon(QIcon(":/logo.png"));
+    this->setWindowTitle(QString::fromStdString("Glacé"));
 }
 
 MainWindow::~MainWindow() {}
