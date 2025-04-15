@@ -22,12 +22,11 @@ set(TS_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/translations/StatisticsVisualizer_ru_RU.ts
 )
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Charts LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Charts LinguistTools)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(StatisticsVisualizer
-        MANUAL_FINALIZATION
+    qt_add_executable(StatisticsVisualizer MANUAL_FINALIZATION
         ${SOURCE_FILES}
         ${RESOURCE_FILES}
         ${TS_FILES}
@@ -42,7 +41,13 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_CURRENT_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(StatisticsVisualizer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+# Исправленный вызов target_link_libraries с ключевым словом
+target_link_libraries(StatisticsVisualizer
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Charts
+)
 
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.StatisticsVisualizer)

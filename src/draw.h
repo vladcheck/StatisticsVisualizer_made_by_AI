@@ -1,6 +1,10 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+#include "import.h"
+#include "export.h"
+#include "globals.h"
+
 #include <QHBoxLayout>
 #include <QSpinBox>
 #include <QLabel>
@@ -8,7 +12,20 @@
 #include <QIcon>
 #include <QPixmap>
 #include <QTableWidget>
-#include "structs.h"
+#include <QMessageBox>
+#include <QHeaderView>
+#include <QFileDialog>
+#include <QFile>
+#include <QTextStream>
+#include <QStringList>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QSplitter>
+#include <QGroupBox>
+#include <QtCharts/QChartView>
+#include <QtCharts/QScatterSeries>
+#include <QtCharts/QValueAxis>
+#include <QLineSeries>
 
 namespace Draw
 {

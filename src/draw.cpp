@@ -1,23 +1,4 @@
 #include "draw.h"
-#include "import.h"
-#include "export.h"
-#include "globals.h"
-
-#include <QHBoxLayout>
-#include <QSpinBox>
-#include <QLabel>
-#include <QPushButton>
-#include <QIcon>
-#include <QPixmap>
-#include <QTableWidget>
-#include <QMessageBox>
-#include <QHeaderView>
-#include <QFileDialog>
-#include <QFile>
-#include <QTextStream>
-#include <QStringList>
-#include <QWidget>
-#include <QVBoxLayout>
 
 namespace Draw {
     QRegularExpression csvRegex("[;, \\t-]+");
@@ -169,15 +150,100 @@ namespace Draw {
         }
     }
 
+    QGroupBox* createChartSettingsPanel(QWidget* parent) {
+        QGroupBox* settingsGroup = new QGroupBox("Настройки визуализации", parent);
+        QVBoxLayout* settingsLayout = new QVBoxLayout(settingsGroup);
+        settingsLayout->setAlignment(Qt::AlignTop);
+
+        // Заглушка для элементов управления
+        QLabel* settingsPlaceholder = new QLabel("Параметры будут здесь");
+        settingsLayout->addWidget(settingsPlaceholder);
+
+        settingsGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+        return settingsGroup;
+    }
+
+    QValueAxis* setupAxis(QString name, int a = 0, int b = 10) {
+        QValueAxis* axis = new QValueAxis();
+        axis->setTitleText(name);
+        axis->setRange(a,b);
+        return axis;
+    }
+
+    QScatterSeries* setupScatterSeries(float size = 12.0, QColor pointColor = Qt::blue, QColor borderColor = Qt::white) {
+        QScatterSeries* scatterSeries = new QScatterSeries();
+        scatterSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+        scatterSeries->setMarkerSize(size);
+        scatterSeries->setColor(pointColor);
+        scatterSeries->setBorderColor(borderColor);
+        return scatterSeries;
+    }
+
+    QWidget* createChartWidget(QWidget* parent = nullptr) {
+        QWidget* chartContainer = new QWidget(parent);
+        QVBoxLayout* chartLayout = new QVBoxLayout(chartContainer);
+        chartLayout->setContentsMargins(0, 0, 0, 0);
+
+        // Создаем два типа серий: линии и точки
+        QLineSeries* lineSeries = new QLineSeries();    // Для соединения точек линиями
+        auto* scatterSeries = setupScatterSeries();     // Для отображения точек
+
+        // Настройка линий
+        lineSeries->setColor(Qt::blue);
+        QPen pen = lineSeries->pen();
+        pen.setWidth(2);
+        lineSeries->setPen(pen);
+
+        // Здесь можно добавить данные через сигналы/слоты
+        // Пока оставляем пустым для демонстрации
+
+        QChart* chart = new QChart();
+        chart->addSeries(lineSeries);
+        chart->addSeries(scatterSeries);
+        chart->setTitle("Точечный график");
+        chart->setAnimationOptions(QChart::SeriesAnimations);
+        chart->setBackgroundBrush(Qt::white);
+        chart->legend()->setVisible(false);
+
+        // Настройка осей
+        QValueAxis* axisX = setupAxis("Ось X",0,10);
+        QValueAxis* axisY = setupAxis("Ось Y",0,10);
+
+        chart->addAxis(axisX, Qt::AlignBottom);
+        chart->addAxis(axisY, Qt::AlignLeft);
+
+        // Привязываем оси к обеим сериям
+        lineSeries->attachAxis(axisX);
+        lineSeries->attachAxis(axisY);
+        scatterSeries->attachAxis(axisX);
+        scatterSeries->attachAxis(axisY);
+
+        QChartView* chartView = new QChartView(chart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+
+        chartLayout->addWidget(chartView);
+        setSizePolicyExpanding(chartContainer);
+        return chartContainer;
+    }
+
     QWidget* setupGraphSection(QWidget* parent) {
         QWidget* widget = new QWidget(parent);
-
         widget->setMinimumSize(400, 300);
 
-        QHBoxLayout* layout = new QHBoxLayout(widget);
-        layout->setContentsMargins(0, 0, 0, 0);
-        widget->setLayout(layout);
+        QHBoxLayout* mainLayout = new QHBoxLayout(widget);
+        mainLayout->setContentsMargins(0, 0, 0, 0);
 
+        QSplitter* splitter = new QSplitter(Qt::Horizontal, widget);
+        splitter->addWidget(createChartSettingsPanel(widget));
+        splitter->addWidget(createChartWidget(widget));
+        // Устанавливаем коэффициенты растяжения
+        splitter->setStretchFactor(0, 1);  // Настройки - 1 часть
+        splitter->setStretchFactor(1, 2);  // График - 2 части
+        QList<int> sizes;
+        sizes << widget->width()/3 << widget->width()*2/3;
+        splitter->setSizes(sizes);
+
+        mainLayout->addWidget(splitter);
         return widget;
     }
 }
