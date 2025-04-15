@@ -39,7 +39,7 @@ public:
     ~MainWindow();
 private slots:
     void updateStatistics();
-    void plotData(const std::vector<std::vector<std::pair<int, int>>>& data);
+    void plotData(const TableData& data);
 
 private:
     QTableWidget *m_table = nullptr;
@@ -84,9 +84,11 @@ private:
     };
 
     void clearChart();
-    QPair<QScatterSeries*, QLineSeries*> createSeries(int seriesIndex);
-    void addPointsToSeries(QXYSeries* series, const std::vector<std::pair<int, int>>& data,
-                           double& minX, double& maxX, double& minY, double& maxY);
+    QLineSeries* createSeries(int seriesIndex);
+    void addPointsToSeries(QLineSeries* series,
+                           const std::vector<std::pair<int, int>>& data,
+                           double& minX, double& maxX,
+                           double& minY, double& maxY);
     void updateAxisRanges(double minX, double maxX, double minY, double maxY);
     TableData parse() const;
     QWidget *setupDataSection(QWidget *parent);

@@ -333,7 +333,7 @@ void MainWindow::updateAxesRange(const TableData& data) {
     m_axisY->setRange(minY - padding, maxY + padding);
 }
 
-void MainWindow::plotData(const std::vector<std::vector<std::pair<int, int>>>& data) {
+void MainWindow::plotData(const TableData& data) {
     if (!m_chartView || !m_axisX || !m_axisY) return;
 
     clearChart();
@@ -344,15 +344,10 @@ void MainWindow::plotData(const std::vector<std::vector<std::pair<int, int>>>& d
     double maxY = std::numeric_limits<double>::lowest();
 
     for (size_t i = 0; i < data.size(); ++i) {
-        auto [scatter, line] = createSeries(i);
+        QLineSeries* line = createSeries(i); // Теперь создаем только линию
 
-        addPointsToSeries(scatter, data[i], minX, maxX, minY, maxY);
         addPointsToSeries(line, data[i], minX, maxX, minY, maxY);
-
-        m_chartView->chart()->addSeries(scatter);
         m_chartView->chart()->addSeries(line);
-
-        attachSeriesToAxes(scatter);
         attachSeriesToAxes(line);
     }
 
@@ -366,32 +361,24 @@ void MainWindow::clearChart() {
     }
 }
 
-QPair<QScatterSeries*, QLineSeries*> MainWindow::createSeries(int seriesIndex) {
-    QScatterSeries* scatter = new QScatterSeries();
+QLineSeries* MainWindow::createSeries(int seriesIndex) { // Возвращаем только линию
     QLineSeries* line = new QLineSeries();
-
-    // Настройка стилей
     QColor color = m_seriesColors[seriesIndex % m_seriesColors.size()];
 
-    scatter->setName(QString("Ряд %1").arg(seriesIndex + 1));
-    scatter->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    scatter->setMarkerSize(12.0);
-    scatter->setColor(color);
-    scatter->setBorderColor(Qt::white);
-
     line->setPen(QPen(color, 2));
-    line->setName(QString("Линия %1").arg(seriesIndex + 1));
+    line->setName(QString("Ряд %1").arg(seriesIndex + 1));
 
-    return qMakePair(scatter, line);
+    return line;
 }
 
-void MainWindow::addPointsToSeries(QXYSeries* series, const std::vector<std::pair<int, int>>& data,
-                                   double& minX, double& maxX, double& minY, double& maxY) {
+void MainWindow::addPointsToSeries(QLineSeries* series,
+                                   const std::vector<std::pair<int, int>>& data,
+                                   double& minX, double& maxX,
+                                   double& minY, double& maxY) {
     for (const auto& [x, y] : data) {
         QPointF point(x, y);
-        *series << point;
+        series->append(point.x(), point.y());
 
-        // Обновляем границы
         minX = qMin(minX, point.x());
         maxX = qMax(maxX, point.x());
         minY = qMin(minY, point.y());

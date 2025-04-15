@@ -177,6 +177,7 @@ namespace Draw {
         layout->addWidget(chartView);
         return container;
     }
+
     QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1 = 1, int stretch2 = 1) {
         QSplitter* splitter = new QSplitter(Qt::Horizontal, parent);
         splitter->setHandleWidth(10);
