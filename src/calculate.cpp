@@ -2,7 +2,6 @@
 #include "globals.h"
 #include "structs.h"
 
-#include <QVector>
 #include <QTableWidgetItem>
 #include <QHash>
 #include <QSet>
@@ -23,9 +22,9 @@
 
 namespace Calculate
 {
-    QVector<double> getWeights(const QTableWidget *table, int weightColumn = 1)
+    std::vector<double> getWeights(const QTableWidget *table, int weightColumn = 1)
     {
-        QVector<double> weights;
+        std::vector<double> weights;
         if (!table || weightColumn >= table->columnCount() || weightColumn < 0)
             return weights;
 
@@ -38,24 +37,24 @@ namespace Calculate
                 double weight = item->text().toDouble(&ok);
                 if (ok && weight >= 0 && std::isfinite(weight))
                 {
-                    weights.append(weight);
+                    weights.push_back(weight);
                 }
                 else
                 {
                     qWarning() << "Invalid weight found in row" << row << "column" << weightColumn;
-                    return QVector<double>();
+                    return std::vector<double>();
                 }
             }
             else
             {
                 qWarning() << "Empty weight cell found in row" << row << "column" << weightColumn;
-                return QVector<double>();
+                return std::vector<double>();
             }
         }
         return weights;
     }
 
-    double getSum(const QVector<double> &values)
+    double getSum(const std::vector<double>& values)
     {
         long double sum = std::accumulate(values.begin(), values.end(), 0.0L);
         if (!std::isfinite(sum))
@@ -63,9 +62,9 @@ namespace Calculate
         return static_cast<double>(sum);
     }
 
-    double getMean(const QVector<double> &values)
+    double getMean(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
         {
             return std::numeric_limits<double>::quiet_NaN();
         }
@@ -75,17 +74,17 @@ namespace Calculate
         return static_cast<double>(sum / values.size());
     }
 
-    double getMedian(const QVector<double> &values)
+    double getMedian(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = values;
+        std::vector<double> sorted = values;
         sorted.erase(std::remove_if(sorted.begin(), sorted.end(), [](double d)
                                     { return !std::isfinite(d); }),
                      sorted.end());
 
-        if (sorted.isEmpty())
+        if (sorted.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         std::sort(sorted.begin(), sorted.end());
@@ -106,9 +105,9 @@ namespace Calculate
         }
     }
 
-    double getMode(const QVector<double> &values)
+    double getMode(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         std::map<double, int> frequencyMap;
@@ -149,7 +148,7 @@ namespace Calculate
         return mode;
     }
 
-    double getStandardDeviation(const QVector<double> &values, double mean)
+    double getStandardDeviation(const std::vector<double>& values, double mean)
     {
         const int n = values.size();
         if (n < 2 || std::isnan(mean))
@@ -186,9 +185,9 @@ namespace Calculate
         return static_cast<double>(stdDev_ld);
     }
 
-    double geometricMean(const QVector<double> &values)
+    double geometricMean(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         long double logSum = 0.0L;
@@ -215,9 +214,9 @@ namespace Calculate
         return static_cast<double>(result);
     }
 
-    double harmonicMean(const QVector<double> &values)
+    double harmonicMean(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         long double reciprocalSum = 0.0L;
@@ -247,7 +246,7 @@ namespace Calculate
         return static_cast<double>(result);
     }
 
-    double weightedMean(const QVector<double> &values, const QVector<double> &weights)
+    double weightedMean(const std::vector<double>& values, const std::vector<double> &weights)
     {
         qDebug() << "=== weightedMean calculation ===";
         qDebug() << "Values:" << values;
@@ -259,7 +258,7 @@ namespace Calculate
             return std::numeric_limits<double>::quiet_NaN();
         }
 
-        if (values.isEmpty() || weights.isEmpty())
+        if (values.empty() || weights.empty())
         {
             qDebug() << "Error: Empty input data";
             return std::numeric_limits<double>::quiet_NaN();
@@ -281,13 +280,13 @@ namespace Calculate
         return sumProducts / sumWeights;
     }
 
-    QVector<double> findWeights(const QTableWidget *table)
+    std::vector<double> findWeights(const QTableWidget *table)
     {
         const int colCount = table->columnCount();
 
         for (int col = 0; col < colCount; ++col)
         {
-            QVector<double> candidateWeights;
+            std::vector<double> candidateWeights;
             bool validColumn = true;
 
             for (int row = 0; row < table->rowCount(); ++row)
@@ -307,10 +306,10 @@ namespace Calculate
                     break;
                 }
 
-                candidateWeights.append(value);
+                candidateWeights.push_back(value);
             }
 
-            if (validColumn && !candidateWeights.isEmpty())
+            if (validColumn && !candidateWeights.empty())
             {
                 qDebug() << "Found weights in column" << col;
                 return candidateWeights;
@@ -318,12 +317,12 @@ namespace Calculate
         }
 
         qDebug() << "No valid weights column found. Using uniform weights.";
-        return QVector<double>(table->rowCount(), 1.0);
+        return std::vector<double>(table->rowCount(), 1.0);
     }
 
-    double rootMeanSquare(const QVector<double> &values)
+    double rootMeanSquare(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         std::vector<double> squares(values.size());
@@ -333,7 +332,7 @@ namespace Calculate
         return std::sqrt(sumSquares / values.size());
     }
 
-    double skewness(const QVector<double> &values, double mean, double stdDev)
+    double skewness(const std::vector<double>& values, double mean, double stdDev)
     {
         const int n = values.size();
         if (n < 3 || stdDev == 0)
@@ -349,7 +348,7 @@ namespace Calculate
         return factor * (sumCubedDeviations / std::pow(stdDev, 3));
     }
 
-    double kurtosis(const QVector<double> &values, double mean, double stdDev)
+    double kurtosis(const std::vector<double>& values, double mean, double stdDev)
     {
         const int n = values.size();
         const long double n_ld = static_cast<long double>(n);
@@ -391,12 +390,12 @@ namespace Calculate
         return static_cast<double>(kurt);
     }
 
-    double trimmedMean(const QVector<double> &values, double trimFraction = 0.1)
+    double trimmedMean(const std::vector<double>& values, double trimFraction = 0.1)
     {
-        if (values.isEmpty() || trimFraction < 0 || trimFraction >= 0.5)
+        if (values.empty() || trimFraction < 0 || trimFraction >= 0.5)
             return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = values;
+        std::vector<double> sorted = values;
         std::sort(sorted.begin(), sorted.end());
 
         const int removeCount = static_cast<int>(sorted.size() * trimFraction);
@@ -415,34 +414,34 @@ namespace Calculate
         return sum / (end - start);
     }
 
-    double medianAbsoluteDeviation(const QVector<double> &values)
+    double medianAbsoluteDeviation(const std::vector<double>& values)
     {
-        if (values.isEmpty())
+        if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = values;
+        std::vector<double> sorted = values;
         std::sort(sorted.begin(), sorted.end());
         const double median = getMedian(sorted);
 
-        QVector<double> deviations;
+        std::vector<double> deviations;
         for (double value : values)
         {
-            deviations.append(std::abs(value - median));
+            deviations.push_back(std::abs(value - median));
         }
 
         return getMedian(deviations);
     }
 
-    double robustStandardDeviation(const QVector<double> &values)
+    double robustStandardDeviation(const std::vector<double>& values)
     {
         const double mad = medianAbsoluteDeviation(values);
         return (mad != 0.0 && !std::isnan(mad)) ? 1.4826 * mad
                                                 : std::numeric_limits<double>::quiet_NaN();
     }
 
-    double modalFrequency(const QVector<QString> &categories)
+    double modalFrequency(const std::vector<QString> &categories)
     {
-        if (categories.isEmpty())
+        if (categories.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         std::map<QString, int> freqMap;
@@ -459,9 +458,9 @@ namespace Calculate
         return static_cast<double>(maxFreq) / categories.size();
     }
 
-    double simpsonDiversityIndex(const QVector<QString> &categories)
+    double simpsonDiversityIndex(const std::vector<QString> &categories)
     {
-        if (categories.isEmpty())
+        if (categories.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         std::map<QString, int> freqMap;
@@ -479,17 +478,17 @@ namespace Calculate
         return 1.0 - sum;
     }
 
-    double uniqueValueRatio(const QVector<QString> &categories)
+    double uniqueValueRatio(const std::vector<QString> &categories)
     {
-        if (categories.isEmpty())
+        if (categories.empty())
             return std::numeric_limits<double>::quiet_NaN();
         std::unordered_set<QString> unique(categories.begin(), categories.end());
         return static_cast<double>(unique.size()) / categories.size();
     }
 
-    double entropy(const QVector<QString> &categories)
+    double entropy(const std::vector<QString> &categories)
     {
-        if (categories.isEmpty())
+        if (categories.empty())
             return std::numeric_limits<double>::quiet_NaN();
 
         std::map<QString, int> freqMap;
@@ -510,12 +509,12 @@ namespace Calculate
         return entropy;
     }
 
-    double shapiroWilkTest(const QVector<double> &data)
+    double shapiroWilkTest(const std::vector<double> &data)
     {
         if (data.size() < MIN_SAMPLE_SIZE || data.size() > MAX_SAMPLE_SIZE)
             return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = data;
+        std::vector<double> sorted = data;
         std::sort(sorted.begin(), sorted.end());
 
         const double mean = std::accumulate(sorted.begin(), sorted.end(), 0.0) / sorted.size();
@@ -527,9 +526,9 @@ namespace Calculate
         return (W > SW_CRITICAL_VALUE) ? 1.0 : 0.0;
     }
 
-    double calculateDensity(const QVector<double> &data, double point)
+    double calculateDensity(const std::vector<double> &data, double point)
     {
-        if (data.isEmpty() || KDE_BANDWIDTH < KDE_EPSILON)
+        if (data.empty() || KDE_BANDWIDTH < KDE_EPSILON)
             return std::numeric_limits<double>::quiet_NaN();
 
         const double h = KDE_BANDWIDTH;
@@ -544,19 +543,19 @@ namespace Calculate
         return sum / (data.size() * h);
     }
 
-    double chiSquareTest(const QVector<double> &data)
+    double chiSquareTest(const std::vector<double> &data)
     {
         if (data.size() < MIN_SAMPLE_SIZE * 2)
             return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = data;
+        std::vector<double> sorted = data;
         std::sort(sorted.begin(), sorted.end());
 
-        const double min = sorted.first();
-        const double max = sorted.last();
+        const double min = sorted.front();
+        const double max = sorted.back();
         const double binWidth = (max - min) / CHI2_BINS;
 
-        QVector<int> observed(CHI2_BINS, 0);
+        std::vector<int> observed(CHI2_BINS, 0);
         for (double v : sorted)
         {
             int bin = static_cast<int>((v - min) / binWidth);
@@ -578,12 +577,12 @@ namespace Calculate
         return chi2;
     }
 
-    double kolmogorovSmirnovTest(const QVector<double> &data)
+    double kolmogorovSmirnovTest(const std::vector<double> &data)
     {
         if (data.size() < MIN_SAMPLE_SIZE)
             return std::numeric_limits<double>::quiet_NaN();
 
-        QVector<double> sorted = data;
+        std::vector<double> sorted = data;
         std::sort(sorted.begin(), sorted.end());
 
         const double n = sorted.size();

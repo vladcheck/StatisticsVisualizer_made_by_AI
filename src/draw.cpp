@@ -167,6 +167,7 @@ namespace Draw {
         QValueAxis* axis = new QValueAxis();
         axis->setTitleText(name);
         axis->setRange(a,b);
+        axis->setLabelFormat("%d");
         return axis;
     }
 
@@ -179,53 +180,19 @@ namespace Draw {
         return scatterSeries;
     }
 
-    QWidget* createChartWidget(QWidget* parent = nullptr) {
-        QWidget* chartContainer = new QWidget(parent);
-        QVBoxLayout* chartLayout = new QVBoxLayout(chartContainer);
-        chartLayout->setContentsMargins(0, 0, 0, 0);
+    QWidget* createChartWidget(QWidget* parent) {
+        QWidget* container = new QWidget(parent);
+        QVBoxLayout* layout = new QVBoxLayout(container);
 
-        // Создаем два типа серий: линии и точки
-        QLineSeries* lineSeries = new QLineSeries();    // Для соединения точек линиями
-        auto* scatterSeries = setupScatterSeries();     // Для отображения точек
-
-        // Настройка линий
-        lineSeries->setColor(Qt::blue);
-        QPen pen = lineSeries->pen();
-        pen.setWidth(2);
-        lineSeries->setPen(pen);
-
-        // Здесь можно добавить данные через сигналы/слоты
-        // Пока оставляем пустым для демонстрации
-
-        QChart* chart = new QChart();
-        chart->addSeries(lineSeries);
-        chart->addSeries(scatterSeries);
-        chart->setTitle("Точечный график");
-        chart->setAnimationOptions(QChart::SeriesAnimations);
-        chart->setBackgroundBrush(Qt::white);
-        chart->legend()->setVisible(false);
-
-        // Настройка осей
-        QValueAxis* axisX = setupAxis("Ось X",0,10);
-        QValueAxis* axisY = setupAxis("Ось Y",0,10);
-
-        chart->addAxis(axisX, Qt::AlignBottom);
-        chart->addAxis(axisY, Qt::AlignLeft);
-
-        // Привязываем оси к обеим сериям
-        lineSeries->attachAxis(axisX);
-        lineSeries->attachAxis(axisY);
-        scatterSeries->attachAxis(axisX);
-        scatterSeries->attachAxis(axisY);
-
-        QChartView* chartView = new QChartView(chart);
+        // Создаем и добавляем ChartView
+        QChartView* chartView = new QChartView(new QChart(), container);
         chartView->setRenderHint(QPainter::Antialiasing);
+        chartView->chart()->setTitle("Точечный график");
+        chartView->chart()->setBackgroundBrush(Qt::white);
 
-        chartLayout->addWidget(chartView);
-        setSizePolicyExpanding(chartContainer);
-        return chartContainer;
+        layout->addWidget(chartView);
+        return container;
     }
-
     QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1 = 1, int stretch2 = 1) {
         QSplitter* splitter = new QSplitter(Qt::Horizontal, parent);
         splitter->setHandleWidth(10);
@@ -257,13 +224,15 @@ namespace Draw {
 
     QWidget* setupGraphSection(QWidget* parent) {
         QWidget* widget = new QWidget(parent);
+        widget->setObjectName("graphSection");
+
         QHBoxLayout* mainLayout = new QHBoxLayout(widget);
         mainLayout->setContentsMargins(0, 0, 0, 0);
 
         auto* chartSettings = createChartSettingsPanel(widget);
-        auto* chartWidget = createChartWidget(widget);
+        auto* chartWidget = createChartWidget(widget); // Только создание контейнера
 
-        QSplitter* splitter = Draw::addSplitter(widget, chartSettings, chartWidget, 1, 2);
+        QSplitter* splitter = addSplitter(widget, chartSettings, chartWidget, 1, 2);
         mainLayout->addWidget(splitter);
 
         return widget;

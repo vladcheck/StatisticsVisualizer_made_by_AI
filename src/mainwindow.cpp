@@ -237,56 +237,198 @@ bool MainWindow::areAllLabelsDefined() {
             m_shapiroWilkLabel && m_kolmogorovLabel && m_chiSquareLabel && m_densityLabel);
 }
 
-TableRow MainWindow::parse() const {
-    TableRow result;
-    result.isValid = false;
+TableData MainWindow::parse() const {
+    TableData plotData;
+    for (int row = 0; row < m_table->rowCount(); ++row) {
+        std::vector<std::pair<int, int>> rowData; // Вектор для текущей строки
 
-    for (int col = 0; col < m_table->columnCount(); ++col) {
-        QTableWidgetItem* item = m_table->item(0, col);
-        if (!item || item->text().isEmpty()) continue;
+        for (int col = 0; col < m_table->columnCount(); ++col) {
+            if (auto item = m_table->item(row, col)) {
+                bool ok;
+                double value = item->text().toDouble(&ok);
+                if (ok) {
+                    rowData.emplace_back(col, value); // Добавляем пару (столбец, значение)
+                }
+            }
+        }
 
-        bool ok;
-        double value = item->text().toDouble(&ok);
-        if (ok) result.values.append(value);
+        if (!rowData.empty()) {
+            plotData.push_back(rowData); // Добавляем строку в результат
+        }
     }
-
-    result.isValid = !result.values.isEmpty();
-    return result;
+    return plotData;
 }
 
-void MainWindow::updateUI(const TableRow& rowData) {
-    const bool hasData = rowData.isValid;
-    double mean = hasData ? Calculate::getMean(rowData.values) : 0.0;
-    double stdDev = hasData ? Calculate::getStandardDeviation(rowData.values, mean) : 0.0;
-    double min = hasData ? *std::min_element(rowData.values.begin(), rowData.values.end()) : 0.0;
-    double max = hasData ? *std::max_element(rowData.values.begin(), rowData.values.end()) : 0.0;
+void MainWindow::setupChartAxes() {
+    // Создаем оси один раз
+    m_axisX = Draw::setupAxis("Ось X", 0, 10);
+    m_axisY = Draw::setupAxis("Ось Y", 0, 10);
+
+    m_chartView->chart()->addAxis(m_axisX, Qt::AlignBottom);
+    m_chartView->chart()->addAxis(m_axisY, Qt::AlignLeft);
+}
+
+void MainWindow::initializeChart() {
+    QWidget* graphSection = findChild<QWidget*>("graphSection");
+
+    if (graphSection) {
+        m_chartView = graphSection->findChild<QChartView*>();
+
+        if (m_chartView) {
+            setupChartAxes();
+            m_chartView->setRenderHint(QPainter::Antialiasing);
+            m_chartView->chart()->setBackgroundBrush(Qt::white);
+        }
+    }
+}
+
+void MainWindow::updateAxesRange(const TableData& data) {
+    double minX = std::numeric_limits<double>::max();
+    double maxX = std::numeric_limits<double>::min();
+    double minY = std::numeric_limits<double>::max();
+    double maxY = std::numeric_limits<double>::min();
+
+    // Ищем минимальные и максимальные значения
+    for (const auto& series : data) {
+        for (const auto& [x, y] : series) {
+            minX = std::min(minX, static_cast<double>(x));
+            maxX = std::max(maxX, static_cast<double>(x));
+            minY = std::min(minY, static_cast<double>(y));
+            maxY = std::max(maxY, static_cast<double>(y));
+        }
+    }
+
+    // Устанавливаем новые границы с небольшим запасом
+    const double padding = 0.1;
+    m_axisX->setRange(minX - padding, maxX + padding);
+    m_axisY->setRange(minY - padding, maxY + padding);
+}
+
+void MainWindow::plotData(const std::vector<std::vector<std::pair<int, int>>>& data) {
+    if (!m_chartView || !m_axisX || !m_axisY) return;
+
+    clearChart();
+
+    double minX = std::numeric_limits<double>::max();
+    double maxX = std::numeric_limits<double>::lowest();
+    double minY = std::numeric_limits<double>::max();
+    double maxY = std::numeric_limits<double>::lowest();
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        auto [scatter, line] = createSeries(i);
+
+        addPointsToSeries(scatter, data[i], minX, maxX, minY, maxY);
+        addPointsToSeries(line, data[i], minX, maxX, minY, maxY);
+
+        m_chartView->chart()->addSeries(scatter);
+        m_chartView->chart()->addSeries(line);
+
+        attachSeriesToAxes(scatter);
+        attachSeriesToAxes(line);
+    }
+
+    updateAxisRanges(minX, maxX, minY, maxY);
+    m_chartView->chart()->update();
+}
+
+void MainWindow::clearChart() {
+    if (m_chartView) {
+        m_chartView->chart()->removeAllSeries();
+    }
+}
+
+QPair<QScatterSeries*, QLineSeries*> MainWindow::createSeries(int seriesIndex) {
+    QScatterSeries* scatter = new QScatterSeries();
+    QLineSeries* line = new QLineSeries();
+
+    // Настройка стилей
+    QColor color = m_seriesColors[seriesIndex % m_seriesColors.size()];
+
+    scatter->setName(QString("Ряд %1").arg(seriesIndex + 1));
+    scatter->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    scatter->setMarkerSize(12.0);
+    scatter->setColor(color);
+    scatter->setBorderColor(Qt::white);
+
+    line->setPen(QPen(color, 2));
+    line->setName(QString("Линия %1").arg(seriesIndex + 1));
+
+    return qMakePair(scatter, line);
+}
+
+void MainWindow::addPointsToSeries(QXYSeries* series, const std::vector<std::pair<int, int>>& data,
+                                   double& minX, double& maxX, double& minY, double& maxY) {
+    for (const auto& [x, y] : data) {
+        QPointF point(x, y);
+        *series << point;
+
+        // Обновляем границы
+        minX = qMin(minX, point.x());
+        maxX = qMax(maxX, point.x());
+        minY = qMin(minY, point.y());
+        maxY = qMax(maxY, point.y());
+    }
+}
+
+void MainWindow::attachSeriesToAxes(QXYSeries* series) {
+    series->attachAxis(m_axisX);
+    series->attachAxis(m_axisY);
+}
+
+void MainWindow::updateAxisRanges(double minX, double maxX, double minY, double maxY) {
+    if (minX == std::numeric_limits<double>::max()) { // Нет данных
+        m_axisX->setRange(0, 10);
+        m_axisY->setRange(0, 10);
+        return;
+    }
+
+    const double xPadding = (maxX - minX) * 0.1;
+    const double yPadding = (maxY - minY) * 0.1;
+
+    m_axisX->setRange(minX - xPadding, maxX + xPadding);
+    m_axisY->setRange(minY - yPadding, maxY + yPadding);
+}
+
+void MainWindow::updateUI(const TableData data) {
+    const bool hasData = !data.empty() && !data[0].empty();
+    std::vector<double> values;
+    if (hasData) {
+        for (const auto& pair : data[0]) {
+            values.push_back(pair.second);
+        }
+    }
+
+    double mean = hasData ? Calculate::getMean(values) : 0.0;
+    double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
+    double min = hasData ? *std::min_element(values.begin(), values.end()) : 0.0;
+    double max = hasData ? *std::max_element(values.begin(), values.end()) : 0.0;
     double range = max - min;
 
     // Основные метрики
-    m_elementCountLabel->setText(hasData ? QString::number(rowData.values.size()) : na);
-    m_sumLabel->setText(hasData ? QString::number(Calculate::getSum(rowData.values), 'f', statsPrecision) : na);
+    m_elementCountLabel->setText(hasData ? QString::number(values.size()) : na);
+    m_sumLabel->setText(hasData ? QString::number(Calculate::getSum(values), 'f', statsPrecision) : na);
     m_averageLabel->setText(hasData ? QString::number(hasData ? mean : 0.0, 'f', statsPrecision) : na);
 
     // Средние значения
-    m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(rowData.values), 'f', statsPrecision) : na);
-    m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(rowData.values), 'f', statsPrecision) : na);
-    m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(rowData.values), 'f', statsPrecision) : na);
-    m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(rowData.values, trimmedMeanPercentage), 'f', statsPrecision) : na);
+    m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(values), 'f', statsPrecision) : na);
+    m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(values), 'f', statsPrecision) : na);
+    m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(values), 'f', statsPrecision) : na);
+    m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(values, trimmedMeanPercentage), 'f', statsPrecision) : na);
 
     // Распределение
-    m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(rowData.values), 'f', statsPrecision) : na);
-    m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(rowData.values), 'f', statsPrecision) : na);
+    m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(values), 'f', statsPrecision) : na);
+    m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(values), 'f', statsPrecision) : na);
     m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
-    m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(rowData.values, mean, stdDev), 'f', statsPrecision) : na);
-    m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(rowData.values, mean, stdDev), 'f', statsPrecision) : na);
-    m_madLabel->setText(hasData ? QString::number(Calculate::medianAbsoluteDeviation(rowData.values), 'f', statsPrecision) : na);
-    m_robustStdLabel->setText(hasData ? QString::number(Calculate::robustStandardDeviation(rowData.values), 'f', statsPrecision) : na);
+    m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(values, mean, stdDev), 'f', statsPrecision) : na);
+    m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(values, mean, stdDev), 'f', statsPrecision) : na);
+    m_madLabel->setText(hasData ? QString::number(Calculate::medianAbsoluteDeviation(values), 'f', statsPrecision) : na);
+    m_robustStdLabel->setText(hasData ? QString::number(Calculate::robustStandardDeviation(values), 'f', statsPrecision) : na);
 
     // Статистические тесты
-    m_shapiroWilkLabel->setText(hasData ? QString::number(Calculate::shapiroWilkTest(rowData.values), 'f', statsPrecision) : na);
-    m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(rowData.values, mean), 'f', statsPrecision) : na);
-    m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(rowData.values), 'f', statsPrecision) : na);
-    m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(rowData.values), 'f', statsPrecision) : na);
+    m_shapiroWilkLabel->setText(hasData ? QString::number(Calculate::shapiroWilkTest(values), 'f', statsPrecision) : na);
+    m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(values, mean), 'f', statsPrecision) : na);
+    m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(values), 'f', statsPrecision) : na);
+    m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(values), 'f', statsPrecision) : na);
 
     // Экстремумы
     m_minLabel->setText(hasData ? QString::number(min, 'f', statsPrecision) : na);
@@ -297,8 +439,9 @@ void MainWindow::updateUI(const TableRow& rowData) {
 void MainWindow::updateStatistics() {
     if (!areAllLabelsDefined()) return;
 
-    const TableRow rowData = parse();
-    updateUI(rowData);
+    const TableData data = parse();
+    updateUI(data);
+    plotData(data);
 }
 
 
@@ -306,9 +449,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
-    auto *header = Draw::setupHeader(mainWidget, 20);
-    auto *dataSection = setupDataSection(mainWidget);
-    auto *graphSection = Draw::setupGraphSection(mainWidget);
+    QWidget *header = Draw::setupHeader(mainWidget, 20);
+    QWidget *dataSection = setupDataSection(mainWidget);
+    QWidget* graphSection = Draw::setupGraphSection(mainWidget);
+    initializeChart(); // Инициализация графика один раз
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);

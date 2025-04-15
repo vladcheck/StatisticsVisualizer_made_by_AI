@@ -67,6 +67,7 @@ namespace Draw
     void addStatRows(QWidget *parent, QLayout *layout, const std::initializer_list<QPair<QString, QString>> &rows);
     void updateStatValue(QWidget *section, const QString &title, const QString &value);
     QWidget* setupGraphSection(QWidget* parent);
+    QValueAxis* setupAxis(QString name, int a, int b);
     QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1, int stretch2);
 };
 

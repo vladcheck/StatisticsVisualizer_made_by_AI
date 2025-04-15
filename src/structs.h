@@ -7,9 +7,9 @@
 #include <QPushButton>
 #include <QSpinBox>
 
-struct TableRow {
-    QVector<double> values;
-    bool isValid = false;
-};
+#include <vector>
+#include <utility>
+
+using TableData = std::vector<std::vector<std::pair<int, int>>>;
 
 #endif // STRUCTS_H

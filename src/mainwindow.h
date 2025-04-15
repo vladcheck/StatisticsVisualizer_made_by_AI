@@ -5,6 +5,7 @@
 #include "draw.h"
 #include "calculate.h"
 #include "structs.h"
+#include "export.h"
 #include "import.h"
 
 #include <QMainWindow>
@@ -21,10 +22,14 @@
 #include <QScrollArea>
 #include <QScroller>
 #include <QScrollBar>
+#include <QChart>
+#include <QColor>
+#include <QChartView>
+#include <QVector>
+#include <QXYSeries>
 
 #include <limits>
 #include <iostream>
-#include "structs.h"
 
 class MainWindow : public QMainWindow
 {
@@ -34,6 +39,7 @@ public:
     ~MainWindow();
 private slots:
     void updateStatistics();
+    void plotData(const std::vector<std::vector<std::pair<int, int>>>& data);
 
 private:
     QTableWidget *m_table = nullptr;
@@ -66,8 +72,20 @@ private:
     QLabel* m_densityLabel = nullptr;
     QLabel* m_chiSquareLabel = nullptr;
     QLabel* m_kolmogorovLabel = nullptr;
+    QChartView* m_chartView = nullptr;
+    QValueAxis* m_axisX = nullptr;
+    QValueAxis* m_axisY = nullptr;
+    QVector<QColor> m_seriesColors {
+        QColor("#1f77b4"), QColor("#ff7f0e"), QColor("#2ca02c"),
+        QColor("#d62728"), QColor("#9467bd"), QColor("#8c564b")
+    };
 
-    TableRow parse() const;
+    void clearChart();
+    QPair<QScatterSeries*, QLineSeries*> createSeries(int seriesIndex);
+    void addPointsToSeries(QXYSeries* series, const std::vector<std::pair<int, int>>& data,
+                           double& minX, double& maxX, double& minY, double& maxY);
+    void updateAxisRanges(double minX, double maxX, double minY, double maxY);
+    TableData parse() const;
     QWidget *setupDataSection(QWidget *parent);
     QWidget *setupDataPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
     QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
@@ -75,11 +93,15 @@ private:
     QWidget* createDistributionSection(QWidget *parent);
     QWidget* createExtremesSection(QWidget *parent);
     QWidget* createCorrelationSection(QWidget *parent);
+    void updateAxesRange(const TableData& data);
     QWidget* setupTableToolbar(QWidget* parent, QTableWidget* table);
     QWidget* setupTablePanel(QWidget *parent);
     void setupTableActions();
-    void updateUI(const TableRow& rowData);
+    void updateUI(const TableData data);
     void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     bool areAllLabelsDefined();
+    void setupChartAxes();
+    void initializeChart();
+    void attachSeriesToAxes(QXYSeries* series);
 };
 #endif // MAINWINDOW_H
