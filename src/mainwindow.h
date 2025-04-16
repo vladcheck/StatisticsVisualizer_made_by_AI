@@ -43,8 +43,12 @@ private slots:
     void plotData(const TableData& data);
     void updateXAxisTitle();
     void updateYAxisTitle();
+    void updateSeriesNames();
+    void handleSeriesAdded(const QModelIndex &parent, int first, int last);
+    void handleSeriesRemoved(const QModelIndex &parent, int first, int last);
 
 private:
+    QWidget* m_seriesSettingsContent;
     QLineEdit* m_xAxisTitleEdit;
     QLineEdit* m_yAxisTitleEdit;
     QTableWidget *m_table = nullptr;
@@ -83,6 +87,8 @@ private:
     QChartView* m_chartView = nullptr;
     QValueAxis* m_axisX = nullptr;
     QValueAxis* m_axisY = nullptr;
+
+    QVector<QLineEdit*> m_seriesNameEdits;
     QVector<QColor> m_seriesColors {
         QColor("#1f77b4"), QColor("#ff7f0e"), QColor("#2ca02c"),
         QColor("#d62728"), QColor("#9467bd"), QColor("#8c564b")
@@ -113,5 +119,6 @@ private:
     void setupChartAxes();
     void initializeChart();
     void attachSeriesToAxes(QXYSeries* series);
+    void setupGraphSettingsSlots();
 };
 #endif // MAINWINDOW_H

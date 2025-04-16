@@ -53,6 +53,8 @@ namespace Draw
         QObject::connect(button, &QPushButton::clicked,
                          button, std::forward<Func>(callback));
     }
+    QGroupBox* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget);
+    QWidget* createSeriesNameRow(QWidget* parent, int seriesIndex, QLineEdit** edit);
     void setSizePolicyExpanding(QWidget *w);
     void setSizePolicyFixed(QWidget *w);
     void setupTableActions();
@@ -67,7 +69,7 @@ namespace Draw
     QWidget *createStatSection(QWidget *parent, const QString &title);     // Создание секции с заголовком
     void addStatRows(QWidget *parent, QLayout *layout, const std::initializer_list<QPair<QString, QString>> &rows);
     void updateStatValue(QWidget *section, const QString &title, const QString &value);
-    QWidget* setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit);
+    QWidget* setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit, QWidget** seriesContent);
     QValueAxis* setupAxis(QString name, int a, int b);
     QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1, int stretch2);
 };

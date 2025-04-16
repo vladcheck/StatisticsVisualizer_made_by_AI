@@ -257,6 +257,54 @@ void MainWindow::setupTableActions()
     });
 }
 
+void MainWindow::setupGraphSettingsSlots() {
+    connect(m_table->model(), &QAbstractItemModel::rowsInserted,
+            this, &MainWindow::handleSeriesAdded);
+
+    connect(m_table->model(), &QAbstractItemModel::rowsAboutToBeRemoved,
+            this, &MainWindow::handleSeriesRemoved);
+
+    connect(m_xAxisTitleEdit, &QLineEdit::textChanged,
+            this, &MainWindow::updateXAxisTitle);
+
+    connect(m_yAxisTitleEdit, &QLineEdit::textChanged,
+            this, &MainWindow::updateYAxisTitle);
+}
+
+void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int last) {
+    if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
+        for(int row = first; row <= last; ++row) {
+            QLineEdit* edit;
+            QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit);
+
+            // Вставляем в конец списка и добавляем виджет в конец лэйаута
+            m_seriesNameEdits.append(edit);
+            layout->addWidget(rowWidget);
+
+            connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
+        }
+    }
+}
+
+void MainWindow::handleSeriesRemoved(const QModelIndex &parent, int first, int last) {
+    if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
+        for(int i = last; i >= first; --i) {
+            QLayoutItem* item = layout->takeAt(i);
+            delete item->widget();
+            delete item;
+            m_seriesNameEdits.removeAt(i);
+        }
+    }
+}
+
+void MainWindow::updateSeriesNames() {
+    for(int i = 0; i < m_seriesNameEdits.size(); ++i) {
+        if(QAbstractSeries* series = m_chartView->chart()->series().value(i)) {
+            series->setName(m_seriesNameEdits[i]->text());
+        }
+    }
+}
+
 bool MainWindow::areAllLabelsDefined() {
     return (m_table &&
             m_elementCountLabel && m_sumLabel && m_averageLabel && m_geometricMeanLabel &&
@@ -344,31 +392,41 @@ void MainWindow::plotData(const TableData& data) {
     double maxY = std::numeric_limits<double>::lowest();
 
     for (size_t i = 0; i < data.size(); ++i) {
-        QLineSeries* line = createSeries(i); // Теперь создаем только линию
+        // Создаем серию один раз
+        QLineSeries* series = createSeries(i);
 
-        addPointsToSeries(line, data[i], minX, maxX, minY, maxY);
-        m_chartView->chart()->addSeries(line);
-        attachSeriesToAxes(line);
+        // Устанавливаем имя из поля ввода или по умолчанию
+        QString seriesName = "График " + QString::number(i+1);
+        if (i < static_cast<size_t>(m_seriesNameEdits.size())) {
+            seriesName = m_seriesNameEdits[i]->text().isEmpty()
+                       ? seriesName
+                       : m_seriesNameEdits[i]->text();
+        }
+        series->setName(seriesName);
+
+        // Добавляем точки и обновляем границы
+        addPointsToSeries(series, data[i], minX, maxX, minY, maxY);
+
+        // Добавляем серию на график
+        m_chartView->chart()->addSeries(series);
+        attachSeriesToAxes(series);
     }
 
     updateAxisRanges(minX, maxX, minY, maxY);
     m_chartView->chart()->update();
 }
-
 void MainWindow::clearChart() {
     if (m_chartView) {
         m_chartView->chart()->removeAllSeries();
     }
 }
 
-QLineSeries* MainWindow::createSeries(int seriesIndex) { // Возвращаем только линию
-    QLineSeries* line = new QLineSeries();
+QLineSeries* MainWindow::createSeries(int seriesIndex) {
+    QLineSeries* series = new QLineSeries();
     QColor color = m_seriesColors[seriesIndex % m_seriesColors.size()];
-
-    line->setPen(QPen(color, 2));
-    line->setName(QString("Ряд %1").arg(seriesIndex + 1));
-
-    return line;
+    series->setPen(QPen(color, 2));
+    series->setName(QString("Ряд %1").arg(seriesIndex + 1));
+    return series;
 }
 
 void MainWindow::addPointsToSeries(QLineSeries* series,
@@ -489,27 +547,38 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
+    // Объявляем переменные для хранения элементов управления
+    QLineEdit* xAxisEdit = nullptr;
+    QLineEdit* yAxisEdit = nullptr;
+    QWidget* seriesContent = nullptr;
+
     QWidget *dataSection = setupDataSection(mainWidget);
-    QWidget* graphSection = Draw::setupGraphSection(mainWidget, &m_xAxisTitleEdit, &m_yAxisTitleEdit);
-    initializeChart(); // Инициализация графика один раз
+    QWidget* graphSection = Draw::setupGraphSection(
+        mainWidget,
+        &xAxisEdit,
+        &yAxisEdit,
+        &seriesContent
+        );
+
+    // Сохраняем ссылки на элементы управления
+    m_xAxisTitleEdit = xAxisEdit;
+    m_yAxisTitleEdit = yAxisEdit;
+    m_seriesSettingsContent = seriesContent;
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(dataSection, 1);
     mainLayout->addWidget(graphSection, 1);
 
-    connect(m_xAxisTitleEdit, &QLineEdit::textChanged, this, &MainWindow::updateXAxisTitle);
-    connect(m_yAxisTitleEdit, &QLineEdit::textChanged, this, &MainWindow::updateYAxisTitle);
-
-    // Проверка инициализации перед подключением сигналов
     if (m_table) {
-        // Обработчик изменения текущей ячейки
         connect(m_table, &QTableWidget::currentCellChanged, [this](int row, int, int, int) {
             updateStatistics();
         });
 
-        // Обработчик изменения данных
         connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
+
+        initializeChart();
+        setupGraphSettingsSlots();
         updateStatistics();
     } else {
         qFatal("Table initialization failed!");

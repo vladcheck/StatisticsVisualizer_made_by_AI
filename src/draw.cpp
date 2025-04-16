@@ -218,20 +218,64 @@ namespace Draw {
         return splitter;
     }
 
-    QWidget* setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit) {
+    QWidget*setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit,
+        QLineEdit** yAxisEdit, QWidget** seriesContent)
+    {
         QWidget* widget = new QWidget(parent);
         widget->setObjectName("graphSection");
 
         QHBoxLayout* mainLayout = new QHBoxLayout(widget);
         mainLayout->setContentsMargins(0, 0, 0, 0);
 
-        // Передаем дополнительные параметры для полей ввода
-        auto* chartSettings = createChartSettingsPanel(widget, xAxisEdit, yAxisEdit);
-        auto* chartWidget = createChartWidget(widget);
+        // Создаем панель с настройками
+        QWidget* settingsContainer = new QWidget(widget);
+        QVBoxLayout* settingsLayout = new QVBoxLayout(settingsContainer);
 
-        QSplitter* splitter = addSplitter(widget, chartSettings, chartWidget, 1, 2);
+        // Добавляем панели настроек осей и серий
+        settingsLayout->addWidget(createChartSettingsPanel(settingsContainer, xAxisEdit, yAxisEdit));
+        settingsLayout->addWidget(createSeriesSettingsPanel(settingsContainer, seriesContent));
+
+        // Создаем разделитель
+        QSplitter* splitter = addSplitter(widget, settingsContainer, createChartWidget(widget), 1, 2);
+
         mainLayout->addWidget(splitter);
-
         return widget;
+    }
+
+    // Создание сворачиваемой панели для названий рядов
+    QGroupBox* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget) {
+        QGroupBox* group = new QGroupBox("Названия графиков", parent);
+        group->setCheckable(true);
+        group->setChecked(false); // Свернуто по умолчанию
+
+        QScrollArea* scrollArea = new QScrollArea(group);
+        scrollArea->setWidgetResizable(true);
+
+        QWidget* container = new QWidget;
+        QVBoxLayout* layout = new QVBoxLayout(container);
+        layout->setAlignment(Qt::AlignTop);
+
+        scrollArea->setWidget(container);
+
+        QVBoxLayout* groupLayout = new QVBoxLayout(group);
+        groupLayout->addWidget(scrollArea);
+
+        *contentWidget = container;
+        return group;
+    }
+
+    // Создание строки с полем ввода для конкретного ряда
+    QWidget* createSeriesNameRow(QWidget* parent, int seriesIndex, QLineEdit** edit) {
+        QWidget* row = new QWidget(parent);
+        QHBoxLayout* layout = new QHBoxLayout(row);
+
+        QLabel* label = new QLabel(QString("График %1:").arg(seriesIndex + 1), row);
+        QLineEdit* lineEdit = new QLineEdit(QString("График %1").arg(seriesIndex + 1), row);
+
+        layout->addWidget(label);
+        layout->addWidget(lineEdit);
+
+        *edit = lineEdit;
+        return row;
     }
 }
