@@ -276,8 +276,16 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
         for(int row = first; row <= last; ++row) {
             if(row >= m_seriesNameEdits.size()) {
                 QLineEdit* edit;
-                QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit);
+                QPushButton *minBtn, *maxBtn;
+                QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit, &minBtn, &maxBtn);
+
+                connect(minBtn, &QPushButton::clicked, [this, row]() { handleShowMin(row); });
+                connect(maxBtn, &QPushButton::clicked, [this, row]() { handleShowMax(row); });
+
                 m_seriesNameEdits.append(edit);
+                m_minButtons.append(minBtn);
+                m_maxButtons.append(maxBtn);
+
                 layout->insertWidget(row, rowWidget);
                 connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
             }
@@ -292,7 +300,64 @@ void MainWindow::handleSeriesRemoved(const QModelIndex &parent, int first, int l
             delete item->widget();
             delete item;
             m_seriesNameEdits.removeAt(i);
+            m_minButtons.removeAt(i);
+            m_maxButtons.removeAt(i);
         }
+    }
+}
+
+// В MainWindow.cpp
+
+// Общая функция для поиска экстремумов
+std::pair<double, int> MainWindow::findExtremum(int seriesIndex, bool findMax) {
+    double extremumVal = findMax ? std::numeric_limits<double>::lowest()
+                                : std::numeric_limits<double>::max();
+    int extremumCol = -1;
+
+    if(seriesIndex < 0 || seriesIndex >= m_table->rowCount())
+        return {extremumVal, extremumCol};
+
+    for(int col = 0; col < m_table->columnCount(); ++col) {
+        if(auto item = m_table->item(seriesIndex, col)) {
+            bool ok;
+            double val = item->text().toDouble(&ok);
+            if(ok) {
+                if((findMax && val > extremumVal) || (!findMax && val < extremumVal)) {
+                    extremumVal = val;
+                    extremumCol = col;
+                }
+            }
+        }
+    }
+    return {extremumVal, extremumCol};
+}
+
+// Общая функция создания маркера
+void MainWindow::createMarker(double x, double y, const QColor& color) {
+    QScatterSeries* marker = new QScatterSeries();
+    marker->setMarkerSize(15);
+    marker->setColor(color);
+    marker->setBorderColor(Qt::white);
+    marker->append(x, y);
+    marker->setName(""); // Пустое имя уберет из легенды
+
+    m_chartView->chart()->addSeries(marker);
+    marker->attachAxis(m_axisX);
+    marker->attachAxis(m_axisY);
+}
+
+// Слоты для обработки кнопок
+void MainWindow::handleShowMin(int seriesIndex) {
+    auto [minVal, minCol] = findExtremum(seriesIndex, false);
+    if(minCol != -1) {
+        createMarker(minCol, minVal, Qt::red);
+    }
+}
+
+void MainWindow::handleShowMax(int seriesIndex) {
+    auto [maxVal, maxCol] = findExtremum(seriesIndex, true);
+    if(maxCol != -1) {
+        createMarker(maxCol, maxVal, Qt::blue);
     }
 }
 

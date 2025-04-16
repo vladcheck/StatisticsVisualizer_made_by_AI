@@ -53,8 +53,8 @@ namespace Draw
         QObject::connect(button, &QPushButton::clicked,
                          button, std::forward<Func>(callback));
     }
-    QGroupBox* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget);
-    QWidget* createSeriesNameRow(QWidget* parent, int seriesIndex, QLineEdit** edit);
+    QWidget* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget);
+    QWidget* createSeriesNameRow(QWidget* parent, int seriesIndex, QLineEdit** edit, QPushButton** minBtn, QPushButton** maxBtn);
     void setSizePolicyExpanding(QWidget *w);
     void setSizePolicyFixed(QWidget *w);
     void setupTableActions();

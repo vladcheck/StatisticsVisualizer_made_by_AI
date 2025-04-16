@@ -242,11 +242,13 @@ namespace Draw {
         return widget;
     }
 
-    // Создание сворачиваемой панели для названий рядов
-    QGroupBox* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget) {
-        QGroupBox* group = new QGroupBox("Названия графиков", parent);
-        group->setCheckable(true);
-        group->setChecked(false); // Свернуто по умолчанию
+    // Создание панели для названий рядов
+    QWidget* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget) {
+        QWidget* group = new QWidget(parent); // Заменяем QGroupBox на обычный виджет
+        QVBoxLayout* groupLayout = new QVBoxLayout(group);
+
+        QLabel* header = new QLabel("Индивидуальные настройки", group);
+        groupLayout->addWidget(header);
 
         QScrollArea* scrollArea = new QScrollArea(group);
         scrollArea->setWidgetResizable(true);
@@ -254,11 +256,9 @@ namespace Draw {
         QWidget* container = new QWidget;
         QVBoxLayout* layout = new QVBoxLayout(container);
         layout->setAlignment(Qt::AlignTop);
-        layout->setSpacing(0);
+        layout->setSpacing(6);
 
         scrollArea->setWidget(container);
-
-        QVBoxLayout* groupLayout = new QVBoxLayout(group);
         groupLayout->addWidget(scrollArea);
 
         *contentWidget = container;
@@ -266,17 +266,29 @@ namespace Draw {
     }
 
     // Создание строки с полем ввода для конкретного ряда
-    QWidget* createSeriesNameRow(QWidget* parent, int seriesIndex, QLineEdit** edit) {
+    QWidget* createSeriesNameRow(QWidget* parent, int seriesIndex, QLineEdit** edit, QPushButton** minBtn, QPushButton** maxBtn) {
         QWidget* row = new QWidget(parent);
         QHBoxLayout* layout = new QHBoxLayout(row);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(4);
+
+        // Добавляем кнопки
+        QPushButton* minButton = new QPushButton("MIN", row);
+        QPushButton* maxButton = new QPushButton("MAX", row);
+        minButton->setFixedSize(40, 24);
+        maxButton->setFixedSize(40, 24);
 
         QLabel* label = new QLabel(QString("График %1:").arg(seriesIndex + 1), row);
         QLineEdit* lineEdit = new QLineEdit(QString("График %1").arg(seriesIndex + 1), row);
 
+        layout->addWidget(minButton);
+        layout->addWidget(maxButton);
         layout->addWidget(label);
         layout->addWidget(lineEdit);
 
         *edit = lineEdit;
+        *minBtn = minButton;
+        *maxBtn = maxButton;
         return row;
     }
 }

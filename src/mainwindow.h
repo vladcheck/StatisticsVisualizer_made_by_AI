@@ -46,6 +46,8 @@ private slots:
     void updateSeriesNames();
     void handleSeriesAdded(const QModelIndex &parent, int first, int last);
     void handleSeriesRemoved(const QModelIndex &parent, int first, int last);
+    void handleShowMin(int seriesIndex);
+    void handleShowMax(int seriesIndex);
 
 private:
     QWidget* m_seriesSettingsContent;
@@ -62,6 +64,8 @@ private:
     QPushButton* m_exportBtn = nullptr;
     QPushButton* m_addRowBtn = nullptr;
     QPushButton* m_delRowBtn = nullptr;
+    QVector<QPushButton*> m_minButtons;
+    QVector<QPushButton*> m_maxButtons;
 
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;
@@ -120,5 +124,7 @@ private:
     void initializeChart();
     void attachSeriesToAxes(QXYSeries* series);
     void setupGraphSettingsSlots();
+    std::pair<double, int> findExtremum(int seriesIndex, bool findMax);
+    void createMarker(double x, double y, const QColor& color);
 };
 #endif // MAINWINDOW_H
