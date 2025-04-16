@@ -274,14 +274,13 @@ void MainWindow::setupGraphSettingsSlots() {
 void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int last) {
     if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
         for(int row = first; row <= last; ++row) {
-            QLineEdit* edit;
-            QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit);
-
-            // Вставляем в конец списка и добавляем виджет в конец лэйаута
-            m_seriesNameEdits.append(edit);
-            layout->addWidget(rowWidget);
-
-            connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
+            if(row >= m_seriesNameEdits.size()) {
+                QLineEdit* edit;
+                QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit);
+                m_seriesNameEdits.append(edit);
+                layout->insertWidget(row, rowWidget);
+                connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
+            }
         }
     }
 }
@@ -579,6 +578,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
         initializeChart();
         setupGraphSettingsSlots();
+
+        // Принудительно создаем поля для начальных рядов
+        QTimer::singleShot(0, this, [this]() {
+            int rows = m_table->rowCount();
+            if(rows > 0) {
+                handleSeriesAdded(QModelIndex(), 0, rows-1);
+            }
+        });
+
         updateStatistics();
     } else {
         qFatal("Table initialization failed!");

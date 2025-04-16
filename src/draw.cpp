@@ -254,6 +254,7 @@ namespace Draw {
         QWidget* container = new QWidget;
         QVBoxLayout* layout = new QVBoxLayout(container);
         layout->setAlignment(Qt::AlignTop);
+        layout->setSpacing(0);
 
         scrollArea->setWidget(container);
 
