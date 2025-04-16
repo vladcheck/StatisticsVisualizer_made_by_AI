@@ -12,7 +12,7 @@ void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 }
 
 QWidget* MainWindow::createBasicDataSection(QWidget *parent, QLabel **elementCountLabel,
-                                             QLabel **sumLabel, QLabel **averageLabel)
+                                            QLabel **sumLabel, QLabel **averageLabel)
 {
     QWidget *section = Draw::createStatSection(parent, "Основные метрики");
     QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
@@ -70,7 +70,7 @@ QWidget* MainWindow::createExtremesSection(QWidget *parent)
 }
 
 QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
-                                     QLabel **sumLabel, QLabel **averageLabel)
+                                    QLabel **sumLabel, QLabel **averageLabel)
 {
     QWidget *statsPanel = new QWidget(parent);
     statsPanel->setLayout(new QVBoxLayout(statsPanel));
@@ -460,19 +460,46 @@ void MainWindow::updateStatistics() {
     plotData(data);
 }
 
+void MainWindow::updateXAxisTitle() {
+    if(m_chartView && m_chartView->chart()) {
+        // Получаем все горизонтальные оси
+        QList<QAbstractAxis*> xAxes = m_chartView->chart()->axes(Qt::Horizontal);
+        if(!xAxes.isEmpty()) {
+            if(QValueAxis* xAxis = qobject_cast<QValueAxis*>(xAxes.first())) {
+                xAxis->setTitleText(m_xAxisTitleEdit->text());
+            }
+        }
+    }
+}
+
+void MainWindow::updateYAxisTitle() {
+    if(m_chartView && m_chartView->chart()) {
+        // Получаем все вертикальные оси
+        QList<QAbstractAxis*> yAxes = m_chartView->chart()->axes(Qt::Vertical);
+        if(!yAxes.isEmpty()) {
+            if(QValueAxis* yAxis = qobject_cast<QValueAxis*>(yAxes.first())) {
+                yAxis->setTitleText(m_yAxisTitleEdit->text());
+            }
+        }
+    }
+}
+
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
 
     QWidget *dataSection = setupDataSection(mainWidget);
-    QWidget* graphSection = Draw::setupGraphSection(mainWidget);
+    QWidget* graphSection = Draw::setupGraphSection(mainWidget, &m_xAxisTitleEdit, &m_yAxisTitleEdit);
     initializeChart(); // Инициализация графика один раз
 
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(dataSection, 1);
     mainLayout->addWidget(graphSection, 1);
+
+    connect(m_xAxisTitleEdit, &QLineEdit::textChanged, this, &MainWindow::updateXAxisTitle);
+    connect(m_yAxisTitleEdit, &QLineEdit::textChanged, this, &MainWindow::updateYAxisTitle);
 
     // Проверка инициализации перед подключением сигналов
     if (m_table) {

@@ -134,16 +134,27 @@ namespace Draw {
         }
     }
 
-    QGroupBox* createChartSettingsPanel(QWidget* parent) {
+    QGroupBox* createChartSettingsPanel(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit) {
         QGroupBox* settingsGroup = new QGroupBox("Настройки визуализации", parent);
-        QVBoxLayout* settingsLayout = new QVBoxLayout(settingsGroup);
-        settingsLayout->setAlignment(Qt::AlignTop);
+        QFormLayout* formLayout = new QFormLayout(settingsGroup);
 
-        // Заглушка для элементов управления
-        QLabel* settingsPlaceholder = new QLabel("Параметры будут здесь");
-        settingsLayout->addWidget(settingsPlaceholder);
+        // Поле для названия горизонтальной оси
+        QLineEdit* xEdit = new QLineEdit(settingsGroup);
+        xEdit->setText("Ось X");
+        xEdit->setPlaceholderText("Введите название горизонтальной оси");
+        formLayout->addRow("Ось X:", xEdit);
 
-        settingsGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+        // Поле для названия вертикальной оси
+        QLineEdit* yEdit = new QLineEdit(settingsGroup);
+        yEdit->setText("Ось Y");
+        yEdit->setPlaceholderText("Введите название вертикальной оси");
+        formLayout->addRow("Ось Y:", yEdit);
+
+        // Возвращаем указатели через параметры
+        *xAxisEdit = xEdit;
+        *yAxisEdit = yEdit;
+
+        settingsGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
         return settingsGroup;
     }
 
@@ -207,15 +218,16 @@ namespace Draw {
         return splitter;
     }
 
-    QWidget* setupGraphSection(QWidget* parent) {
+    QWidget* setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit) {
         QWidget* widget = new QWidget(parent);
         widget->setObjectName("graphSection");
 
         QHBoxLayout* mainLayout = new QHBoxLayout(widget);
         mainLayout->setContentsMargins(0, 0, 0, 0);
 
-        auto* chartSettings = createChartSettingsPanel(widget);
-        auto* chartWidget = createChartWidget(widget); // Только создание контейнера
+        // Передаем дополнительные параметры для полей ввода
+        auto* chartSettings = createChartSettingsPanel(widget, xAxisEdit, yAxisEdit);
+        auto* chartWidget = createChartWidget(widget);
 
         QSplitter* splitter = addSplitter(widget, chartSettings, chartWidget, 1, 2);
         mainLayout->addWidget(splitter);

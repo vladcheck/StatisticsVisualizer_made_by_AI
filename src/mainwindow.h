@@ -27,6 +27,7 @@
 #include <QChartView>
 #include <QVector>
 #include <QXYSeries>
+#include <QLineEdit>
 
 #include <limits>
 #include <iostream>
@@ -40,8 +41,12 @@ public:
 private slots:
     void updateStatistics();
     void plotData(const TableData& data);
+    void updateXAxisTitle();
+    void updateYAxisTitle();
 
 private:
+    QLineEdit* m_xAxisTitleEdit;
+    QLineEdit* m_yAxisTitleEdit;
     QTableWidget *m_table = nullptr;
     QPushButton* m_addColBtn = nullptr;
     QPushButton* m_delColBtn = nullptr;

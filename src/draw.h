@@ -27,6 +27,8 @@
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QValueAxis>
 #include <QLineSeries>
+#include <QFormLayout>
+#include <QLineEdit>
 
 namespace Draw
 {
@@ -65,7 +67,7 @@ namespace Draw
     QWidget *createStatSection(QWidget *parent, const QString &title);     // Создание секции с заголовком
     void addStatRows(QWidget *parent, QLayout *layout, const std::initializer_list<QPair<QString, QString>> &rows);
     void updateStatValue(QWidget *section, const QString &title, const QString &value);
-    QWidget* setupGraphSection(QWidget* parent);
+    QWidget* setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit);
     QValueAxis* setupAxis(QString name, int a, int b);
     QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1, int stretch2);
 };
