@@ -4,6 +4,24 @@ bool areWeightsValid(const QVector<double>& weights, const QVector<double>& valu
     return (weights.size() == values.size()) && !weights.isEmpty();
 }
 
+// Получение цвета по индексу с цикличностью
+QColor MainWindow::getSeriesColor(int index) const {
+    return m_seriesColors[index % m_seriesColors.size()];
+}
+
+QPen MainWindow::getSeriesPen(int index) const {
+    QPen pen(getSeriesColor(index));
+    pen.setWidthF(2.5); // Толщина линии
+    pen.setStyle(Qt::SolidLine); // Стиль линии
+    return pen;
+}
+
+// Автоматическое затемнение для границ
+QColor MainWindow::getBorderColor(int index) const {
+    QColor base = getSeriesColor(index);
+    return base.darker(120); // Затемнение на 20%
+}
+
 void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 {
     QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
@@ -636,7 +654,7 @@ void MainWindow::plotData(const TableData& data) {
 
     for (size_t i = 0; i < data.size(); ++i) {
         // Создаем серию один раз
-        QLineSeries* series = createSeries(i);
+        QLineSeries* series = createSeries(i,false);
 
         // Устанавливаем имя из поля ввода или по умолчанию
         QString seriesName = "График " + QString::number(i+1);
@@ -664,11 +682,30 @@ void MainWindow::clearChart() {
     }
 }
 
-QLineSeries* MainWindow::createSeries(int seriesIndex) {
+void MainWindow::addPointsToSeriesGraph(int seriesIndex, QLineSeries* series) {
+    QScatterSeries* scatter = new QScatterSeries();
+    scatter->setMarkerSize(8);
+    scatter->setColor(getSeriesColor(seriesIndex).lighter(120));
+    scatter->setBorderColor(getSeriesColor(seriesIndex).darker(150));
+
+    // Привязываем маркеры к линии
+    series->setPointsVisible(true);
+    m_chartView->chart()->addSeries(scatter);
+    scatter->attachAxis(m_axisX);
+    scatter->attachAxis(m_axisY);
+}
+
+QLineSeries* MainWindow::createSeries(int seriesIndex, bool showPoints) {
     QLineSeries* series = new QLineSeries();
-    QColor color = m_seriesColors[seriesIndex % m_seriesColors.size()];
-    series->setPen(QPen(color, 2));
-    series->setName(QString("Ряд %1").arg(seriesIndex + 1));
+
+    // Устанавливаем стиль линии
+    QPen pen = getSeriesPen(seriesIndex);
+    series->setPen(pen);
+
+    if (showPoints) {
+        addPointsToSeriesGraph(seriesIndex, series);
+    }
+
     return series;
 }
 

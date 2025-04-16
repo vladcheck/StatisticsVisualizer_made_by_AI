@@ -31,6 +31,7 @@
 #include <QStyleFactory>
 #include <QApplication>
 #include <QLegendMarker>
+#include <QPen>
 
 #include <limits>
 #include <iostream>
@@ -100,15 +101,17 @@ private:
 
     QVector<QLineEdit*> m_seriesNameEdits;
     QVector<QColor> m_seriesColors {
-        QColor("#1f77b4"), QColor("#ff7f0e"), QColor("#2ca02c"),
-        QColor("#d62728"), QColor("#9467bd"), QColor("#8c564b")
+        QColor("#A8E6CF"), QColor("#DCEDC1"), QColor("#FFD3B6"), QColor("#FFAAA5"),  // Мятный, салатовый, персиковый, розовый
+        QColor("#D4A5A5"), QColor("#FFC8DD"), QColor("#B5EAD7"), QColor("#E2F0CB"),  // Пудровый, малиновый, аквамарин, лайм
+        QColor("#FFDAC1"), QColor("#C7CEEA"), QColor("#F8B195"), QColor("#F67280"),  // Карамельный, лавандовый, коралловый, арбузный
+        QColor("#6B5B95"), QColor("#88B04B"), QColor("#FF6F61"), QColor("#92A8D1")   // Фиолетовый, оливковый, красный, голубой
     };
     QHash<int, SeriesMarkers> m_seriesMarkers; // Хранит маркеры для каждого ряда
     QVector<QPushButton*> m_minButtons;
     QVector<QPushButton*> m_maxButtons;
 
     void clearChart();
-    QLineSeries* createSeries(int seriesIndex);
+    QLineSeries* createSeries(int seriesIndex, bool showPoints = false);
     void addPointsToSeries(QLineSeries* series,
                            const std::vector<std::pair<int, int>>& data,
                            double& minX, double& maxX,
@@ -142,5 +145,10 @@ private:
     void updateButtonStyle(QPushButton* btn, bool active);
     void setupTableSlots();
     void refreshLegend();
+    QColor getSeriesColor(int index) const;
+    QPen getSeriesPen(int index) const;
+    QColor getBorderColor(int index) const;
+    void addPointsToSeriesGraph(int seriesIndex, QLineSeries* series);
 };
+
 #endif // MAINWINDOW_H
