@@ -141,5 +141,6 @@ private:
     void updateButtonsState(int seriesIndex);
     void updateButtonStyle(QPushButton* btn, bool active);
     void setupTableSlots();
+    void refreshLegend();
 };
 #endif // MAINWINDOW_H

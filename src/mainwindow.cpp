@@ -297,19 +297,37 @@ void MainWindow::updateButtonStyle(QPushButton* btn, bool active) {
 }
 
 void MainWindow::updateMarker(int seriesIndex, bool isMax) {
-    if(!m_seriesMarkers.contains(seriesIndex)) return;
+    // Проверяем валидность индекса
+    if (seriesIndex < 0 || seriesIndex >= m_table->rowCount()) return;
+
+    // Проверяем существование контейнера маркеров
+    if (!m_seriesMarkers.contains(seriesIndex)) {
+        m_seriesMarkers.insert(seriesIndex, SeriesMarkers{});
+    }
 
     auto& markers = m_seriesMarkers[seriesIndex];
     QScatterSeries** marker = isMax ? &markers.maxMarker : &markers.minMarker;
 
-    if(*marker) {
+    // Удаляем только если маркер существует и добавлен на график
+    if (*marker && m_chartView->chart()->series().contains(*marker)) {
         m_chartView->chart()->removeSeries(*marker);
         delete *marker;
         *marker = nullptr;
+    }
+
+    // Пересчитываем экстремум только если кнопка активна
+    if ((isMax && m_maxButtons[seriesIndex]->isChecked()) ||
+        (!isMax && m_minButtons[seriesIndex]->isChecked())) {
 
         auto [val, col] = findExtremum(seriesIndex, isMax);
-        if(col != -1) {
+        if (col != -1) {
             *marker = createMarker(col, val, isMax);
+            // Дополнительная проверка перед добавлением
+            if (*marker && !m_chartView->chart()->series().contains(*marker)) {
+                m_chartView->chart()->addSeries(*marker);
+                (*marker)->attachAxis(m_axisX);
+                (*marker)->attachAxis(m_axisY);
+            }
         }
     }
 }
@@ -384,26 +402,26 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
 void MainWindow::handleSeriesRemoved(const QModelIndex &parent, int first, int last) {
     if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
         for(int i = last; i >= first; --i) {
-            // Удаляем маркеры
-            if(m_seriesMarkers.contains(i)) {
-                auto markers = m_seriesMarkers.take(i);
-                if(markers.minMarker) {
+            // Удаляем маркеры перед удалением ряда
+            if (m_seriesMarkers.contains(i)) {
+                auto& markers = m_seriesMarkers[i];
+                if (markers.minMarker) {
                     m_chartView->chart()->removeSeries(markers.minMarker);
                     delete markers.minMarker;
                 }
-                if(markers.maxMarker) {
+                if (markers.maxMarker) {
                     m_chartView->chart()->removeSeries(markers.maxMarker);
                     delete markers.maxMarker;
                 }
+                m_seriesMarkers.remove(i);
             }
 
-            // Удаляем элементы интерфейса
-            QLayoutItem* item = layout->takeAt(i);
-            delete item->widget();
-            delete item;
-            m_seriesNameEdits.removeAt(i);
-            m_minButtons.removeAt(i);
-            m_maxButtons.removeAt(i);
+            // Обновляем индексы для оставшихся элементов
+            for (int j = i; j < m_seriesMarkers.size(); ++j) {
+                if (m_seriesMarkers.contains(j + 1)) {
+                    m_seriesMarkers[j] = m_seriesMarkers.take(j + 1);
+                }
+            }
         }
     }
 }
@@ -467,22 +485,44 @@ QScatterSeries* MainWindow::createMarker(double x, double y, bool isMax) {
     marker->setBorderColor(Qt::white);
     marker->append(x, y);
 
-    marker->setName("");                          // 1. Пустое имя серии
-    marker->setProperty("isHiddenMarker", true);   // 2. Кастомное свойство
+    // 1. Явно задаем пустое имя и пользовательское свойство
+    marker->setName("");
+    marker->setProperty("isHiddenMarker", QVariant(true));
 
-    m_chartView->chart()->addSeries(marker);
-    marker->attachAxis(m_axisX);
-    marker->attachAxis(m_axisY);
+    if (m_chartView && m_chartView->chart()) {
+        // 2. Добавляем серию на график
+        m_chartView->chart()->addSeries(marker);
+        marker->attachAxis(m_axisX);
+        marker->attachAxis(m_axisY);
 
-    // 3. Принудительно скрываем в легенде
-    QTimer::singleShot(0, [this, marker]() {
-        auto legend = m_chartView->chart()->legend();
-        for (auto* legendMarker : legend->markers(marker)) {
-            legendMarker->setVisible(false);
-        }
-    });
-
+        // 3. Принудительно скрываем в легенде через отложенный вызов
+        QTimer::singleShot(0, [this, marker]() {
+            if (marker && m_chartView->chart()) {
+                QLegend* legend = m_chartView->chart()->legend();
+                for (QLegendMarker* legendMarker : legend->markers(marker)) {
+                    // 4. Двойная проверка через свойство и имя
+                    if (marker->property("isHiddenMarker").toBool()
+                        && marker->name().isEmpty()) {
+                        legendMarker->setVisible(false);
+                    }
+                }
+            }
+        });
+    }
     return marker;
+}
+
+void MainWindow::refreshLegend() {
+    if (!m_chartView || !m_chartView->chart()) return;
+
+    QLegend* legend = m_chartView->chart()->legend();
+    for (QLegendMarker* marker : legend->markers()) {
+        if (auto series = dynamic_cast<QScatterSeries*>(marker->series())) {
+            if (series->property("isHiddenMarker").toBool()) {
+                marker->setVisible(false);
+            }
+        }
+    }
 }
 
 // Слоты для обработки кнопок
@@ -722,6 +762,7 @@ void MainWindow::updateStatistics() {
     for(int i = 0; i < m_table->rowCount(); ++i) {
         updateButtonsState(i);
     }
+    refreshLegend();
 }
 
 void MainWindow::updateXAxisTitle() {
@@ -766,18 +807,19 @@ void MainWindow::setupTableSlots() {
 
     connect(m_table->model(), &QAbstractItemModel::dataChanged, [this]() {
         const int rows = m_table->rowCount();
-        for(int i = 0; i < rows; ++i) {
-            const bool hasMinBtn = (i < m_minButtons.size());
-            const bool hasMaxBtn = (i < m_maxButtons.size());
+        const int buttonsCount = qMin(m_minButtons.size(), m_maxButtons.size());
 
-            if(hasMinBtn && m_minButtons[i]->isChecked())
-                updateMarker(i, false);
-
-            if(hasMaxBtn && m_maxButtons[i]->isChecked())
-                updateMarker(i, true);
+        for (int i = 0; i < qMin(rows, buttonsCount); ++i) {
+            if (m_minButtons[i]->isChecked() || m_maxButtons[i]->isChecked()) {
+                QTimer::singleShot(0, [this, i]() { // Добавляем задержку
+                    if (i < m_table->rowCount()) { // Проверка актуальности индекса
+                        if (m_minButtons[i]->isChecked()) updateMarker(i, false);
+                        if (m_maxButtons[i]->isChecked()) updateMarker(i, true);
+                    }
+                });
+            }
         }
     });
-
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
