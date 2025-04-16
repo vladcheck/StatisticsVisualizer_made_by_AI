@@ -415,11 +415,22 @@ QScatterSeries* MainWindow::createMarker(double x, double y, const QColor& color
     marker->setColor(color);
     marker->setBorderColor(Qt::white);
     marker->append(x, y);
-    marker->setName("");
+
+    marker->setName("");                          // 1. Пустое имя серии
+    marker->setProperty("isHiddenMarker", true);   // 2. Кастомное свойство
 
     m_chartView->chart()->addSeries(marker);
     marker->attachAxis(m_axisX);
     marker->attachAxis(m_axisY);
+
+    // 3. Принудительно скрываем в легенде
+    QTimer::singleShot(0, [this, marker]() {
+        auto legend = m_chartView->chart()->legend();
+        for (auto* legendMarker : legend->markers(marker)) {
+            legendMarker->setVisible(false);
+        }
+    });
+
     return marker;
 }
 

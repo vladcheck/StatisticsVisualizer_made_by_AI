@@ -30,6 +30,7 @@
 #include <QLineEdit>
 #include <QStyleFactory>
 #include <QApplication>
+#include <QLegendMarker>
 
 #include <limits>
 #include <iostream>
