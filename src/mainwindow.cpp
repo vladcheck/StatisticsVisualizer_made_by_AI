@@ -273,27 +273,45 @@ void MainWindow::setupGraphSettingsSlots() {
 
 void MainWindow::updateButtonStyle(QPushButton* btn, bool active) {
     QString style = QString(
-    "QPushButton {"
-    "  border: 1px solid %1;"
-    "  border-radius: 4px;"
-    "  padding: 4px;"
-    "  background: %2;"
-    "  color: %3;"
-    "  min-width: 40px;"
-    "}"
-    "QPushButton:hover {"
-    "  background: %4;"
-    "  border-color: %5;"
-    "}"
-    ).arg(
-        active ? "#3daee9" : "#505050",  // Цвет границы
-        active ? "#2a82da" : "#404040",  // Фон
-        active ? "#ffffff" : "#b0b0b0",  // Цвет текста
-        active ? "#1d6eab" : "#505050",  // Фон при наведении
-        active ? "#3daee9" : "#606060"   // Граница при наведении
-        );
+        "QPushButton {"
+        "  border: 1px solid %1;"
+        "  border-radius: 4px;"
+        "  padding: 4px;"
+        "  background: %2;"
+        "  color: %3;"
+        "  min-width: 40px;"
+        "}"
+        "QPushButton:hover {"
+        "  background: %4;"
+        "  border-color: %5;"
+        "}"
+        ).arg(
+            active ? "#3daee9" : "#505050",  // border
+            active ? "#2a82da" : "#404040",  // background
+            active ? "#ffffff" : "#b0b0b0",  // text
+            active ? "#1d6eab" : "#505050",  // hover background
+            active ? "#3daee9" : "#606060"   // hover border
+    );
 
     btn->setStyleSheet(style);
+}
+
+void MainWindow::updateMarker(int seriesIndex, bool isMax) {
+    if(!m_seriesMarkers.contains(seriesIndex)) return;
+
+    auto& markers = m_seriesMarkers[seriesIndex];
+    QScatterSeries** marker = isMax ? &markers.maxMarker : &markers.minMarker;
+
+    if(*marker) {
+        m_chartView->chart()->removeSeries(*marker);
+        delete *marker;
+        *marker = nullptr;
+
+        auto [val, col] = findExtremum(seriesIndex, isMax);
+        if(col != -1) {
+            *marker = createMarker(col, val, isMax);
+        }
+    }
 }
 
 void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int last) {
@@ -307,37 +325,42 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                 // Настройка кнопок
                 minBtn->setCheckable(true);
                 maxBtn->setCheckable(true);
-                updateButtonStyle(minBtn, false);
-                updateButtonStyle(maxBtn, false);
+                updateButtonsState(row);
 
+                // MIN button
                 connect(minBtn, &QPushButton::toggled, [=](bool checked) {
-                    updateButtonStyle(minBtn, checked);
+                    if(!minBtn->isEnabled()) return;
+
+                    // Удаляем старый маркер перед созданием нового
+                    if(m_seriesMarkers[row].minMarker) {
+                        m_chartView->chart()->removeSeries(m_seriesMarkers[row].minMarker);
+                        delete m_seriesMarkers[row].minMarker;
+                        m_seriesMarkers[row].minMarker = nullptr;
+                    }
+
                     if(checked) {
                         auto [minVal, minCol] = findExtremum(row, false);
                         if(minCol != -1) {
-                            m_seriesMarkers[row].minMarker = createMarker(minCol, minVal, Qt::red);
-                        }
-                    } else {
-                        if(m_seriesMarkers.contains(row)) {
-                            auto& markers = m_seriesMarkers[row];
-                            if(markers.minMarker) {
-                                m_chartView->chart()->removeSeries(markers.minMarker);
-                                delete markers.minMarker;
-                                markers.minMarker = nullptr;
-                            }
+                            m_seriesMarkers[row].minMarker = createMarker(minCol, minVal, false);
+                            connect(m_table->model(), &QAbstractItemModel::dataChanged,
+                                    [this, row]() { updateMarker(row, false); });
                         }
                     }
+                    updateButtonStyle(minBtn, checked);
                 });
 
+                // MAX button
                 connect(maxBtn, &QPushButton::toggled, [=](bool checked) {
+                    if(!maxBtn->isEnabled()) return;
+
                     updateButtonStyle(maxBtn, checked);
                     if(checked) {
                         auto [maxVal, maxCol] = findExtremum(row, true);
                         if(maxCol != -1) {
-                            m_seriesMarkers[row].maxMarker = createMarker(maxCol, maxVal, Qt::blue);
+                            m_seriesMarkers[row].maxMarker = createMarker(maxCol, maxVal, true);
                         }
                     } else {
-                        if(m_seriesMarkers.contains(row) && m_seriesMarkers[row].maxMarker) {
+                        if(m_seriesMarkers[row].maxMarker) {
                             m_chartView->chart()->removeSeries(m_seriesMarkers[row].maxMarker);
                             delete m_seriesMarkers[row].maxMarker;
                             m_seriesMarkers[row].maxMarker = nullptr;
@@ -345,10 +368,11 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                     }
                 });
 
+                // Сохраняем ссылки
                 m_seriesNameEdits.append(edit);
                 m_minButtons.append(minBtn);
                 m_maxButtons.append(maxBtn);
-                m_seriesMarkers[row] = SeriesMarkers();
+                m_seriesMarkers.insert(row, SeriesMarkers{});
 
                 layout->insertWidget(row, rowWidget);
                 connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
@@ -408,11 +432,38 @@ std::pair<double, int> MainWindow::findExtremum(int seriesIndex, bool findMax) {
     return {extremumVal, extremumCol};
 }
 
+void MainWindow::updateButtonsState(int seriesIndex) {
+    if(seriesIndex < 0 || seriesIndex >= m_minButtons.size())
+        return;
+
+    bool isEmpty = isSeriesEmpty(seriesIndex);
+    m_minButtons[seriesIndex]->setDisabled(isEmpty);
+    m_maxButtons[seriesIndex]->setDisabled(isEmpty);
+
+    // Обновление стилей для заблокированных кнопок
+    updateButtonStyle(m_minButtons[seriesIndex],
+                      m_minButtons[seriesIndex]->isChecked() && !isEmpty);
+    updateButtonStyle(m_maxButtons[seriesIndex],
+                      m_maxButtons[seriesIndex]->isChecked() && !isEmpty);
+}
+
+bool MainWindow::isSeriesEmpty(int seriesIndex) const {
+    if(seriesIndex < 0 || seriesIndex >= m_table->rowCount())
+        return true;
+
+    for(int col = 0; col < m_table->columnCount(); ++col) {
+        if(auto item = m_table->item(seriesIndex, col)) {
+            if(!item->text().isEmpty()) return false;
+        }
+    }
+    return true;
+}
+
 // Общая функция создания маркера
-QScatterSeries* MainWindow::createMarker(double x, double y, const QColor& color) {
+QScatterSeries* MainWindow::createMarker(double x, double y, bool isMax) {
     QScatterSeries* marker = new QScatterSeries();
-    marker->setMarkerSize(15);
-    marker->setColor(color);
+    marker->setMarkerSize(10);
+    marker->setColor(isMax ? QColor("#90EE90") : QColor("#FFB6C1"));
     marker->setBorderColor(Qt::white);
     marker->append(x, y);
 
@@ -668,6 +719,9 @@ void MainWindow::updateStatistics() {
     const TableData data = parse();
     updateUI(data);
     plotData(data);
+    for(int i = 0; i < m_table->rowCount(); ++i) {
+        updateButtonsState(i);
+    }
 }
 
 void MainWindow::updateXAxisTitle() {
@@ -703,6 +757,29 @@ void MainWindow::setupPalette() {
     qApp->setPalette(darkPalette);
 }
 
+void MainWindow::setupTableSlots() {
+    connect(m_table, &QTableWidget::currentCellChanged, [this](int row, int, int, int) {
+        updateStatistics();
+    });
+
+    connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
+
+    connect(m_table->model(), &QAbstractItemModel::dataChanged, [this]() {
+        const int rows = m_table->rowCount();
+        for(int i = 0; i < rows; ++i) {
+            const bool hasMinBtn = (i < m_minButtons.size());
+            const bool hasMaxBtn = (i < m_maxButtons.size());
+
+            if(hasMinBtn && m_minButtons[i]->isChecked())
+                updateMarker(i, false);
+
+            if(hasMaxBtn && m_maxButtons[i]->isChecked())
+                updateMarker(i, true);
+        }
+    });
+
+}
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
@@ -731,12 +808,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     mainLayout->addWidget(graphSection, 1);
 
     if (m_table) {
-        connect(m_table, &QTableWidget::currentCellChanged, [this](int row, int, int, int) {
-            updateStatistics();
-        });
-
-        connect(m_table, &QTableWidget::itemChanged, this, &MainWindow::updateStatistics);
-
+        setupTableSlots();
         initializeChart();
         setupGraphSettingsSlots();
 

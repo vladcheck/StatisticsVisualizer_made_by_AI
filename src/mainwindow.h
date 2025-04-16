@@ -72,8 +72,6 @@ private:
     QPushButton* m_exportBtn = nullptr;
     QPushButton* m_addRowBtn = nullptr;
     QPushButton* m_delRowBtn = nullptr;
-    QVector<QPushButton*> m_minButtons;
-    QVector<QPushButton*> m_maxButtons;
 
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;
@@ -106,6 +104,8 @@ private:
         QColor("#d62728"), QColor("#9467bd"), QColor("#8c564b")
     };
     QHash<int, SeriesMarkers> m_seriesMarkers; // Хранит маркеры для каждого ряда
+    QVector<QPushButton*> m_minButtons;
+    QVector<QPushButton*> m_maxButtons;
 
     void clearChart();
     QLineSeries* createSeries(int seriesIndex);
@@ -133,9 +133,13 @@ private:
     void initializeChart();
     void attachSeriesToAxes(QXYSeries* series);
     void setupGraphSettingsSlots();
-    std::pair<double, int> findExtremum(int seriesIndex, bool findMax);
-    QScatterSeries* createMarker(double x, double y, const QColor& color);
-    void updateButtonStyle(QPushButton* btn, bool active);
     void setupPalette();
+    QScatterSeries* createMarker(double x, double y, bool isMax);
+    void updateMarker(int seriesIndex, bool isMax);
+    std::pair<double, int> findExtremum(int seriesIndex, bool findMax);
+    bool isSeriesEmpty(int seriesIndex) const;
+    void updateButtonsState(int seriesIndex);
+    void updateButtonStyle(QPushButton* btn, bool active);
+    void setupTableSlots();
 };
 #endif // MAINWINDOW_H
