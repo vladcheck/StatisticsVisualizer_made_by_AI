@@ -246,6 +246,13 @@ namespace Draw {
     QWidget* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget) {
         QWidget* group = new QWidget(parent); // Заменяем QGroupBox на обычный виджет
         QVBoxLayout* groupLayout = new QVBoxLayout(group);
+        group->setStyleSheet(
+            "QWidget {"
+            "  background-color: #404040;"
+            "  color: #ffffff;"
+            "}"
+            "QLabel { color: #d0d0d0; }"
+            );
 
         QLabel* header = new QLabel("Индивидуальные настройки", group);
         groupLayout->addWidget(header);

@@ -28,9 +28,16 @@
 #include <QVector>
 #include <QXYSeries>
 #include <QLineEdit>
+#include <QStyleFactory>
+#include <QApplication>
 
 #include <limits>
 #include <iostream>
+
+struct SeriesMarkers {
+    QScatterSeries* minMarker = nullptr;
+    QScatterSeries* maxMarker = nullptr;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -97,6 +104,7 @@ private:
         QColor("#1f77b4"), QColor("#ff7f0e"), QColor("#2ca02c"),
         QColor("#d62728"), QColor("#9467bd"), QColor("#8c564b")
     };
+    QHash<int, SeriesMarkers> m_seriesMarkers; // Хранит маркеры для каждого ряда
 
     void clearChart();
     QLineSeries* createSeries(int seriesIndex);
@@ -125,6 +133,8 @@ private:
     void attachSeriesToAxes(QXYSeries* series);
     void setupGraphSettingsSlots();
     std::pair<double, int> findExtremum(int seriesIndex, bool findMax);
-    void createMarker(double x, double y, const QColor& color);
+    QScatterSeries* createMarker(double x, double y, const QColor& color);
+    void updateButtonStyle(QPushButton* btn, bool active);
+    void setupPalette();
 };
 #endif // MAINWINDOW_H

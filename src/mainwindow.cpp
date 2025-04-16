@@ -271,6 +271,31 @@ void MainWindow::setupGraphSettingsSlots() {
             this, &MainWindow::updateYAxisTitle);
 }
 
+void MainWindow::updateButtonStyle(QPushButton* btn, bool active) {
+    QString style = QString(
+    "QPushButton {"
+    "  border: 1px solid %1;"
+    "  border-radius: 4px;"
+    "  padding: 4px;"
+    "  background: %2;"
+    "  color: %3;"
+    "  min-width: 40px;"
+    "}"
+    "QPushButton:hover {"
+    "  background: %4;"
+    "  border-color: %5;"
+    "}"
+    ).arg(
+        active ? "#3daee9" : "#505050",  // Цвет границы
+        active ? "#2a82da" : "#404040",  // Фон
+        active ? "#ffffff" : "#b0b0b0",  // Цвет текста
+        active ? "#1d6eab" : "#505050",  // Фон при наведении
+        active ? "#3daee9" : "#606060"   // Граница при наведении
+        );
+
+    btn->setStyleSheet(style);
+}
+
 void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int last) {
     if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
         for(int row = first; row <= last; ++row) {
@@ -279,12 +304,51 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                 QPushButton *minBtn, *maxBtn;
                 QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit, &minBtn, &maxBtn);
 
-                connect(minBtn, &QPushButton::clicked, [this, row]() { handleShowMin(row); });
-                connect(maxBtn, &QPushButton::clicked, [this, row]() { handleShowMax(row); });
+                // Настройка кнопок
+                minBtn->setCheckable(true);
+                maxBtn->setCheckable(true);
+                updateButtonStyle(minBtn, false);
+                updateButtonStyle(maxBtn, false);
+
+                connect(minBtn, &QPushButton::toggled, [=](bool checked) {
+                    updateButtonStyle(minBtn, checked);
+                    if(checked) {
+                        auto [minVal, minCol] = findExtremum(row, false);
+                        if(minCol != -1) {
+                            m_seriesMarkers[row].minMarker = createMarker(minCol, minVal, Qt::red);
+                        }
+                    } else {
+                        if(m_seriesMarkers.contains(row)) {
+                            auto& markers = m_seriesMarkers[row];
+                            if(markers.minMarker) {
+                                m_chartView->chart()->removeSeries(markers.minMarker);
+                                delete markers.minMarker;
+                                markers.minMarker = nullptr;
+                            }
+                        }
+                    }
+                });
+
+                connect(maxBtn, &QPushButton::toggled, [=](bool checked) {
+                    updateButtonStyle(maxBtn, checked);
+                    if(checked) {
+                        auto [maxVal, maxCol] = findExtremum(row, true);
+                        if(maxCol != -1) {
+                            m_seriesMarkers[row].maxMarker = createMarker(maxCol, maxVal, Qt::blue);
+                        }
+                    } else {
+                        if(m_seriesMarkers.contains(row) && m_seriesMarkers[row].maxMarker) {
+                            m_chartView->chart()->removeSeries(m_seriesMarkers[row].maxMarker);
+                            delete m_seriesMarkers[row].maxMarker;
+                            m_seriesMarkers[row].maxMarker = nullptr;
+                        }
+                    }
+                });
 
                 m_seriesNameEdits.append(edit);
                 m_minButtons.append(minBtn);
                 m_maxButtons.append(maxBtn);
+                m_seriesMarkers[row] = SeriesMarkers();
 
                 layout->insertWidget(row, rowWidget);
                 connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
@@ -296,6 +360,20 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
 void MainWindow::handleSeriesRemoved(const QModelIndex &parent, int first, int last) {
     if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
         for(int i = last; i >= first; --i) {
+            // Удаляем маркеры
+            if(m_seriesMarkers.contains(i)) {
+                auto markers = m_seriesMarkers.take(i);
+                if(markers.minMarker) {
+                    m_chartView->chart()->removeSeries(markers.minMarker);
+                    delete markers.minMarker;
+                }
+                if(markers.maxMarker) {
+                    m_chartView->chart()->removeSeries(markers.maxMarker);
+                    delete markers.maxMarker;
+                }
+            }
+
+            // Удаляем элементы интерфейса
             QLayoutItem* item = layout->takeAt(i);
             delete item->widget();
             delete item;
@@ -305,8 +383,6 @@ void MainWindow::handleSeriesRemoved(const QModelIndex &parent, int first, int l
         }
     }
 }
-
-// В MainWindow.cpp
 
 // Общая функция для поиска экстремумов
 std::pair<double, int> MainWindow::findExtremum(int seriesIndex, bool findMax) {
@@ -333,17 +409,18 @@ std::pair<double, int> MainWindow::findExtremum(int seriesIndex, bool findMax) {
 }
 
 // Общая функция создания маркера
-void MainWindow::createMarker(double x, double y, const QColor& color) {
+QScatterSeries* MainWindow::createMarker(double x, double y, const QColor& color) {
     QScatterSeries* marker = new QScatterSeries();
     marker->setMarkerSize(15);
     marker->setColor(color);
     marker->setBorderColor(Qt::white);
     marker->append(x, y);
-    marker->setName(""); // Пустое имя уберет из легенды
+    marker->setName("");
 
     m_chartView->chart()->addSeries(marker);
     marker->attachAxis(m_axisX);
     marker->attachAxis(m_axisY);
+    return marker;
 }
 
 // Слоты для обработки кнопок
@@ -606,6 +683,14 @@ void MainWindow::updateYAxisTitle() {
     }
 }
 
+void MainWindow::setupPalette() {
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
+
+    QPalette darkPalette;
+    darkPalette.setColor(QPalette::Window, QColor(53,53,53));
+    darkPalette.setColor(QPalette::WindowText, Qt::white);
+    qApp->setPalette(darkPalette);
+}
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
