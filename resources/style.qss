@@ -1,0 +1,134 @@
+/* Основные настройки */
+QWidget {
+    background: #2d2d2d;
+    color: #ffffff;
+    font-family: "Segoe UI";
+}
+
+/* Заголовок анализа данных */
+QLabel#mainHeader {
+    font-size: 32px;
+    font-weight: 600;
+    padding: 8px 0;
+}
+
+/* Секции статистики */
+.statSection {
+    background: #383838;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 8px 0;
+}
+
+.statSection QLabel {
+    font-size: 13px;
+    padding: 4px 0;
+}
+
+/* Кнопки управления таблицей */
+QPushButton[toolButton="true"] {
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 6px;
+    background: #404040;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+QPushButton[toolButton="true"]:hover {
+    background: #505050;
+}
+
+QPushButton[toolButton="true"]:disabled {
+    background: #303030;
+    color: #707070;
+}
+
+/* Кнопки экстремумов */
+QPushButton[seriesButton="true"] {
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 4px;
+    background: #404040;
+    color: #b0b0b0;
+    min-width: 40px;
+}
+
+QPushButton[seriesButton="true"]:checked {
+    border-color: #3daee9;
+    background: #2a82da;
+    color: #ffffff;
+}
+
+QPushButton[seriesButton="true"]:hover {
+    background: #505050;
+    border-color: #606060;
+}
+
+QPushButton[seriesButton="true"]:checked:hover {
+    background: #1d6eab;
+    border-color: #3daee9;
+}
+
+/* Таблица */
+QTableWidget {
+    background: #1e1e1e;
+    gridline-color: #404040;
+    border: none;
+}
+
+QHeaderView::section {
+    background: #323232;
+    padding: 4px;
+    border: none;
+}
+
+QTableWidget::item {
+    padding: 4px;
+}
+
+QScrollBar:vertical {
+    width: 12px;
+    background: #252525;
+}
+
+QScrollBar::handle:vertical {
+    background: #404040;
+    min-height: 20px;
+}
+
+/* Оси графика */
+ChartTitle {
+    color: #ffffff;
+    font-size: 14px;
+}
+
+AxisLabel {
+    color: #a0a0a0;
+    font-size: 12px;
+}
+
+/* Легенда графика */
+QLegend {
+    background: #383838;
+    border: 1px solid #454545;
+    border-radius: 4px;
+}
+
+QLegendMarker::label {
+    color: #d0d0d0;
+}
+
+/* Стили для маркеров */
+ScatterSeries.marker {
+    qproperty-markerSize: 10px;
+    qproperty-borderColor: #ffffff;
+}
+
+ScatterSeries#maxMarker {
+    qproperty-color: #90ee90;
+}
+
+ScatterSeries#minMarker {
+    qproperty-color: #ffb6c1;
+}

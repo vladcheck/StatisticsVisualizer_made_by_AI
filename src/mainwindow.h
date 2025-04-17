@@ -149,6 +149,7 @@ private:
     QPen getSeriesPen(int index) const;
     QColor getBorderColor(int index) const;
     void addPointsToSeriesGraph(int seriesIndex, QLineSeries* series);
+    void loadStylesheets();
 };
 
 #endif // MAINWINDOW_H

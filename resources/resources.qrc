@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/icons">
         <file>add-column.png</file>
         <file>delete-column.png</file>
         <file>logo.png</file>
@@ -9,5 +9,8 @@
         <file>export-file.png</file>
         <file>add-row.png</file>
         <file>delete-row.png</file>
+    </qresource>
+    <qresource prefix="/stylesheets">
+        <file>style.qss</file>
     </qresource>
 </RCC>

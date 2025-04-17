@@ -15,7 +15,7 @@ file(GLOB SOURCE_FILES
 )
 
 set(RESOURCE_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/icons.qrc
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/resources.qrc
 )
 
 set(TS_FILES

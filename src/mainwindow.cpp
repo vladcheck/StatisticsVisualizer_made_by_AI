@@ -25,7 +25,7 @@ QColor MainWindow::getBorderColor(int index) const {
 void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
 {
     QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
-    mainHeader->setStyleSheet("font-size: 32px; font-weight: 600;");
+    mainHeader->setObjectName("mainHeader");
     statsLayout->addWidget(mainHeader);
 }
 
@@ -33,6 +33,7 @@ QWidget* MainWindow::createBasicDataSection(QWidget *parent, QLabel **elementCou
                                             QLabel **sumLabel, QLabel **averageLabel)
 {
     QWidget *section = Draw::createStatSection(parent, "Основные метрики");
+    section->setObjectName("statSection");
     QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
 
     *elementCountLabel = Draw::createAndRegisterStatRow(section, layout, "Количество элементов", "0", "elementCountLabel");
@@ -499,8 +500,8 @@ bool MainWindow::isSeriesEmpty(int seriesIndex) const {
 QScatterSeries* MainWindow::createMarker(double x, double y, bool isMax) {
     QScatterSeries* marker = new QScatterSeries();
     marker->setMarkerSize(10);
-    marker->setColor(isMax ? QColor("#90EE90") : QColor("#FFB6C1"));
-    marker->setBorderColor(Qt::white);
+    marker->setProperty("class", "marker");
+    marker->setObjectName(isMax ? "maxMarker" : "minMarker");
     marker->append(x, y);
 
     // 1. Явно задаем пустое имя и пользовательское свойство
@@ -859,9 +860,17 @@ void MainWindow::setupTableSlots() {
     });
 }
 
+void MainWindow::loadStylesheets() {
+    QFile styleFile(":/style.qss");
+    styleFile.open(QFile::ReadOnly);
+    QString style = QLatin1String(styleFile.readAll());
+    qApp->setStyleSheet(style);
+}
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QWidget *mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
+    loadStylesheets();
 
     // Объявляем переменные для хранения элементов управления
     QLineEdit* xAxisEdit = nullptr;
