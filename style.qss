@@ -209,3 +209,27 @@ QPushButton.seriesButton:checked:hover {
     background: #1d6eab;
     border-color: #3daee9;
 }
+
+/* Стили для кнопок MIN/MAX */
+QPushButton.series-control {
+    /* Базовый стиль */
+    border: 1px solid #505050;
+    background: #404040;
+    color: #b0b0b0;
+    border-radius: 4px;
+    min-width: 40px;
+}
+
+QPushButton.series-control:checked {
+    /* Стиль активной кнопки */
+    border-color: #3daee9;
+    background: #2a82da;
+    color: #ffffff;
+}
+
+QPushButton.series-control:disabled {
+    /* Стиль заблокированной кнопки */
+    background: #303030;
+    color: #707070;
+    border-color: #404040;
+}

@@ -129,7 +129,7 @@ private:
     QWidget* setupTableToolbar(QWidget* parent, QTableWidget* table);
     QWidget* setupTablePanel(QWidget *parent);
     void setupTableActions();
-    void updateUI(const TableData data);
+    void updateUI(const TableData& data);
     void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     bool areAllLabelsDefined();
     void setupChartAxes();
@@ -142,7 +142,6 @@ private:
     std::pair<double, int> findExtremum(int seriesIndex, bool findMax);
     bool isSeriesEmpty(int seriesIndex) const;
     void updateButtonsState(int seriesIndex);
-    void updateButtonStyle(QPushButton* btn, bool active);
     void setupTableSlots();
     void refreshLegend();
     QColor getSeriesColor(int index) const;
@@ -150,6 +149,14 @@ private:
     QColor getBorderColor(int index) const;
     void addPointsToSeriesGraph(int seriesIndex, QLineSeries* series);
     void loadStylesheets();
+    void updateBasicMetrics(bool hasData, const std::vector<double>& values, double mean);
+    void updateAverages(bool hasData, const std::vector<double>& values);
+    void updateDistribution(bool hasData, const std::vector<double>& values, double mean, double stdDev);
+    void updateStatisticalTests(bool hasData, const std::vector<double>& values, double mean);
+    void updateExtremes(bool hasData, double min, double max, double range);
+
+    template<typename Func, typename... Args>
+    QString calculateAndFormat(bool hasData, Func func, Args&&... args) const;
 };
 
 #endif // MAINWINDOW_H

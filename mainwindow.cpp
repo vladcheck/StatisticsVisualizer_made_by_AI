@@ -449,14 +449,21 @@ void MainWindow::updateButtonsState(int seriesIndex) {
         return;
 
     bool isEmpty = isSeriesEmpty(seriesIndex);
-    m_minButtons[seriesIndex]->setDisabled(isEmpty);
-    m_maxButtons[seriesIndex]->setDisabled(isEmpty);
 
-    // Обновление стилей для заблокированных кнопок
-    updateButtonStyle(m_minButtons[seriesIndex],
-                      m_minButtons[seriesIndex]->isChecked() && !isEmpty);
-    updateButtonStyle(m_maxButtons[seriesIndex],
-                      m_maxButtons[seriesIndex]->isChecked() && !isEmpty);
+    // Обновляем состояния кнопок
+    QPushButton* minBtn = m_minButtons[seriesIndex];
+    QPushButton* maxBtn = m_maxButtons[seriesIndex];
+
+    // Блокировка кнопок
+    minBtn->setDisabled(isEmpty);
+    maxBtn->setDisabled(isEmpty);
+
+    // Принудительное обновление стилей
+    minBtn->style()->unpolish(minBtn);
+    minBtn->style()->polish(minBtn);
+
+    maxBtn->style()->unpolish(maxBtn);
+    maxBtn->style()->polish(maxBtn);
 }
 
 bool MainWindow::isSeriesEmpty(int seriesIndex) const {
@@ -719,51 +726,75 @@ void MainWindow::updateAxisRanges(double minX, double maxX, double minY, double 
     m_axisY->setRange(minY - yPadding, maxY + yPadding);
 }
 
-void MainWindow::updateUI(const TableData data) {
+QString formatValue(double value, int precision = 2) {
+    return QString::number(value, 'f', precision);
+}
+
+template<typename Func, typename... Args>
+QString MainWindow::calculateAndFormat(bool hasData, Func func, Args&&... args) const {
+    return hasData ? formatValue(func(std::forward<Args>(args)...)) : na;
+}
+
+void MainWindow::updateBasicMetrics(bool hasData, const std::vector<double>& values, double mean) {
+    m_elementCountLabel->setText(hasData ? QString::number(values.size()) : na);
+    m_sumLabel->setText(calculateAndFormat(hasData, Calculate::getSum, values));
+    m_averageLabel->setText(calculateAndFormat(hasData, [mean](){ return mean; }));
+}
+
+void MainWindow::updateAverages(bool hasData, const std::vector<double>& values) {
+    m_geometricMeanLabel->setText(calculateAndFormat(hasData, Calculate::geometricMean, values));
+    m_harmonicMeanLabel->setText(calculateAndFormat(hasData, Calculate::harmonicMean, values));
+    m_rmsLabel->setText(calculateAndFormat(hasData, Calculate::rootMeanSquare, values));
+    m_trimmedMeanLabel->setText(calculateAndFormat(hasData,
+                                                   Calculate::trimmedMean, values, trimmedMeanPercentage));
+}
+
+void MainWindow::updateDistribution(bool hasData, const std::vector<double>& values, double mean, double stdDev) {
+    m_medianLabel->setText(calculateAndFormat(hasData, Calculate::getMedian, values));
+    m_modeLabel->setText(calculateAndFormat(hasData, Calculate::getMode, values));
+    m_stdDevLabel->setText(calculateAndFormat(hasData, [stdDev](){ return stdDev; }));
+    m_skewnessLabel->setText(calculateAndFormat(hasData, Calculate::skewness, values, mean, stdDev));
+    m_kurtosisLabel->setText(calculateAndFormat(hasData, Calculate::kurtosis, values, mean, stdDev));
+    m_madLabel->setText(calculateAndFormat(hasData, Calculate::medianAbsoluteDeviation, values));
+    m_robustStdLabel->setText(calculateAndFormat(hasData, Calculate::robustStandardDeviation, values));
+}
+
+void MainWindow::updateStatisticalTests(bool hasData, const std::vector<double>& values, double mean) {
+    m_shapiroWilkLabel->setText(calculateAndFormat(hasData, Calculate::shapiroWilkTest, values));
+    m_densityLabel->setText(calculateAndFormat(hasData, Calculate::calculateDensity, values, mean));
+    m_chiSquareLabel->setText(calculateAndFormat(hasData, Calculate::chiSquareTest, values));
+    m_kolmogorovLabel->setText(calculateAndFormat(hasData, Calculate::kolmogorovSmirnovTest, values));
+}
+
+void MainWindow::updateExtremes(bool hasData, double min, double max, double range) {
+    auto format = [](double val){ return QString::number(val, 'f', statsPrecision); };
+    m_minLabel->setText(hasData ? format(min) : na);
+    m_maxLabel->setText(hasData ? format(max) : na);
+    m_rangeLabel->setText(hasData ? format(range) : na);
+}
+
+void MainWindow::updateUI(const TableData& data) {
     const bool hasData = !data.empty() && !data[0].empty();
     std::vector<double> values;
-    if (hasData) {
-        for (const auto& pair : data[0]) {
+
+    if(hasData) {
+        values.reserve(data[0].size());
+        for(const auto& pair : data[0]) {
             values.push_back(pair.second);
         }
     }
 
-    double mean = hasData ? Calculate::getMean(values) : 0.0;
-    double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
-    double min = hasData ? *std::min_element(values.begin(), values.end()) : 0.0;
-    double max = hasData ? *std::max_element(values.begin(), values.end()) : 0.0;
-    double range = max - min;
+    const double mean = hasData ? Calculate::getMean(values) : 0.0;
+    const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
+    const double min = hasData ? *std::min_element(values.begin(), values.end()) : 0.0;
+    const double max = hasData ? *std::max_element(values.begin(), values.end()) : 0.0;
+    const double range = max - min;
 
-    // Основные метрики
-    m_elementCountLabel->setText(hasData ? QString::number(values.size()) : na);
-    m_sumLabel->setText(hasData ? QString::number(Calculate::getSum(values), 'f', statsPrecision) : na);
-    m_averageLabel->setText(hasData ? QString::number(hasData ? mean : 0.0, 'f', statsPrecision) : na);
-
-    // Средние значения
-    m_geometricMeanLabel->setText(hasData ? QString::number(Calculate::geometricMean(values), 'f', statsPrecision) : na);
-    m_harmonicMeanLabel->setText(hasData ? QString::number(Calculate::harmonicMean(values), 'f', statsPrecision) : na);
-    m_rmsLabel->setText(hasData ? QString::number(Calculate::rootMeanSquare(values), 'f', statsPrecision) : na);
-    m_trimmedMeanLabel->setText(hasData ? QString::number(Calculate::trimmedMean(values, trimmedMeanPercentage), 'f', statsPrecision) : na);
-
-    // Распределение
-    m_medianLabel->setText(hasData ? QString::number(Calculate::getMedian(values), 'f', statsPrecision) : na);
-    m_modeLabel->setText(hasData ? QString::number(Calculate::getMode(values), 'f', statsPrecision) : na);
-    m_stdDevLabel->setText(hasData ? QString::number(stdDev, 'f', statsPrecision) : na);
-    m_skewnessLabel->setText(hasData ? QString::number(Calculate::skewness(values, mean, stdDev), 'f', statsPrecision) : na);
-    m_kurtosisLabel->setText(hasData ? QString::number(Calculate::kurtosis(values, mean, stdDev), 'f', statsPrecision) : na);
-    m_madLabel->setText(hasData ? QString::number(Calculate::medianAbsoluteDeviation(values), 'f', statsPrecision) : na);
-    m_robustStdLabel->setText(hasData ? QString::number(Calculate::robustStandardDeviation(values), 'f', statsPrecision) : na);
-
-    // Статистические тесты
-    m_shapiroWilkLabel->setText(hasData ? QString::number(Calculate::shapiroWilkTest(values), 'f', statsPrecision) : na);
-    m_densityLabel->setText(hasData ? QString::number(Calculate::calculateDensity(values, mean), 'f', statsPrecision) : na);
-    m_chiSquareLabel->setText(hasData ? QString::number(Calculate::chiSquareTest(values), 'f', statsPrecision) : na);
-    m_kolmogorovLabel->setText(hasData ? QString::number(Calculate::kolmogorovSmirnovTest(values), 'f', statsPrecision) : na);
-
-    // Экстремумы
-    m_minLabel->setText(hasData ? QString::number(min, 'f', statsPrecision) : na);
-    m_maxLabel->setText(hasData ? QString::number(max, 'f', statsPrecision) : na);
-    m_rangeLabel->setText(hasData ? QString::number(range, 'f', statsPrecision) : na);
+    updateBasicMetrics(hasData, values, mean);
+    updateAverages(hasData, values);
+    updateDistribution(hasData, values, mean, stdDev);
+    updateStatisticalTests(hasData, values, mean);
+    updateExtremes(hasData, min, max, range);
 }
 
 void MainWindow::updateStatistics() {
@@ -836,7 +867,7 @@ void MainWindow::setupTableSlots() {
 }
 
 void MainWindow::loadStylesheets() {
-    QFile styleFile(":/style.qss");
+    QFile styleFile(":/stylesheets/style.qss");
     styleFile.open(QFile::ReadOnly);
     QString style = QLatin1String(styleFile.readAll());
     qApp->setStyleSheet(style);

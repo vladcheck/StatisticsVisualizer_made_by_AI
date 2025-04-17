@@ -57,6 +57,7 @@ namespace Draw {
     {
         QPushButton *btn = new QPushButton();
         btn->setObjectName("seriesButton");
+        btn->setProperty("class", "series-control");
         btn->setProperty("toolButton", true);
         btn->setCheckable(true);
 
