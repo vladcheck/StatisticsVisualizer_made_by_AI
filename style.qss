@@ -132,3 +132,52 @@ ScatterSeries#maxMarker {
 ScatterSeries#minMarker {
     qproperty-color: #ffb6c1;
 }
+
+/* Стили для разделителей */
+QFrame#separatorLine {
+    color: #dddddd;
+}
+
+/* Стили для панели настроек */
+QWidget#seriesSettingsPanel {
+    background-color: #404040;
+    color: #ffffff;
+}
+
+QWidget#seriesSettingsPanel QLabel#settingsHeader {
+    font-weight: 600;
+    font-size: 16px;
+    padding: 4px 0;
+}
+
+/* Стили для элементов внутри панели */
+QWidget#seriesSettingsPanel QLabel {
+    color: #d0d0d0;
+    font-size: 14px;
+}
+
+QWidget#seriesSettingsPanel QScrollArea {
+    border: none;
+    background: transparent;
+}
+
+QWidget#seriesSettingsPanel QLineEdit {
+    background: #505050;
+    color: #ffffff;
+    border: 1px solid #606060;
+    border-radius: 3px;
+    padding: 4px;
+}
+
+/* Стили для кнопок MIN/MAX */
+QWidget#seriesSettingsPanel QPushButton {
+    background: #4a4a4a;
+    border: 1px solid #5a5a5a;
+    border-radius: 3px;
+    color: #e0e0e0;
+    min-width: 40px;
+}
+
+QWidget#seriesSettingsPanel QPushButton:hover {
+    background: #5a5a5a;
+}

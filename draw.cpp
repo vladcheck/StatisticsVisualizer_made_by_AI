@@ -27,7 +27,7 @@ namespace Draw {
         QFrame *line = new QFrame();
         line->setFrameShape(horizontal ? QFrame::HLine : QFrame::VLine);
         line->setFrameShadow(QFrame::Sunken);
-        line->setStyleSheet("color: #ddd;");
+        line->setObjectName("separatorLine");
         line->setFixedHeight(horizontal ? 1 : 20);
         return line;
     }
@@ -250,15 +250,10 @@ namespace Draw {
     QWidget* createSeriesSettingsPanel(QWidget* parent, QWidget** contentWidget) {
         QWidget* group = new QWidget(parent); // Заменяем QGroupBox на обычный виджет
         QVBoxLayout* groupLayout = new QVBoxLayout(group);
-        group->setStyleSheet(
-            "QWidget {"
-            "  background-color: #404040;"
-            "  color: #ffffff;"
-            "}"
-            "QLabel { color: #d0d0d0; }"
-            );
+        group->setObjectName("seriesSettingsPanel");
 
         QLabel* header = new QLabel("Индивидуальные настройки", group);
+        header->setObjectName("settingsHeader");
         groupLayout->addWidget(header);
 
         QScrollArea* scrollArea = new QScrollArea(group);
