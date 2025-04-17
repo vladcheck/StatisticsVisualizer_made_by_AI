@@ -56,7 +56,9 @@ namespace Draw {
     QPushButton *createToolButton(const QString &tooltip, const QString &iconName)
     {
         QPushButton *btn = new QPushButton();
+        btn->setObjectName("seriesButton");
         btn->setProperty("toolButton", true);
+        btn->setCheckable(true);
 
         // Загрузка изображения через QPixmap
         QPixmap pixmap(":/icons/" + iconName + ".png");

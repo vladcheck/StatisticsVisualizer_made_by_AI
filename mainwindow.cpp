@@ -290,31 +290,6 @@ void MainWindow::setupGraphSettingsSlots() {
             this, &MainWindow::updateYAxisTitle);
 }
 
-void MainWindow::updateButtonStyle(QPushButton* btn, bool active) {
-    QString style = QString(
-        "QPushButton {"
-        "  border: 1px solid %1;"
-        "  border-radius: 4px;"
-        "  padding: 4px;"
-        "  background: %2;"
-        "  color: %3;"
-        "  min-width: 40px;"
-        "}"
-        "QPushButton:hover {"
-        "  background: %4;"
-        "  border-color: %5;"
-        "}"
-        ).arg(
-            active ? "#3daee9" : "#505050",  // border
-            active ? "#2a82da" : "#404040",  // background
-            active ? "#ffffff" : "#b0b0b0",  // text
-            active ? "#1d6eab" : "#505050",  // hover background
-            active ? "#3daee9" : "#606060"   // hover border
-    );
-
-    btn->setStyleSheet(style);
-}
-
 void MainWindow::updateMarker(int seriesIndex, bool isMax) {
     // Проверяем валидность индекса
     if (seriesIndex < 0 || seriesIndex >= m_table->rowCount()) return;
@@ -383,14 +358,13 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                                     [this, row]() { updateMarker(row, false); });
                         }
                     }
-                    updateButtonStyle(minBtn, checked);
+                    minBtn->setChecked(checked);
                 });
 
                 // MAX button
                 connect(maxBtn, &QPushButton::toggled, [=](bool checked) {
                     if(!maxBtn->isEnabled()) return;
 
-                    updateButtonStyle(maxBtn, checked);
                     if(checked) {
                         auto [maxVal, maxCol] = findExtremum(row, true);
                         if(maxCol != -1) {
@@ -403,6 +377,7 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                             m_seriesMarkers[row].maxMarker = nullptr;
                         }
                     }
+                    minBtn->setChecked(checked);
                 });
 
                 // Сохраняем ссылки

@@ -181,3 +181,31 @@ QWidget#seriesSettingsPanel QPushButton {
 QWidget#seriesSettingsPanel QPushButton:hover {
     background: #5a5a5a;
 }
+
+/* Базовый стиль для кнопок серий */
+QPushButton.seriesButton {
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 4px;
+    background: #404040;
+    color: #b0b0b0;
+    min-width: 40px;
+}
+
+/* Состояние "активна" (аналог параметра active = true) */
+QPushButton.seriesButton:checked {
+    border-color: #3daee9;
+    background: #2a82da;
+    color: #ffffff;
+}
+
+/* Ховер-эффекты */
+QPushButton.seriesButton:hover {
+    background: #505050;
+    border-color: #606060;
+}
+
+QPushButton.seriesButton:checked:hover {
+    background: #1d6eab;
+    border-color: #3daee9;
+}
