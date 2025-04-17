@@ -1,12 +1,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include <QVector>
-#include <QString>
-#include <QTableWidget>
-#include <QPushButton>
-#include <QSpinBox>
-
 #include <vector>
 #include <utility>
 
