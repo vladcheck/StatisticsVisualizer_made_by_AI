@@ -59,7 +59,10 @@ namespace Draw {
         btn->setProperty("toolButton", true);
 
         // Загрузка изображения через QPixmap
-        QPixmap pixmap(":/" + iconName + ".png");
+        QPixmap pixmap(":/icons/" + iconName + ".png");
+        if(pixmap.isNull()) { // Проверка загрузки
+            qWarning() << "Failed to load icon:" << iconName;
+        }
         btn->setIcon(QIcon(pixmap));
         btn->setIconSize(QSize(buttonIconSize, buttonIconSize)); // Размер иконки
 

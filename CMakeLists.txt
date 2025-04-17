@@ -8,14 +8,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Пути
-set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 file(GLOB SOURCE_FILES
     "${SRC_DIR}/*.cpp"
     "${SRC_DIR}/*.h"
 )
 
 set(RESOURCE_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/resources.qrc
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc
 )
 
 set(TS_FILES
