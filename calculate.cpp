@@ -22,6 +22,10 @@
 
 namespace Calculate
 {
+    bool areWeightsValid(const QVector<double>& weights, const QVector<double>& values) {
+        return (weights.size() == values.size()) && !weights.isEmpty();
+    }
+
     std::vector<double> getWeights(const QTableWidget *table, int weightColumn = 1)
     {
         std::vector<double> weights;

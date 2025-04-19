@@ -1,9 +1,5 @@
 #include "mainwindow.h"
 
-bool areWeightsValid(const QVector<double>& weights, const QVector<double>& values) {
-    return (weights.size() == values.size()) && !weights.isEmpty();
-}
-
 // Получение цвета по индексу с цикличностью
 QColor MainWindow::getSeriesColor(int index) const {
     return m_seriesColors[index % m_seriesColors.size()];
