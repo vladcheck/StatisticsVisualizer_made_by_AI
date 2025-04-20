@@ -345,4 +345,66 @@ namespace Draw {
         mainHeader->setObjectName("mainHeader");
         statsLayout->addWidget(mainHeader);
     }
+
+    QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel,
+                                                QLabel **sumLabel, QLabel **averageLabel)
+    {
+        QWidget *section = Draw::createStatSection(parent, "Основные метрики");
+        section->setObjectName("statSection");
+        QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+        *elementCountLabel = Draw::createAndRegisterStatRow(section, layout, "Количество элементов", "0", "elementCountLabel");
+        *sumLabel = Draw::createAndRegisterStatRow(section, layout, "Сумма", "0", "sumLabel");
+        *averageLabel = Draw::createAndRegisterStatRow(section, layout, "Среднее арифметическое", "—", "averageLabel");
+
+        return section;
+    }
+
+    QWidget* createMeansSection(QWidget *parent, QLabel **geometricMeanLabel, QLabel **harmonicMeanLabel, QLabel **rmsLabel, QLabel **trimmedMeanLabel)
+    {
+        QWidget *section = Draw::createStatSection(parent, "Средние");
+        QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(section->layout());
+
+        *geometricMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Геом. среднее", "—", "geometricMeanLabel");
+        *harmonicMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Гарм. среднее", "—", "harmonicMeanLabel");
+        *rmsLabel = Draw::createAndRegisterStatRow(section, layout, "Квадр. среднее", "—", "rmsLabel");
+        *trimmedMeanLabel = Draw::createAndRegisterStatRow(section, layout, "Усеч. среднее", "—", "trimmedMeanLabel");
+
+        return section;
+    }
+
+    QWidget* createDistributionSection(QWidget *parent, QLabel **medianLabel, QLabel **modeLabel, QLabel **stdDevLabel,
+                                       QLabel **skewnessLabel, QLabel **kurtosisLabel, QLabel **madLabel,
+                                       QLabel **robustStdLabel, QLabel **shapiroWilkLabel, QLabel **densityLabel,
+                                       QLabel **chiSquareLabel, QLabel **kolmogorovLabel)
+    {
+        QWidget *section = Draw::createStatSection(parent, "Распределение");
+        QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(section->layout());
+
+        *medianLabel = Draw::createAndRegisterStatRow(section, layout, "Медиана", "—", "medianLabel");
+        *modeLabel = Draw::createAndRegisterStatRow(section, layout, "Мода", "—", "modeLabel");
+        *stdDevLabel = Draw::createAndRegisterStatRow(section, layout, "Стандартное отклонение", "—", "stdDevLabel");
+        *skewnessLabel = Draw::createAndRegisterStatRow(section, layout, "Асимметрия", "—", "skewnessLabel");
+        *kurtosisLabel = Draw::createAndRegisterStatRow(section, layout, "Эксцесс", "—", "kurtosisLabel");
+        *madLabel = Draw::createAndRegisterStatRow(section, layout, "Медианное абсолютное отклонение", "—", "madLabel");
+        *robustStdLabel = Draw::createAndRegisterStatRow(section, layout, "Робастный стандартный разброс", "—", "robustStdLabel");
+        *shapiroWilkLabel = Draw::createAndRegisterStatRow(section, layout, "Шапиро-Уилк", "—", "shapiroWilkLabel");
+        *densityLabel = Draw::createAndRegisterStatRow(section, layout, "Плотность", "—", "densityLabel");
+        *chiSquareLabel = Draw::createAndRegisterStatRow(section, layout, "χ²-критерий", "—", "chiSquareLabel");
+        *kolmogorovLabel = Draw::createAndRegisterStatRow(section, layout, "Колмогоров-Смирнов", "—", "kolmogorovLabel");
+
+        return section;
+    }
+
+    QWidget* createExtremesSection(QWidget *parent, QLabel **minLabel, QLabel **maxLabel, QLabel **rangeLabel)
+    {
+        QWidget *section = Draw::createStatSection(parent, "Экстремумы");
+        QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(section->layout());
+
+        *minLabel = Draw::createAndRegisterStatRow(section, layout, "Минимум", "—", "minLabel");
+        *maxLabel = Draw::createAndRegisterStatRow(section, layout, "Максимум", "—", "maxLabel");
+        *rangeLabel = Draw::createAndRegisterStatRow(section, layout, "Размах", "—", "rangeLabel");
+
+        return section;
+    }
 }

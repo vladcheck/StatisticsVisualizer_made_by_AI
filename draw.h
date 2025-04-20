@@ -75,6 +75,15 @@ namespace Draw
     QWidget* setupGraphSection(QWidget* parent, QLineEdit** xAxisEdit, QLineEdit** yAxisEdit, QWidget** seriesContent);
     QValueAxis* setupAxis(QString name, int a, int b);
     QSplitter* addSplitter(QWidget* parent, QWidget* w1, QWidget* w2, int stretch1, int stretch2);
+    QWidget* createExtremesSection(QWidget *parent, QLabel **minLabel, QLabel **maxLabel, QLabel **rangeLabel);
+    QWidget* createDistributionSection(QWidget *parent, QLabel **medianLabel, QLabel **modeLabel, QLabel **stdDevLabel,
+                                       QLabel **skewnessLabel, QLabel **kurtosisLabel, QLabel **madLabel,
+                                       QLabel **robustStdLabel, QLabel **shapiroWilkLabel, QLabel **densityLabel,
+                                       QLabel **chiSquareLabel, QLabel **kolmogorovLabel);
+    QWidget* createMeansSection(QWidget *parent, QLabel **geometricMeanLabel, QLabel **harmonicMeanLabel,
+                                QLabel **rmsLabel, QLabel **trimmedMeanLabel);
+    QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel,
+                                    QLabel **sumLabel, QLabel **averageLabel);
 };
 
 #endif // DRAW_H

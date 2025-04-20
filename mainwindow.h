@@ -119,7 +119,7 @@ private:
     void updateAxisRanges(double minX, double maxX, double minY, double maxY);
     TableData parse() const;
     QWidget *setupDataSection(QWidget *parent);
-    QWidget *setupDataPanel(QWidget *parent, QLabel **, QLabel **, QLabel **);
+    QWidget *setupDataPanel(QWidget *parent);
     QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
     QWidget* createMeansSection(QWidget *parent);
     QWidget* createDistributionSection(QWidget *parent);
