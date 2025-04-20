@@ -111,6 +111,8 @@ private:
     QVector<QPushButton*> m_maxButtons;
 
     void clearChart();
+    void updateExtremumMarker(int seriesIndex, bool isMax);
+    void handleExtremumToggle(int seriesIndex, bool isMax, bool checked);
     QLineSeries* createSeries(int seriesIndex, bool showPoints = false);
     void addPointsToSeries(QLineSeries* series,
                            const std::vector<std::pair<int, int>>& data,

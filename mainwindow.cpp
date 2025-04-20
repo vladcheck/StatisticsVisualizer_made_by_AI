@@ -237,6 +237,42 @@ void MainWindow::updateMarker(int seriesIndex, bool isMax) {
     }
 }
 
+void MainWindow::handleExtremumToggle(int seriesIndex, bool isMax, bool checked) {
+    auto& markers = m_seriesMarkers[seriesIndex];
+    QScatterSeries** targetMarker = isMax ? &markers.maxMarker : &markers.minMarker;
+
+    // Удаляем предыдущий маркер
+    if (*targetMarker) {
+        m_chartView->chart()->removeSeries(*targetMarker);
+        delete *targetMarker;
+        *targetMarker = nullptr;
+    }
+
+    if (checked) {
+        auto [value, col] = findExtremum(seriesIndex, isMax);
+        if (col != -1) {
+            *targetMarker = Draw::createMarker(col, value,
+                                               m_chartView->chart(), m_axisX, m_axisY, isMax);
+
+            // Подключаем обновление при изменении данных
+            connect(m_table->model(), &QAbstractItemModel::dataChanged,
+                    [this, seriesIndex, isMax]() {
+                        updateExtremumMarker(seriesIndex, isMax);
+                    });
+        }
+    }
+}
+
+void MainWindow::updateExtremumMarker(int seriesIndex, bool isMax) {
+    auto& markers = m_seriesMarkers[seriesIndex];
+    QScatterSeries** targetMarker = isMax ? &markers.maxMarker : &markers.minMarker;
+    QPushButton* btn = isMax ? m_maxButtons[seriesIndex] : m_minButtons[seriesIndex];
+
+    if (btn->isChecked()) {
+        handleExtremumToggle(seriesIndex, isMax, true);
+    }
+}
+
 void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int last) {
     if (QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(m_seriesSettingsContent->layout())) {
         for(int row = first; row <= last; ++row) {
@@ -250,43 +286,14 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                 maxBtn->setCheckable(true);
                 updateButtonsState(row);
 
-                // MIN button
                 connect(minBtn, &QPushButton::toggled, [=](bool checked) {
-                    if(!minBtn->isEnabled()) return;
-
-                    // Удаляем старый маркер перед созданием нового
-                    if(m_seriesMarkers[row].minMarker) {
-                        m_chartView->chart()->removeSeries(m_seriesMarkers[row].minMarker);
-                        delete m_seriesMarkers[row].minMarker;
-                        m_seriesMarkers[row].minMarker = nullptr;
-                    }
-
-                    if(checked) {
-                        auto [minVal, minCol] = findExtremum(row, false);
-                        if(minCol != -1) {
-                            m_seriesMarkers[row].minMarker = Draw::createMarker(minCol, minVal, m_chartView->chart(), m_axisX, m_axisY, false);
-                            connect(m_table->model(), &QAbstractItemModel::dataChanged,
-                                    [this, row]() { updateMarker(row, false); });
-                        }
-                    }
+                    if (!minBtn->isEnabled()) return;
+                    handleExtremumToggle(row, false, checked);
                 });
 
-                // MAX button
                 connect(maxBtn, &QPushButton::toggled, [=](bool checked) {
-                    if(!maxBtn->isEnabled()) return;
-
-                    if(checked) {
-                        auto [maxVal, maxCol] = findExtremum(row, true);
-                        if(maxCol != -1) {
-                            m_seriesMarkers[row].maxMarker = Draw::createMarker(maxCol, maxVal,  m_chartView->chart(), m_axisX, m_axisY, true);
-                        }
-                    } else {
-                        if(m_seriesMarkers[row].maxMarker) {
-                            m_chartView->chart()->removeSeries(m_seriesMarkers[row].maxMarker);
-                            delete m_seriesMarkers[row].maxMarker;
-                            m_seriesMarkers[row].maxMarker = nullptr;
-                        }
-                    }
+                    if (!maxBtn->isEnabled()) return;
+                    handleExtremumToggle(row, true, checked);
                 });
 
                 // Сохраняем ссылки
