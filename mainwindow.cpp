@@ -514,7 +514,7 @@ void MainWindow::plotData(const TableData& data) {
         QLineSeries* series = createSeries(i,false);
 
         // Устанавливаем имя из поля ввода или по умолчанию
-        QString seriesName = "График " + QString::number(i+1);
+        QString seriesName = "Наименование ";
         if (i < static_cast<size_t>(m_seriesNameEdits.size())) {
             seriesName = m_seriesNameEdits[i]->text().isEmpty()
                        ? seriesName
