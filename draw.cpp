@@ -338,4 +338,11 @@ namespace Draw {
         *maxBtn = maxButton;
         return row;
     }
+
+    void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
+    {
+        QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
+        mainHeader->setObjectName("mainHeader");
+        statsLayout->addWidget(mainHeader);
+    }
 }

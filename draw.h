@@ -59,16 +59,9 @@ namespace Draw
     void setSizePolicyExpanding(QWidget *w);
     void setSizePolicyFixed(QWidget *w);
     void setupTableActions();
-    QScatterSeries* createMarker(
-        double x,
-        double y,
-        QChart* chart,
-        QValueAxis* axisX,
-        QValueAxis* axisY,
-        bool isMax,
-        int markerSize = 10
-        );
+    QScatterSeries* createMarker(double x, double y, QChart* chart, QValueAxis* axisX, QValueAxis* axisY, bool isMax, int markerSize = 10);
     QTableWidget *setupTable(QWidget *parent);
+    void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
     QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable);
     QWidget *createSeparator(bool horizontal);
     QSpinBox *createSpinBox(QWidget *parent, int max, int value, int min);

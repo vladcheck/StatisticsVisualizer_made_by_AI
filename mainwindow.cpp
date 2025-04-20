@@ -18,13 +18,6 @@ QColor MainWindow::getBorderColor(int index) const {
     return base.darker(120); // Затемнение на 20%
 }
 
-void MainWindow::createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout)
-{
-    QLabel *mainHeader = new QLabel("Анализ данных", statsPanel);
-    mainHeader->setObjectName("mainHeader");
-    statsLayout->addWidget(mainHeader);
-}
-
 QWidget* MainWindow::createBasicDataSection(QWidget *parent, QLabel **elementCountLabel,
                                             QLabel **sumLabel, QLabel **averageLabel)
 {
@@ -95,7 +88,7 @@ QWidget* MainWindow::setupDataPanel(QWidget *parent, QLabel **elementCountLabel,
     statsLayout->setContentsMargins(12, 8, 12, 8);
     statsLayout->setSpacing(8);
 
-    createDataHeader(statsPanel, statsLayout);
+    Draw::createDataHeader(statsPanel, statsLayout);
     statsLayout->addWidget(createBasicDataSection(statsPanel, elementCountLabel, sumLabel, averageLabel));
     statsLayout->addWidget(createMeansSection(statsPanel));
     statsLayout->addWidget(createDistributionSection(statsPanel));
