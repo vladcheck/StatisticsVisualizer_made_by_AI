@@ -269,7 +269,6 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                                     [this, row]() { updateMarker(row, false); });
                         }
                     }
-                    minBtn->setChecked(checked);
                 });
 
                 // MAX button
@@ -288,7 +287,6 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                             m_seriesMarkers[row].maxMarker = nullptr;
                         }
                     }
-                    minBtn->setChecked(checked);
                 });
 
                 // Сохраняем ссылки
