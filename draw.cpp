@@ -13,24 +13,24 @@ namespace Draw {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
-    QScatterSeries* createMarker(
-        double x,
-        double y,
-        QChart* chart,          // График для привязки
-        QValueAxis* axisX,       // Ось X
-        QValueAxis* axisY,       // Ось Y
-        bool isMax,              // Тип маркера (min/max)
-        int markerSize      // Размер маркера
-        ) {
+    QScatterSeries* createMarker(double x, double y, QChart* chart,
+                                 QValueAxis* axisX, QValueAxis* axisY,
+                                 bool isMax, int markerSize)
+    {
         QScatterSeries* marker = new QScatterSeries();
         marker->setMarkerSize(markerSize);
         marker->setProperty("class", "marker");
-        marker->setObjectName(isMax ? "maxMarker" : "minMarker");
         marker->setBorderColor(Qt::white);
         marker->append(x, y);
-
         marker->setName("");
         marker->setProperty("isHiddenMarker", QVariant(true));
+        if(isMax) {
+            marker->setObjectName("maxMarker");
+            marker->setColor(QColor(255, 102, 102));  // Нежный красный: #FF6666
+        } else {
+            marker->setObjectName("minMarker");
+            marker->setColor(QColor(102, 255, 102));  // Нежный зеленый: #66FF66
+        }
 
         if (chart) {
             chart->addSeries(marker);

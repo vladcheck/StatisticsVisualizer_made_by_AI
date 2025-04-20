@@ -107,14 +107,6 @@ ScatterSeries.marker {
     qproperty-borderColor: #ffffff;
 }
 
-ScatterSeries#maxMarker {
-    qproperty-color: #90ee90;
-}
-
-ScatterSeries#minMarker {
-    qproperty-color: #ffb6c1;
-}
-
 /* Панель настроек */
 QWidget#seriesSettingsPanel {
     background-color: #404040;
