@@ -30,6 +30,7 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QLegendMarker>
+#include <QScrollBar>
 
 namespace Draw
 {
@@ -80,10 +81,9 @@ namespace Draw
                                        QLabel **skewnessLabel, QLabel **kurtosisLabel, QLabel **madLabel,
                                        QLabel **robustStdLabel, QLabel **shapiroWilkLabel, QLabel **densityLabel,
                                        QLabel **chiSquareLabel, QLabel **kolmogorovLabel);
-    QWidget* createMeansSection(QWidget *parent, QLabel **geometricMeanLabel, QLabel **harmonicMeanLabel,
-                                QLabel **rmsLabel, QLabel **trimmedMeanLabel);
-    QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel,
-                                    QLabel **sumLabel, QLabel **averageLabel);
+    QWidget* createMeansSection(QWidget *parent, QLabel **geometricMeanLabel, QLabel **harmonicMeanLabel, QLabel **rmsLabel, QLabel **trimmedMeanLabel);
+    QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
+    QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll);
 };
 
 #endif // DRAW_H

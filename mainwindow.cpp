@@ -18,19 +18,6 @@ QColor MainWindow::getBorderColor(int index) const {
     return base.darker(120); // Затемнение на 20%
 }
 
-QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll) {
-    QScrollArea *scrollArea = new QScrollArea(parent);
-    scrollArea->setWidget(toScroll);
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    scrollArea->setFrameShape(QFrame::NoFrame); // Убираем рамку
-    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Горизонтальную отключаем
-    scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
-    scrollArea->verticalScrollBar()->setContextMenuPolicy(Qt::NoContextMenu);
-    return scrollArea;
-}
-
 QWidget* MainWindow::setupTablePanel(QWidget *parent) {
     QWidget *tableSection = new QWidget(parent);
 
@@ -50,7 +37,7 @@ QWidget* MainWindow::setupDataSection(QWidget* parent) {
     dataSectionLayout->setContentsMargins(0, 0, 0, 0);
 
     QWidget* statsPanel = setupDataPanel(dataSection);
-    QScrollArea* statsScrollArea = setupDataSectionScrollArea(dataSection, statsPanel);
+    QScrollArea* statsScrollArea = Draw::setupDataSectionScrollArea(dataSection, statsPanel);
     QWidget* tablePanel = setupTablePanel(dataSection);
     QSplitter* splitter = Draw::addSplitter(dataSection, statsScrollArea, tablePanel, 1, 2);
 
@@ -116,16 +103,8 @@ QWidget* MainWindow::setupTableToolbar(QWidget* parent, QTableWidget* table) {
     toolbarLayout->addLayout(rowsContainer);
     toolbarLayout->addLayout(columnsContainer);
 
-    QList<QWidget*> toolbarWidgets = {
-        m_addRowBtn,
-        m_delRowBtn,
-        m_addColBtn,
-        m_delColBtn,
-        m_autoSizeBtn,
-        m_clearBtn,
-        m_importBtn,
-        m_exportBtn
-    };
+    QList<QWidget*> toolbarWidgets = {m_addRowBtn, m_delRowBtn, m_addColBtn, m_delColBtn,
+                                       m_autoSizeBtn, m_clearBtn, m_importBtn, m_exportBtn};
 
     // Добавляем элементы в layout
     for (QWidget *widget : toolbarWidgets) {

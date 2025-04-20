@@ -407,4 +407,17 @@ namespace Draw {
 
         return section;
     }
+
+    QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll) {
+        QScrollArea *scrollArea = new QScrollArea(parent);
+        scrollArea->setWidget(toScroll);
+        scrollArea->setWidgetResizable(true);
+        scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        scrollArea->setFrameShape(QFrame::NoFrame); // Убираем рамку
+        scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Горизонтальную отключаем
+        scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
+        scrollArea->verticalScrollBar()->setContextMenuPolicy(Qt::NoContextMenu);
+        return scrollArea;
+    }
 }
