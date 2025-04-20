@@ -1,13 +1,8 @@
 // export.cpp
 #include "export.h"
-#include <QFileDialog>
-#include <QFile>
-#include <QTextStream>
-#include <QMessageBox>
-#include <QHeaderView>
 
 namespace Export {
-void exportData(QTableWidget *table, const QStringList &metrics) {
+void exportData(QTableWidget *table, const QList<QPair<QString, QString>>& metrics) {
     if (!table) {
         QMessageBox::critical(nullptr, "Ошибка", "Таблица не инициализирована!");
         return;
@@ -63,18 +58,8 @@ void exportData(QTableWidget *table, const QStringList &metrics) {
         out.setEncoding(QStringConverter::Utf8);
 
         // Запись метрик с названиями
-        QStringList metricLabels = {
-            "Количество элементов", "Сумма", "Среднее",
-            "Геометрическое среднее", "Гармоническое среднее",
-            "Медиана", "Мода", "Стандартное отклонение"
-        };
-
-        for (int i = 0; i < metrics.size(); ++i) {
-            if (i < metricLabels.size()) {
-                out << metricLabels[i] << ": " << metrics[i] << "\n";
-            } else {
-                out << "Метрика " << i+1 << ": " << metrics[i] << "\n";
-            }
+        for (const auto& [name, value] : metrics) {
+            out << name << ": " << value << "\n";
         }
 
         // Заголовки

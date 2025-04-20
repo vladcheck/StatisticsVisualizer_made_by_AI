@@ -32,6 +32,8 @@
 #include <QApplication>
 #include <QLegendMarker>
 #include <QPen>
+#include <QPair>
+#include <QList>
 
 #include <limits>
 #include <iostream>
@@ -155,7 +157,7 @@ private:
     void updateDistribution(bool hasData, const std::vector<double>& values, double mean, double stdDev);
     void updateStatisticalTests(bool hasData, const std::vector<double>& values, double mean);
     void updateExtremes(bool hasData, double min, double max, double range);
-
+    QList<QPair<QString, QLabel*>> getMetricsList() const;
     template<typename Func, typename... Args>
     QString calculateAndFormat(bool hasData, Func func, Args&&... args) const;
 };

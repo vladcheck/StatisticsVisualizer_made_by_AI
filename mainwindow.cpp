@@ -172,19 +172,11 @@ void MainWindow::setupTableActions()
             return;
         }
 
-        QStringList metrics = {
-            m_elementCountLabel->text(),
-            m_sumLabel->text(),
-            m_averageLabel->text(),
-            m_geometricMeanLabel->text(),
-            m_harmonicMeanLabel->text(),
-            m_medianLabel->text(),
-            m_modeLabel->text(),
-            m_stdDevLabel->text(),
-            m_minLabel->text(),
-            m_maxLabel->text(),
-            m_rangeLabel->text()
-        };
+        QList<QPair<QString, QString>> metrics;
+        for (const auto& [name, label] : getMetricsList()) {
+            metrics.append({name, label->text()});
+        }
+
         Export::exportData(m_table, metrics);
     });
 
@@ -454,12 +446,10 @@ void MainWindow::updateSeriesNames() {
 }
 
 bool MainWindow::areAllLabelsDefined() {
-    return (m_table &&
-            m_elementCountLabel && m_sumLabel && m_averageLabel && m_geometricMeanLabel &&
-            m_medianLabel && m_modeLabel && m_stdDevLabel && m_minLabel && m_maxLabel &&
-            m_rangeLabel && m_skewnessLabel && m_kurtosisLabel && m_harmonicMeanLabel &&
-            m_rmsLabel && m_trimmedMeanLabel && m_robustStdLabel && m_madLabel &&
-            m_shapiroWilkLabel && m_kolmogorovLabel && m_chiSquareLabel && m_densityLabel);
+    for (const auto& [name, label] : getMetricsList()) {
+        if (!label) return false;
+    }
+    return m_table != nullptr;
 }
 
 TableData MainWindow::parse() const {
@@ -699,6 +689,32 @@ void MainWindow::updateUI(const TableData& data) {
     updateDistribution(hasData, values, mean, stdDev);
     updateStatisticalTests(hasData, values, mean);
     updateExtremes(hasData, min, max, range);
+}
+
+QList<QPair<QString, QLabel*>> MainWindow::getMetricsList() const {
+    return {
+        {"Количество элементов", m_elementCountLabel},
+        {"Сумма", m_sumLabel},
+        {"Среднее арифметическое", m_averageLabel},
+        {"Геометрическое среднее", m_geometricMeanLabel},
+        {"Гармоническое среднее", m_harmonicMeanLabel},
+        {"Квадратичное среднее", m_rmsLabel},
+        {"Усечённое среднее", m_trimmedMeanLabel},
+        {"Медиана", m_medianLabel},
+        {"Мода", m_modeLabel},
+        {"Стандартное отклонение", m_stdDevLabel},
+        {"Асимметрия", m_skewnessLabel},
+        {"Эксцесс", m_kurtosisLabel},
+        {"Медианное абс. отклонение", m_madLabel},
+        {"Робастное стан. отклонение", m_robustStdLabel},
+        {"Тест Шапиро-Уилка", m_shapiroWilkLabel},
+        {"Плотность распределения", m_densityLabel},
+        {"χ²-критерий", m_chiSquareLabel},
+        {"Критерий Колмогорова-Смирнова", m_kolmogorovLabel},
+        {"Минимум", m_minLabel},
+        {"Максимум", m_maxLabel},
+        {"Размах", m_rangeLabel}
+    };
 }
 
 void MainWindow::updateStatistics() {
