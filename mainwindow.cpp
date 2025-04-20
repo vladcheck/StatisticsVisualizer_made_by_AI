@@ -311,7 +311,7 @@ void MainWindow::updateMarker(int seriesIndex, bool isMax) {
 
         auto [val, col] = findExtremum(seriesIndex, isMax);
         if (col != -1) {
-            *marker = createMarker(col, val, isMax);
+            *marker = Draw::createMarker(col, val, m_chartView->chart(), m_axisX, m_axisY, isMax);
             // Дополнительная проверка перед добавлением
             if (*marker && !m_chartView->chart()->series().contains(*marker)) {
                 m_chartView->chart()->addSeries(*marker);
@@ -349,7 +349,7 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                     if(checked) {
                         auto [minVal, minCol] = findExtremum(row, false);
                         if(minCol != -1) {
-                            m_seriesMarkers[row].minMarker = createMarker(minCol, minVal, false);
+                            m_seriesMarkers[row].minMarker = Draw::createMarker(minCol, minVal, m_chartView->chart(), m_axisX, m_axisY, false);
                             connect(m_table->model(), &QAbstractItemModel::dataChanged,
                                     [this, row]() { updateMarker(row, false); });
                         }
@@ -364,7 +364,7 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                     if(checked) {
                         auto [maxVal, maxCol] = findExtremum(row, true);
                         if(maxCol != -1) {
-                            m_seriesMarkers[row].maxMarker = createMarker(maxCol, maxVal, true);
+                            m_seriesMarkers[row].maxMarker = Draw::createMarker(maxCol, maxVal,  m_chartView->chart(), m_axisX, m_axisY, true);
                         }
                     } else {
                         if(m_seriesMarkers[row].maxMarker) {
@@ -474,41 +474,6 @@ bool MainWindow::isSeriesEmpty(int seriesIndex) const {
     return true;
 }
 
-// Общая функция создания маркера
-QScatterSeries* MainWindow::createMarker(double x, double y, bool isMax) {
-    QScatterSeries* marker = new QScatterSeries();
-    marker->setMarkerSize(10);
-    marker->setProperty("class", "marker");
-    marker->setObjectName(isMax ? "maxMarker" : "minMarker");
-    marker->append(x, y);
-
-    // 1. Явно задаем пустое имя и пользовательское свойство
-    marker->setName("");
-    marker->setProperty("isHiddenMarker", QVariant(true));
-
-    if (m_chartView && m_chartView->chart()) {
-        // 2. Добавляем серию на график
-        m_chartView->chart()->addSeries(marker);
-        marker->attachAxis(m_axisX);
-        marker->attachAxis(m_axisY);
-
-        // 3. Принудительно скрываем в легенде через отложенный вызов
-        QTimer::singleShot(0, [this, marker]() {
-            if (marker && m_chartView->chart()) {
-                QLegend* legend = m_chartView->chart()->legend();
-                for (QLegendMarker* legendMarker : legend->markers(marker)) {
-                    // 4. Двойная проверка через свойство и имя
-                    if (marker->property("isHiddenMarker").toBool()
-                        && marker->name().isEmpty()) {
-                        legendMarker->setVisible(false);
-                    }
-                }
-            }
-        });
-    }
-    return marker;
-}
-
 void MainWindow::refreshLegend() {
     if (!m_chartView || !m_chartView->chart()) return;
 
@@ -526,14 +491,14 @@ void MainWindow::refreshLegend() {
 void MainWindow::handleShowMin(int seriesIndex) {
     auto [minVal, minCol] = findExtremum(seriesIndex, false);
     if(minCol != -1) {
-        createMarker(minCol, minVal, Qt::red);
+        Draw::createMarker(minCol, minVal,  m_chartView->chart(), m_axisX, m_axisY, false); // RED
     }
 }
 
 void MainWindow::handleShowMax(int seriesIndex) {
     auto [maxVal, maxCol] = findExtremum(seriesIndex, true);
     if(maxCol != -1) {
-        createMarker(maxCol, maxVal, Qt::blue);
+        Draw::createMarker(maxCol, maxVal,  m_chartView->chart(), m_axisX, m_axisY, true); // GREEN
     }
 }
 

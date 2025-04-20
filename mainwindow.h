@@ -137,7 +137,6 @@ private:
     void attachSeriesToAxes(QXYSeries* series);
     void setupGraphSettingsSlots();
     void setupPalette();
-    QScatterSeries* createMarker(double x, double y, bool isMax);
     void updateMarker(int seriesIndex, bool isMax);
     std::pair<double, int> findExtremum(int seriesIndex, bool findMax);
     bool isSeriesEmpty(int seriesIndex) const;

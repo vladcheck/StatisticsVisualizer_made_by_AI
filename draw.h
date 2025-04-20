@@ -29,6 +29,7 @@
 #include <QLineSeries>
 #include <QFormLayout>
 #include <QLineEdit>
+#include <QLegendMarker>
 
 namespace Draw
 {
@@ -58,6 +59,15 @@ namespace Draw
     void setSizePolicyExpanding(QWidget *w);
     void setSizePolicyFixed(QWidget *w);
     void setupTableActions();
+    QScatterSeries* createMarker(
+        double x,
+        double y,
+        QChart* chart,
+        QValueAxis* axisX,
+        QValueAxis* axisY,
+        bool isMax,
+        int markerSize = 10
+        );
     QTableWidget *setupTable(QWidget *parent);
     QWidget *setupTablePanel(QWidget *parent, QTableWidget **outTable);
     QWidget *createSeparator(bool horizontal);

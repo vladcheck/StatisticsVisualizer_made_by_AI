@@ -13,6 +13,44 @@ namespace Draw {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
+    QScatterSeries* createMarker(
+        double x,
+        double y,
+        QChart* chart,          // График для привязки
+        QValueAxis* axisX,       // Ось X
+        QValueAxis* axisY,       // Ось Y
+        bool isMax,              // Тип маркера (min/max)
+        int markerSize      // Размер маркера
+        ) {
+        QScatterSeries* marker = new QScatterSeries();
+        marker->setMarkerSize(markerSize);
+        marker->setProperty("class", "marker");
+        marker->setObjectName(isMax ? "maxMarker" : "minMarker");
+        marker->setBorderColor(Qt::white);
+        marker->append(x, y);
+
+        marker->setName("");
+        marker->setProperty("isHiddenMarker", QVariant(true));
+
+        if (chart) {
+            chart->addSeries(marker);
+            marker->attachAxis(axisX);
+            marker->attachAxis(axisY);
+
+            QTimer::singleShot(0, [chart, marker]() {
+                if (marker && chart) {
+                    QLegend* legend = chart->legend();
+                    for (QLegendMarker* legendMarker : legend->markers(marker)) {
+                        if (marker->property("isHiddenMarker").toBool() && marker->name().isEmpty()) {
+                            legendMarker->setVisible(false);
+                        }
+                    }
+                }
+            });
+        }
+        return marker;
+    }
+
     QTableWidget *setupTable(QWidget *parent) {
         // Правая часть - таблица
         QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
