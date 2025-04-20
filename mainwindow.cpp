@@ -165,6 +165,29 @@ void MainWindow::setupTableActions()
         Import::importFile(m_table);
     });
 
+    // Экспорт файлов
+    QObject::connect(m_exportBtn, &QPushButton::clicked, [=]() {
+        if (!areAllLabelsDefined()) {
+            QMessageBox::warning(this, "Ошибка", "Не все метрики рассчитаны!");
+            return;
+        }
+
+        QStringList metrics = {
+            m_elementCountLabel->text(),
+            m_sumLabel->text(),
+            m_averageLabel->text(),
+            m_geometricMeanLabel->text(),
+            m_harmonicMeanLabel->text(),
+            m_medianLabel->text(),
+            m_modeLabel->text(),
+            m_stdDevLabel->text(),
+            m_minLabel->text(),
+            m_maxLabel->text(),
+            m_rangeLabel->text()
+        };
+        Export::exportData(m_table, metrics);
+    });
+
     // Добавление ряда
     Draw::connect(m_addRowBtn, [=]() {
         m_table->setRowCount(m_table->rowCount() + 1);
