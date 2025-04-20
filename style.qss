@@ -25,68 +25,51 @@ QLabel#mainHeader {
     padding: 4px 0;
 }
 
-/* Кнопки управления таблицей */
-QPushButton[toolButton="true"] {
-    border: 1px solid #505050;
-    border-radius: 4px;
-    padding: 6px;
-    background: #404040;
-    min-width: 32px;
-    min-height: 32px;
-}
-
-QPushButton[toolButton="true"]:hover {
-    background: #505050;
-}
-
-QPushButton[toolButton="true"]:disabled {
-    background: #303030;
-    color: #707070;
-}
-
-/* Кнопки экстремумов */
-QPushButton[seriesButton="true"] {
+/* Общие стили для кнопок */
+QPushButton[toolButton="true"],
+QPushButton[seriesButton="true"],
+QPushButton.series-control {
     border: 1px solid #505050;
     border-radius: 4px;
     padding: 4px;
     background: #404040;
     color: #b0b0b0;
-    min-width: 40px;
+    min-width: 32px;
+    min-height: 32px;
 }
 
-QPushButton[seriesButton="true"]:checked {
+/* Стили для кнопок над таблицей */
+QPushButton[toolButton="true"] {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+}
+
+/* Состояния кнопок */
+QPushButton[toolButton="true"]:hover,
+QPushButton[seriesButton="true"]:hover,
+QPushButton.series-control:hover {
+    background: #505050;
+    border-color: #606060;
+}
+
+QPushButton[toolButton="true"]:checked,
+QPushButton[seriesButton="true"]:checked,
+QPushButton.series-control:checked {
     border-color: #3daee9;
     background: #2a82da;
     color: #ffffff;
 }
 
-QPushButton[seriesButton="true"]:hover {
-    background: #505050;
-    border-color: #606060;
+QPushButton[toolButton="true"]:disabled,
+QPushButton[seriesButton="true"]:disabled,
+QPushButton.series-control:disabled {
+    background: #303030;
+    color: #707070;
+    border-color: #404040;
 }
 
-QPushButton[seriesButton="true"]:checked:hover {
-    background: #1d6eab;
-    border-color: #3daee9;
-}
-
-/* Таблица */
-QTableWidget {
-    background: #1e1e1e;
-    gridline-color: #404040;
-    border: none;
-}
-
-QHeaderView::section {
-    background: #323232;
-    padding: 4px;
-    border: none;
-}
-
-QTableWidget::item {
-    padding: 4px;
-}
-
+/* Скроллбары */
 QScrollBar:vertical {
     width: 12px;
     background: #252525;
@@ -97,7 +80,7 @@ QScrollBar::handle:vertical {
     min-height: 20px;
 }
 
-/* Оси графика */
+/* Графики */
 ChartTitle {
     color: #ffffff;
     font-size: 14px;
@@ -108,7 +91,6 @@ AxisLabel {
     font-size: 12px;
 }
 
-/* Легенда графика */
 QLegend {
     background: #383838;
     border: 1px solid #454545;
@@ -119,7 +101,7 @@ QLegendMarker::label {
     color: #d0d0d0;
 }
 
-/* Стили для маркеров */
+/* Маркеры графика */
 ScatterSeries.marker {
     qproperty-markerSize: 10px;
     qproperty-borderColor: #ffffff;
@@ -133,12 +115,7 @@ ScatterSeries#minMarker {
     qproperty-color: #ffb6c1;
 }
 
-/* Стили для разделителей */
-QFrame#separatorLine {
-    color: #dddddd;
-}
-
-/* Стили для панели настроек */
+/* Панель настроек */
 QWidget#seriesSettingsPanel {
     background-color: #404040;
     color: #ffffff;
@@ -150,7 +127,6 @@ QWidget#seriesSettingsPanel QLabel#settingsHeader {
     padding: 4px 0;
 }
 
-/* Стили для элементов внутри панели */
 QWidget#seriesSettingsPanel QLabel {
     color: #d0d0d0;
     font-size: 14px;
@@ -169,67 +145,7 @@ QWidget#seriesSettingsPanel QLineEdit {
     padding: 4px;
 }
 
-/* Стили для кнопок MIN/MAX */
-QWidget#seriesSettingsPanel QPushButton {
-    background: #4a4a4a;
-    border: 1px solid #5a5a5a;
-    border-radius: 3px;
-    color: #e0e0e0;
-    min-width: 40px;
-}
-
-QWidget#seriesSettingsPanel QPushButton:hover {
-    background: #5a5a5a;
-}
-
-/* Базовый стиль для кнопок серий */
-QPushButton.seriesButton {
-    border: 1px solid #505050;
-    border-radius: 4px;
-    padding: 4px;
-    background: #404040;
-    color: #b0b0b0;
-    min-width: 40px;
-}
-
-/* Состояние "активна" (аналог параметра active = true) */
-QPushButton.seriesButton:checked {
-    border-color: #3daee9;
-    background: #2a82da;
-    color: #ffffff;
-}
-
-/* Ховер-эффекты */
-QPushButton.seriesButton:hover {
-    background: #505050;
-    border-color: #606060;
-}
-
-QPushButton.seriesButton:checked:hover {
-    background: #1d6eab;
-    border-color: #3daee9;
-}
-
-/* Стили для кнопок MIN/MAX */
-QPushButton.series-control {
-    /* Базовый стиль */
-    border: 1px solid #505050;
-    background: #404040;
-    color: #b0b0b0;
-    border-radius: 4px;
-    min-width: 40px;
-}
-
-QPushButton.series-control:checked {
-    /* Стиль активной кнопки */
-    border-color: #3daee9;
-    background: #2a82da;
-    color: #ffffff;
-}
-
-QPushButton.series-control:disabled {
-    /* Стиль заблокированной кнопки */
-    background: #303030;
-    color: #707070;
-    border-color: #404040;
+/* Разделители */
+QFrame#separatorLine {
+    color: #dddddd;
 }
