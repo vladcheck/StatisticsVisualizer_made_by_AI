@@ -62,6 +62,9 @@ QWidget* MainWindow::setupDataPanel(QWidget *parent)
     statsLayout->setContentsMargins(12, 8, 12, 8);
     statsLayout->setSpacing(8);
 
+    QWidget* rowSelectionWidget = Draw::createRowSelectionWidget(statsPanel, &m_rowToCalculateCombo, &m_rowToCalculateLabel);
+    statsLayout->addWidget(rowSelectionWidget);
+
     Draw::createDataHeader(statsPanel, statsLayout);
     statsLayout->addWidget(Draw::createBasicDataSection(statsPanel, &m_elementCountLabel, &m_sumLabel, &m_averageLabel));
     statsLayout->addWidget(Draw::createMeansSection(statsPanel, &m_geometricMeanLabel, &m_harmonicMeanLabel,
@@ -321,6 +324,7 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
                 connect(edit, &QLineEdit::textChanged, this, &MainWindow::updateSeriesNames);
             }
         }
+        updateRowSelectionCombo();
     }
 }
 
@@ -454,23 +458,26 @@ bool MainWindow::areAllLabelsDefined() {
 
 TableData MainWindow::parse() const {
     TableData plotData;
-    for (int row = 0; row < m_table->rowCount(); ++row) {
-        std::vector<std::pair<int, int>> rowData; // Вектор для текущей строки
+    const int targetRow = m_rowToCalculateCombo->currentIndex();
 
-        for (int col = 0; col < m_table->columnCount(); ++col) {
-            if (auto item = m_table->item(row, col)) {
-                bool ok;
-                double value = item->text().toDouble(&ok);
-                if (ok) {
-                    rowData.emplace_back(col, value); // Добавляем пару (столбец, значение)
-                }
+    if(targetRow < 0 || targetRow >= m_table->rowCount())
+        return plotData;
+
+    std::vector<std::pair<int, int>> rowData;
+    for(int col = 0; col < m_table->columnCount(); ++col) {
+        if(auto item = m_table->item(targetRow, col)) {
+            bool ok;
+            double value = item->text().toDouble(&ok);
+            if(ok) {
+                rowData.emplace_back(col, value);
             }
         }
-
-        if (!rowData.empty()) {
-            plotData.push_back(rowData); // Добавляем строку в результат
-        }
     }
+
+    if(!rowData.empty()) {
+        plotData.push_back(rowData);
+    }
+
     return plotData;
 }
 
@@ -784,6 +791,34 @@ void MainWindow::setupTableSlots() {
             }
         }
     });
+
+    // Обновление списка рядов
+    connect(m_table->model(), &QAbstractItemModel::rowsInserted,
+            this, &MainWindow::updateRowSelectionCombo);
+    connect(m_table->model(), &QAbstractItemModel::rowsAboutToBeRemoved,
+            this, &MainWindow::updateRowSelectionCombo);
+
+    // Обработка выбора ряда
+    connect(m_rowToCalculateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::updateStatistics);
+}
+
+void MainWindow::updateRowSelectionCombo() {
+    const int prevIndex = m_rowToCalculateCombo->currentIndex();
+    const int rowCount = m_table->rowCount();
+
+    m_rowToCalculateCombo->blockSignals(true);
+    m_rowToCalculateCombo->clear();
+
+    for(int i = 0; i < rowCount; ++i) {
+        m_rowToCalculateCombo->addItem(QString("Ряд %1").arg(i+1));
+    }
+
+    // Восстанавливаем выбор или устанавливаем первый элемент
+    const int newIndex = rowCount > 0 ? qBound(0, prevIndex, rowCount-1) : -1;
+    m_rowToCalculateCombo->setCurrentIndex(newIndex);
+    m_rowToCalculateCombo->setEnabled(rowCount > 0);
+    m_rowToCalculateCombo->blockSignals(false);
 }
 
 void MainWindow::loadStylesheets() {
@@ -825,6 +860,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         setupTableSlots();
         initializeChart();
         setupGraphSettingsSlots();
+        updateRowSelectionCombo();
 
         // Принудительно создаем поля для начальных рядов
         QTimer::singleShot(0, this, [this]() {

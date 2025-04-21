@@ -31,6 +31,7 @@
 #include <QLineEdit>
 #include <QLegendMarker>
 #include <QScrollBar>
+#include <QComboBox>
 
 namespace Draw
 {
@@ -84,6 +85,7 @@ namespace Draw
     QWidget* createMeansSection(QWidget *parent, QLabel **geometricMeanLabel, QLabel **harmonicMeanLabel, QLabel **rmsLabel, QLabel **trimmedMeanLabel);
     QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
     QScrollArea *setupDataSectionScrollArea(QWidget *parent, QWidget *toScroll);
+    QWidget* createRowSelectionWidget(QWidget* parent, QComboBox** comboBox, QLabel** label);
 };
 
 #endif // DRAW_H

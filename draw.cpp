@@ -420,4 +420,19 @@ namespace Draw {
         scrollArea->verticalScrollBar()->setContextMenuPolicy(Qt::NoContextMenu);
         return scrollArea;
     }
+
+    QWidget* createRowSelectionWidget(QWidget* parent, QComboBox** comboBox, QLabel** label) {
+        QWidget* container = new QWidget(parent);
+        QHBoxLayout* layout = new QHBoxLayout(container);
+        layout->setContentsMargins(0, 0, 0, 0);
+
+        *label = new QLabel("Ряд для расчёта:", container);
+        *comboBox = new QComboBox(container);
+        (*comboBox)->setObjectName("rowSelectionCombo");
+
+        layout->addWidget(*label);
+        layout->addWidget(*comboBox, 1);
+
+        return container;
+    }
 }

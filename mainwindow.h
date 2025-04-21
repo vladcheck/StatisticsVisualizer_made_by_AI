@@ -34,6 +34,7 @@
 #include <QPen>
 #include <QPair>
 #include <QList>
+#include <QComboBox>
 
 #include <limits>
 #include <iostream>
@@ -75,6 +76,7 @@ private:
     QPushButton* m_exportBtn = nullptr;
     QPushButton* m_addRowBtn = nullptr;
     QPushButton* m_delRowBtn = nullptr;
+    QComboBox* m_rowToCalculateCombo = nullptr;
 
     QLabel *m_elementCountLabel = nullptr;
     QLabel *m_sumLabel = nullptr;
@@ -97,6 +99,7 @@ private:
     QLabel* m_densityLabel = nullptr;
     QLabel* m_chiSquareLabel = nullptr;
     QLabel* m_kolmogorovLabel = nullptr;
+    QLabel* m_rowToCalculateLabel = nullptr;
     QChartView* m_chartView = nullptr;
     QValueAxis* m_axisX = nullptr;
     QValueAxis* m_axisY = nullptr;
@@ -160,6 +163,7 @@ private:
     QList<QPair<QString, QLabel*>> getMetricsList() const;
     template<typename Func, typename... Args>
     QString calculateAndFormat(bool hasData, Func func, Args&&... args) const;
+    void updateRowSelectionCombo();
 };
 
 #endif // MAINWINDOW_H
