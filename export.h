@@ -11,6 +11,12 @@
 #include <QList>
 #include <QString>
 #include <QPair>
+#include <QHash>
+
+#include <algorithm>
+#include <numeric>
+#include "calculate.h"
+#include "globals.h"
 
 struct TableMetrics {
     int maxNonEmptyCols;
