@@ -900,7 +900,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     }
 
     this->setWindowState(Qt::WindowMaximized);
-    this->setWindowIcon(QIcon(":/logo.png"));
+    this->setWindowIcon(QIcon(":/icons/logo.png"));
     this->setWindowTitle(QString::fromStdString("Glacé"));
 }
 
