@@ -5,6 +5,14 @@
 #include <QTableWidget>
 #include <QStringList>
 #include <QRegularExpression>
+#include <QFileDialog>
+#include <QFile>
+#include <QTextStream>
+#include <QMessageBox>
+#include <QHeaderView>
+#include <QFileInfo>
+
+#include "mainwindow.h"
 
 namespace Import {
     QString getFilePath(QWidget *parent);

@@ -179,6 +179,12 @@ public:
         }
         return headers;
     }
+
+    void setSeriesHeaders(const QStringList& headers) {
+        for(int i = 0; i < qMin(headers.size(), m_seriesNameEdits.size()); ++i) {
+            m_seriesNameEdits[i]->setText(headers[i]);
+        }
+    }
 };
 
 #endif // MAINWINDOW_H

@@ -1,10 +1,4 @@
 #include "import.h"
-#include <QFileDialog>
-#include <QFile>
-#include <QTextStream>
-#include <QMessageBox>
-#include <QHeaderView>
-#include <QFileInfo>
 
 namespace Import {
 QRegularExpression regex(R"([,;\t\s]+)");
@@ -17,6 +11,7 @@ struct ParsedRow {
 struct ParseResult {
     QVector<ParsedRow> rows;
     int maxColumns = 0;
+    QStringList seriesHeaders;
 };
 
 // Вспомогательные функции
@@ -97,8 +92,21 @@ ParseResult readAndParseFile(const QString& filePath, QWidget* parent) {
             result.maxColumns = std::max(result.maxColumns, row.lastNonEmptyIndex + 1);
         }
     }
-    file.close();
 
+    QVector<QString> seriesHeaders;
+    while(!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if(line.startsWith("# Заголовки рядов")) {
+            if(!in.atEnd()) {
+                QString headersLine = in.readLine().trimmed();
+                seriesHeaders = headersLine.split(", ", Qt::SkipEmptyParts);
+            }
+            break;
+        }
+    }
+    result.seriesHeaders = seriesHeaders;
+
+    file.close();
     adjustRows(result.rows, result.maxColumns);
     return result;
 }
@@ -122,7 +130,14 @@ void updateTable(QTableWidget* table, const ParseResult& result) {
             }
         }
     }
+
+    MainWindow* mainWindow = qobject_cast<MainWindow*>(table->window());
+    if(mainWindow && !result.seriesHeaders.isEmpty()) {
+        mainWindow->setSeriesHeaders(result.seriesHeaders);
+    }
+
     table->resizeColumnsToContents();
+    table->resizeRowsToContents();
 }
 
 void importFile(QTableWidget* table) {
