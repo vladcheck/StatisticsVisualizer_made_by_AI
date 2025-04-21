@@ -48,7 +48,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 private slots:
     void updateStatistics();
@@ -65,7 +65,7 @@ private:
     QWidget* m_seriesSettingsContent;
     QLineEdit* m_xAxisTitleEdit;
     QLineEdit* m_yAxisTitleEdit;
-    QTableWidget *m_table = nullptr;
+    QTableWidget* m_table = nullptr;
     QPushButton* m_addColBtn = nullptr;
     QPushButton* m_delColBtn = nullptr;
     QPushButton* m_clearBtn = nullptr;
@@ -78,15 +78,15 @@ private:
     QPushButton* m_delRowBtn = nullptr;
     QComboBox* m_rowToCalculateCombo = nullptr;
 
-    QLabel *m_elementCountLabel = nullptr;
-    QLabel *m_sumLabel = nullptr;
-    QLabel *m_averageLabel = nullptr;
-    QLabel *m_medianLabel = nullptr;
-    QLabel *m_modeLabel = nullptr;
-    QLabel *m_stdDevLabel = nullptr;
-    QLabel *m_minLabel = nullptr;
-    QLabel *m_maxLabel = nullptr;
-    QLabel *m_rangeLabel = nullptr;
+    QLabel* m_elementCountLabel = nullptr;
+    QLabel* m_sumLabel = nullptr;
+    QLabel* m_averageLabel = nullptr;
+    QLabel* m_medianLabel = nullptr;
+    QLabel* m_modeLabel = nullptr;
+    QLabel* m_stdDevLabel = nullptr;
+    QLabel* m_minLabel = nullptr;
+    QLabel* m_maxLabel = nullptr;
+    QLabel* m_rangeLabel = nullptr;
     QLabel* m_geometricMeanLabel = nullptr;
     QLabel* m_skewnessLabel = nullptr;
     QLabel* m_kurtosisLabel = nullptr;
@@ -125,19 +125,19 @@ private:
                            double& minY, double& maxY);
     void updateAxisRanges(double minX, double maxX, double minY, double maxY);
     TableData parse() const;
-    QWidget *setupDataSection(QWidget *parent);
-    QWidget *setupDataPanel(QWidget *parent);
-    QWidget* createBasicDataSection(QWidget *parent, QLabel **elementCountLabel, QLabel **sumLabel, QLabel **averageLabel);
-    QWidget* createMeansSection(QWidget *parent);
-    QWidget* createDistributionSection(QWidget *parent);
-    QWidget* createExtremesSection(QWidget *parent);
-    QWidget* createCorrelationSection(QWidget *parent);
+    QWidget* setupDataSection(QWidget* parent);
+    QWidget* setupDataPanel(QWidget* parent);
+    QWidget* createBasicDataSection(QWidget* parent, QLabel* *elementCountLabel, QLabel* *sumLabel, QLabel* *averageLabel);
+    QWidget* createMeansSection(QWidget* parent);
+    QWidget* createDistributionSection(QWidget* parent);
+    QWidget* createExtremesSection(QWidget* parent);
+    QWidget* createCorrelationSection(QWidget* parent);
     void updateAxesRange(const TableData& data);
     QWidget* setupTableToolbar(QWidget* parent, QTableWidget* table);
-    QWidget* setupTablePanel(QWidget *parent);
+    QWidget* setupTablePanel(QWidget* parent);
     void setupTableActions();
     void updateUI(const TableData& data);
-    void createDataHeader(QWidget *statsPanel, QVBoxLayout *statsLayout);
+    void createDataHeader(QWidget* statsPanel, QVBoxLayout* statsLayout);
     bool areAllLabelsDefined();
     void setupChartAxes();
     void initializeChart();
@@ -164,6 +164,7 @@ private:
     template<typename Func, typename... Args>
     QString calculateAndFormat(bool hasData, Func func, Args&&... args) const;
     void updateRowSelectionCombo();
+    std::vector<std::pair<int, int>> getSelectedRowData() const;
 };
 
 #endif // MAINWINDOW_H

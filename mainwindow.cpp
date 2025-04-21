@@ -18,13 +18,13 @@ QColor MainWindow::getBorderColor(int index) const {
     return base.darker(120); // Затемнение на 20%
 }
 
-QWidget* MainWindow::setupTablePanel(QWidget *parent) {
-    QWidget *tableSection = new QWidget(parent);
+QWidget* MainWindow::setupTablePanel(QWidget* parent) {
+    QWidget* tableSection = new QWidget(parent);
 
     this->m_table = Draw::setupTable(tableSection); // Создаем таблицу и возвращаем через outTable
-    auto *tableToolbar = setupTableToolbar(tableSection, m_table);
+    auto* tableToolbar = setupTableToolbar(tableSection, m_table);
 
-    QVBoxLayout *tableSectionLayout = new QVBoxLayout(tableSection);
+    QVBoxLayout* tableSectionLayout = new QVBoxLayout(tableSection);
     tableSectionLayout->addWidget(tableToolbar);
     tableSectionLayout->addWidget(m_table);
 
@@ -52,13 +52,13 @@ QWidget* MainWindow::setupDataSection(QWidget* parent) {
     return dataSection;
 }
 
-QWidget* MainWindow::setupDataPanel(QWidget *parent)
+QWidget* MainWindow::setupDataPanel(QWidget* parent)
 {
-    QWidget *statsPanel = new QWidget(parent);
+    QWidget* statsPanel = new QWidget(parent);
     statsPanel->setLayout(new QVBoxLayout(statsPanel));
     Draw::setSizePolicyExpanding(statsPanel);
 
-    QVBoxLayout *statsLayout = qobject_cast<QVBoxLayout *>(statsPanel->layout());
+    QVBoxLayout* statsLayout = qobject_cast<QVBoxLayout* >(statsPanel->layout());
     statsLayout->setContentsMargins(12, 8, 12, 8);
     statsLayout->setSpacing(8);
 
@@ -79,16 +79,16 @@ QWidget* MainWindow::setupDataPanel(QWidget *parent)
 }
 
 QWidget* MainWindow::setupTableToolbar(QWidget* parent, QTableWidget* table) {
-    QWidget *toolbar = new QWidget(parent);
+    QWidget* toolbar = new QWidget(parent);
     toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbar);
+    QHBoxLayout* toolbarLayout = new QHBoxLayout(toolbar);
     toolbarLayout->setSpacing(5);
 
     // Спинбоксы
-    auto *columnsContainer = Draw::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
-    QSpinBox *colSpinBox = qobject_cast<QSpinBox *>(columnsContainer->layout()->itemAt(1)->widget());
-    auto *rowsContainer = Draw::createSpinBoxWithLabel(toolbar, "Ряды", 512, initialRowCount);
-    QSpinBox *rowSpinBox = qobject_cast<QSpinBox *>(rowsContainer->layout()->itemAt(1)->widget());
+    auto* columnsContainer = Draw::createSpinBoxWithLabel(toolbar, "Столбцы", 512, initialColCount);
+    QSpinBox* colSpinBox = qobject_cast<QSpinBox* >(columnsContainer->layout()->itemAt(1)->widget());
+    auto* rowsContainer = Draw::createSpinBoxWithLabel(toolbar, "Ряды", 512, initialRowCount);
+    QSpinBox* rowSpinBox = qobject_cast<QSpinBox* >(rowsContainer->layout()->itemAt(1)->widget());
 
     m_table = table;
     m_addColBtn = Draw::createToolButton("Добавить столбец", "add-column");
@@ -110,7 +110,7 @@ QWidget* MainWindow::setupTableToolbar(QWidget* parent, QTableWidget* table) {
                                        m_autoSizeBtn, m_clearBtn, m_importBtn, m_exportBtn};
 
     // Добавляем элементы в layout
-    for (QWidget *widget : toolbarWidgets) {
+    for (QWidget* widget : toolbarWidgets) {
         toolbarLayout->addWidget(widget);
     }
 
@@ -234,8 +234,8 @@ void MainWindow::updateMarker(int seriesIndex, bool isMax) {
     // Удаляем только если маркер существует и добавлен на график
     if (*marker && m_chartView->chart()->series().contains(*marker)) {
         m_chartView->chart()->removeSeries(*marker);
-        delete *marker;
-        *marker = nullptr;
+        delete* marker;
+       * marker = nullptr;
     }
 
     // Пересчитываем экстремум только если кнопка активна
@@ -244,7 +244,7 @@ void MainWindow::updateMarker(int seriesIndex, bool isMax) {
 
         auto [val, col] = findExtremum(seriesIndex, isMax);
         if (col != -1) {
-            *marker = Draw::createMarker(col, val, m_chartView->chart(), m_axisX, m_axisY, isMax);
+           * marker = Draw::createMarker(col, val, m_chartView->chart(), m_axisX, m_axisY, isMax);
             // Дополнительная проверка перед добавлением
             if (*marker && !m_chartView->chart()->series().contains(*marker)) {
                 m_chartView->chart()->addSeries(*marker);
@@ -262,14 +262,14 @@ void MainWindow::handleExtremumToggle(int seriesIndex, bool isMax, bool checked)
     // Удаляем предыдущий маркер
     if (*targetMarker) {
         m_chartView->chart()->removeSeries(*targetMarker);
-        delete *targetMarker;
-        *targetMarker = nullptr;
+        delete* targetMarker;
+       * targetMarker = nullptr;
     }
 
     if (checked) {
         auto [value, col] = findExtremum(seriesIndex, isMax);
         if (col != -1) {
-            *targetMarker = Draw::createMarker(col, value,
+           * targetMarker = Draw::createMarker(col, value,
                                                m_chartView->chart(), m_axisX, m_axisY, isMax);
 
             // Подключаем обновление при изменении данных
@@ -296,7 +296,7 @@ void MainWindow::handleSeriesAdded(const QModelIndex &parent, int first, int las
         for(int row = first; row <= last; ++row) {
             if(row >= m_seriesNameEdits.size()) {
                 QLineEdit* edit;
-                QPushButton *minBtn, *maxBtn;
+                QPushButton* minBtn,* maxBtn;
                 QWidget* rowWidget = Draw::createSeriesNameRow(m_seriesSettingsContent, row, &edit, &minBtn, &maxBtn);
 
                 // Настройка кнопок
@@ -458,27 +458,42 @@ bool MainWindow::areAllLabelsDefined() {
 
 TableData MainWindow::parse() const {
     TableData plotData;
+    for (int row = 0; row < m_table->rowCount(); ++row) {
+        std::vector<std::pair<int, int>> rowData;
+
+        for (int col = 0; col < m_table->columnCount(); ++col) {
+            if (auto item = m_table->item(row, col)) {
+                bool ok;
+                double value = item->text().toDouble(&ok);
+                if (ok) {
+                    rowData.emplace_back(col, value);
+                }
+            }
+        }
+
+        if (!rowData.empty()) {
+            plotData.push_back(rowData);
+        }
+    }
+    return plotData;
+}
+
+std::vector<std::pair<int, int>> MainWindow::getSelectedRowData() const {
+    std::vector<std::pair<int, int>> selectedData;
     const int targetRow = m_rowToCalculateCombo->currentIndex();
 
-    if(targetRow < 0 || targetRow >= m_table->rowCount())
-        return plotData;
-
-    std::vector<std::pair<int, int>> rowData;
-    for(int col = 0; col < m_table->columnCount(); ++col) {
-        if(auto item = m_table->item(targetRow, col)) {
-            bool ok;
-            double value = item->text().toDouble(&ok);
-            if(ok) {
-                rowData.emplace_back(col, value);
+    if(targetRow >= 0 && targetRow < m_table->rowCount()) {
+        for(int col = 0; col < m_table->columnCount(); ++col) {
+            if(auto item = m_table->item(targetRow, col)) {
+                bool ok;
+                double value = item->text().toDouble(&ok);
+                if(ok) {
+                    selectedData.emplace_back(col, value);
+                }
             }
         }
     }
-
-    if(!rowData.empty()) {
-        plotData.push_back(rowData);
-    }
-
-    return plotData;
+    return selectedData;
 }
 
 void MainWindow::setupChartAxes() {
@@ -620,8 +635,8 @@ void MainWindow::updateAxisRanges(double minX, double maxX, double minY, double 
         return;
     }
 
-    const double xPadding = (maxX - minX) * 0.1;
-    const double yPadding = (maxY - minY) * 0.1;
+    const double xPadding = (maxX - minX)*  0.1;
+    const double yPadding = (maxY - minY)*  0.1;
 
     m_axisX->setRange(minX - xPadding, maxX + xPadding);
     m_axisY->setRange(minY - yPadding, maxY + yPadding);
@@ -687,8 +702,8 @@ void MainWindow::updateUI(const TableData& data) {
 
     const double mean = hasData ? Calculate::getMean(values) : 0.0;
     const double stdDev = hasData ? Calculate::getStandardDeviation(values, mean) : 0.0;
-    const double min = hasData ? *std::min_element(values.begin(), values.end()) : 0.0;
-    const double max = hasData ? *std::max_element(values.begin(), values.end()) : 0.0;
+    const double min = hasData ?* std::min_element(values.begin(), values.end()) : 0.0;
+    const double max = hasData ?* std::max_element(values.begin(), values.end()) : 0.0;
     const double range = max - min;
 
     updateBasicMetrics(hasData, values, mean);
@@ -727,9 +742,18 @@ QList<QPair<QString, QLabel*>> MainWindow::getMetricsList() const {
 void MainWindow::updateStatistics() {
     if (!areAllLabelsDefined()) return;
 
-    const TableData data = parse();
-    updateUI(data);
-    plotData(data);
+    const TableData allData = parse(); // Все данные для графиков
+    const auto selectedData = getSelectedRowData(); // Данные для метрик
+
+    // Создаем временную TableData для совместимости с updateUI
+    TableData metricsData;
+    if(!selectedData.empty()) {
+        metricsData.push_back(selectedData);
+    }
+
+    updateUI(metricsData); // Передаем только выбранный ряд для метрик
+    plotData(allData); // Передаем все данные для отрисовки графиков
+
     for(int i = 0; i < m_table->rowCount(); ++i) {
         updateButtonsState(i);
     }
@@ -828,8 +852,8 @@ void MainWindow::loadStylesheets() {
     qApp->setStyleSheet(style);
 }
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    QWidget *mainWidget = new QWidget(this);
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+    QWidget* mainWidget = new QWidget(this);
     setCentralWidget(mainWidget);
     loadStylesheets();
 
@@ -838,7 +862,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QLineEdit* yAxisEdit = nullptr;
     QWidget* seriesContent = nullptr;
 
-    QWidget *dataSection = setupDataSection(mainWidget);
+    QWidget* dataSection = setupDataSection(mainWidget);
     QWidget* graphSection = Draw::setupGraphSection(
         mainWidget,
         &xAxisEdit,
@@ -851,7 +875,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_yAxisTitleEdit = yAxisEdit;
     m_seriesSettingsContent = seriesContent;
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
+    QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(dataSection, 1);
     mainLayout->addWidget(graphSection, 1);
