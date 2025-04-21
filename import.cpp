@@ -71,13 +71,25 @@ QString getFilePath(QWidget* parent) {
 ParseResult readAndParseFile(const QString& filePath, QWidget* parent) {
     QFile file(filePath);
     ParseResult result;
+    int emptyLineCounter = 0;  // Счетчик пустых строк
+    const int STOP_LINES = 3;  // Количество пустых строк для остановки
 
     if (!openFile(file, parent)) return result;
 
     QTextStream in(&file);
     while (!in.atEnd()) {
         QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
+
+        // Проверяем разделитель окончания данных
+        if (line.isEmpty()) {
+            emptyLineCounter++;
+            if (emptyLineCounter >= STOP_LINES) {
+                break; // Обнаружен конец данных
+            }
+            continue;
+        } else {
+            emptyLineCounter = 0; // Сбрасываем счетчик
+        }
 
         ParsedRow row = parseLine(line);
         if (row.lastNonEmptyIndex >= 0) {
