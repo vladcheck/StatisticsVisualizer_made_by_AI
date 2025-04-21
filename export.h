@@ -17,6 +17,7 @@
 #include <numeric>
 #include "calculate.h"
 #include "globals.h"
+#include "mainwindow.h"
 
 struct TableMetrics {
     int maxNonEmptyCols;
@@ -28,9 +29,10 @@ namespace Export {
     TableMetrics calculateTableMetrics(QTableWidget *table);
     QStringList prepareTableRows(QTableWidget *table, int columns);
     QStringList getHeaderLabels(QTableWidget *table, int columns);
+    bool processExportDialog(const QString& fileName, const QList<QPair<QString, QString>>& metrics,
+                             const QStringList& tableData, const QStringList& seriesHeaders);
     void exportData(QTableWidget *table, const QList<QPair<QString, QString>>& metrics);
-    bool writeFileContent(const QString& path, const QList<QPair<QString, QString>>& metrics,
-                          const QStringList& headers, const QStringList& data);
+    bool writeFileContent(const QString& path, const QList<QPair<QString, QString>>& metrics, const QStringList& data);
 }
 
 #endif // EXPORT_H

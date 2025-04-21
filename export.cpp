@@ -72,8 +72,10 @@ namespace Export
         return headers;
     }
 
-    bool writeFileContent(const QString &path, const QList<QPair<QString, QString>> &metrics,
-                          const QStringList &headers, const QStringList &data)
+    bool writeFileContent(const QString &path,
+                          const QList<QPair<QString, QString>> &metrics,
+                          const QStringList &data,
+                          const QStringList &seriesHeaders)
     {
         QFile file(path);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -91,9 +93,9 @@ namespace Export
         for (const auto &[name, value] : metrics)
             out << name << ": " << value << "\n";
 
-        // Запись заголовков
-        out << "\n# Заголовки\n"
-            << headers.join(" | ") << "\n";
+        // Запись заголовков рядов
+        out << "\n# Заголовки рядов\n"
+            << seriesHeaders.join(", ") << "\n";
 
         return true;
     }
@@ -210,10 +212,10 @@ namespace Export
 
     bool processExportDialog(const QString& fileName,
                              const QList<QPair<QString, QString>>& metrics,
-                             const QStringList& headers,
-                             const QStringList& tableData) {
+                             const QStringList& tableData,
+                             const QStringList& seriesHeaders) {
         if (fileName.isEmpty()) return false;
-        return writeFileContent(fileName, metrics, headers, tableData);
+        return writeFileContent(fileName, metrics, tableData, seriesHeaders);
     }
 
     void exportData(QTableWidget* table, const QList<QPair<QString, QString>>& /*metrics*/) {
@@ -230,13 +232,19 @@ namespace Export
 
         const auto metrics = calculateAllMetrics(rowsData);
         const TableMetrics tableMetrics = calculateTableMetrics(table);
-        const auto headers = getHeaderLabels(table, tableMetrics.maxNonEmptyCols);
         const auto tableData = prepareTableRows(table, tableMetrics.maxNonEmptyCols);
+
+        // Получаем заголовки рядов из MainWindow
+        MainWindow* mainWindow = qobject_cast<MainWindow*>(table->window());
+        QStringList seriesHeaders;
+        if(mainWindow) {
+            seriesHeaders = mainWindow->getSeriesHeaders();
+        }
 
         const QString fileName = QFileDialog::getSaveFileName(
             nullptr, "Экспорт данных", "", "Текстовый файл (*.txt);;CSV (*.csv)");
 
-        if (processExportDialog(fileName, metrics, headers, tableData)) {
+        if (processExportDialog(fileName, metrics, tableData, seriesHeaders)) {
             QMessageBox::information(nullptr, "Успех", "Данные экспортированы!");
         } else if (!fileName.isEmpty()) {
             QMessageBox::critical(nullptr, "Ошибка", "Ошибка записи файла!");

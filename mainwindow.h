@@ -35,6 +35,9 @@
 #include <QPair>
 #include <QList>
 #include <QComboBox>
+#include <QScatterSeries>
+#include <QValueAxis>
+#include <QLineSeries>
 
 #include <limits>
 #include <iostream>
@@ -165,6 +168,17 @@ private:
     QString calculateAndFormat(bool hasData, Func func, Args&&... args) const;
     void updateRowSelectionCombo();
     std::vector<std::pair<int, int>> getSelectedRowData() const;
+
+public:
+    QStringList getSeriesHeaders() const {
+        QStringList headers;
+        for(auto* edit : m_seriesNameEdits) {
+            headers << (edit->text().isEmpty() ?
+                            QString("Ряд %1").arg(headers.size()+1) :
+                            edit->text());
+        }
+        return headers;
+    }
 };
 
 #endif // MAINWINDOW_H
