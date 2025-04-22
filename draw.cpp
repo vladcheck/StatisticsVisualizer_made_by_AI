@@ -55,6 +55,7 @@ namespace Draw {
         // Правая часть - таблица
         QTableWidget *table = new QTableWidget(initialRowCount, initialColCount, parent);
         Draw::setSizePolicyExpanding(table);
+        table->setItemDelegate(new NumericDelegate(table));
         table->verticalHeader()->setVisible(false);
         table->resizeColumnsToContents();
         return table;

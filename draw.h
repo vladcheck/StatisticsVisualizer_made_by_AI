@@ -4,6 +4,7 @@
 #include "import.h"
 #include "export.h"
 #include "globals.h"
+#include "numericDelegate.h"
 
 #include <QHBoxLayout>
 #include <QSpinBox>
