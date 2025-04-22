@@ -27,6 +27,39 @@ void showError(QWidget* parent, const QString& message) {
     QMessageBox::critical(parent, "Ошибка", message);
 }
 
+QList<int> findInvalidDataLines(const QString& filePath, QWidget* parent) {
+    QFile file(filePath);
+    QList<int> invalidLines;
+    QRegularExpression letterRegex("[A-Za-zА-Яа-яЁё]"); // Регулярка для поиска букв
+
+    if (!openFile(file, parent)) return invalidLines;
+
+    QTextStream in(&file);
+    int lineNumber = 0;
+    int emptyLineCounter = 0;
+    const int STOP_LINES = 3;
+
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        lineNumber++;
+
+        if (line.isEmpty()) {
+            emptyLineCounter++;
+            if (emptyLineCounter >= STOP_LINES) break;
+            continue;
+        } else {
+            emptyLineCounter = 0;
+
+            // Проверка на наличие букв в непустых строках данных
+            if (line.contains(letterRegex)) {
+                invalidLines.append(lineNumber);
+            }
+        }
+    }
+    file.close();
+    return invalidLines;
+}
+
 ParsedRow parseLine(const QString& line) {
     ParsedRow row;
     QStringList tokens = line.split(regex, Qt::SkipEmptyParts);
@@ -68,6 +101,17 @@ ParseResult readAndParseFile(const QString& filePath, QWidget* parent) {
     ParseResult result;
     int emptyLineCounter = 0;  // Счетчик пустых строк
     const int STOP_LINES = 3;  // Количество пустых строк для остановки
+
+    QList<int> invalidLines = findInvalidDataLines(filePath, parent);
+    if (!invalidLines.isEmpty()) {
+        QString errorMsg = "Невозможно импортировать. Найдены буквы в строках:\n";
+        for (int ln : invalidLines) {
+            errorMsg += QString::number(ln) + ", ";
+        }
+        errorMsg.chop(2);
+        showError(parent, errorMsg);
+        return result;
+    }
 
     if (!openFile(file, parent)) return result;
 
@@ -143,8 +187,13 @@ void updateTable(QTableWidget* table, const ParseResult& result) {
 void importFile(QTableWidget* table) {
     const QString filePath = getFilePath(table);
     if (filePath.isEmpty()) return;
-
     const auto parseResult = readAndParseFile(filePath, table);
+
+    // Уже была показана ошибка, выходим
+    if (parseResult.rows.isEmpty() && parseResult.seriesHeaders.isEmpty()) {
+        return;
+    }
+
     updateTable(table, parseResult);
 }
 }
