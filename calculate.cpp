@@ -635,24 +635,61 @@ namespace Calculate
         return chi2;
     }
 
-    double kolmogorovSmirnovTest(const std::vector<double> &data)
-    {
+    double calculateMean(const std::vector<double>& data) {
+        return std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+    }
+
+    double calculateStdDev(const std::vector<double>& data) {
+        const double mean = calculateMean(data);
+        double sq_sum = 0.0;
+        for (double v : data) {
+            sq_sum += (v - mean) * (v - mean);
+        }
+        return std::sqrt(sq_sum / (data.size() - 1));  // Несмещенная оценка
+    }
+
+    double kolmogorovSmirnovTest(const std::vector<double> &data) {
+        const int MIN_SAMPLE_SIZE = 30;  // Минимальный размер выборки
+
         if (data.size() < MIN_SAMPLE_SIZE)
             return std::numeric_limits<double>::quiet_NaN();
 
+        // 1. Рассчитываем параметры распределения
+        const double mu = calculateMean(data);
+        const double sigma = calculateStdDev(data);
+
+        // Проверка edge case: нулевое стандартное отклонение
+        if (sigma < std::numeric_limits<double>::epsilon()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        // 2. Сортируем данные
         std::vector<double> sorted = data;
         std::sort(sorted.begin(), sorted.end());
 
-        const double n = sorted.size();
+        // 3. Вычисляем статистику D
         double D = 0.0;
+        const double n = sorted.size();
+        const double sqrt2 = std::sqrt(2.0);
 
-        for (int i = 0; i < sorted.size(); ++i)
-        {
-            const double Fn = (i + 1) / n;
-            const double F = 0.5 * (1 + erf((sorted[i] - 0) / 1)); // Для N(0,1)
+        for (size_t i = 0; i < sorted.size(); ++i) {
+            // Эмпирическая функция распределения
+            const double Fn = (i + 1) / n;  // (i+1) для поправки на непрерывность
+
+            // Теоретическая CDF (нормальное распределение)
+            const double z = (sorted[i] - mu) / sigma;
+            const double F = 0.5 * (1 + std::erf(z / sqrt2));
+
+            // Максимальное расхождение
             D = std::max(D, std::abs(Fn - F));
+
+            // Проверка для предыдущего значения (требуется для двустороннего сравнения)
+            if (i > 0) {
+                const double F_prev = 0.5 * (1 + std::erf((sorted[i-1] - mu)/sigma / sqrt2));
+                D = std::max(D, std::abs((i/n) - F_prev));
+            }
         }
 
         return D;
     }
-};
+}
