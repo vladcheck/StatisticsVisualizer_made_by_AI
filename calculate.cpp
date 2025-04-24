@@ -498,21 +498,82 @@ namespace Calculate
         return entropy;
     }
 
+    double normal_quantile(double p) {
+        if (p <= 0 || p >= 1)
+            return std::numeric_limits<double>::quiet_NaN();
+        double t = std::sqrt(-2.0 * std::log(std::min(p, 1-p)));
+        double x = t - (a[0] + t*(a[1] + t*(a[2] + t*(a[3] + t*(a[4] + t*a[5])))) /
+                        (1.0 + t*(b[0] + t*(b[1] + t*(b[2] + t*(b[3] + t*b[4]))))));
+
+        return (p < 0.5) ? -x : x;
+    }
+
+    const std::vector<double>& getShapiroWilkCoefficients(int n) {
+        static std::map<int, std::vector<double>> coefficient_cache;
+
+        if (n < MIN_SAMPLE_SIZE || n > MAX_SAMPLE_SIZE)
+            throw std::invalid_argument("Invalid sample size");
+
+        // Проверяем кэш
+        auto it = coefficient_cache.find(n);
+        if (it != coefficient_cache.end()) {
+            return it->second;
+        }
+
+        // Создаем новый вектор и работаем с ним
+        std::vector<double> a(n/2);
+        for (int i = 0; i < n/2; ++i) {
+            double u = (i + 1 - 0.375) / (n + 0.25);
+            a[i] = normal_quantile(u);
+        }
+
+        // Нормализация
+        double sum_sq = 0.0;
+        for (double val : a) sum_sq += val * val;
+        double scale = 1.0 / std::sqrt(2 * sum_sq);
+        for (double& val : a) val *= scale;
+
+        // Сохраняем в кэш и возвращаем ссылку
+        coefficient_cache[n] = std::move(a);  // Используем перемещение
+        return coefficient_cache.at(n);       // Возвращаем из кэша
+    }
+
     double shapiroWilkTest(const std::vector<double> &data)
     {
-        if (data.size() < MIN_SAMPLE_SIZE || data.size() > MAX_SAMPLE_SIZE)
+        const int n = data.size();
+        if (n < MIN_SAMPLE_SIZE || n > MAX_SAMPLE_SIZE)
             return std::numeric_limits<double>::quiet_NaN();
 
+        // 1. Получаем коэффициенты Шапиро-Уилка для данного n
+        const std::vector<double>& a = getShapiroWilkCoefficients(n);
+        if (a.empty() || a.size() != n/2)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        // 2. Сортируем выборку
         std::vector<double> sorted = data;
         std::sort(sorted.begin(), sorted.end());
 
-        const double mean = std::accumulate(sorted.begin(), sorted.end(), 0.0) / sorted.size();
-        double ss = 0.0;
-        for (double v : sorted)
-            ss += (v - mean) * (v - mean);
+        // 3. Вычисляем сумму квадратов отклонений
+        const double mean = getMean(sorted);
+        double ssq = std::accumulate(sorted.begin(), sorted.end(), 0.0,
+                                     [mean](double acc, double x) { return acc + (x - mean)*(x - mean); });
 
-        const double W = 1.0 - exp(-0.001 * ss / sorted.size());
-        return (W > SW_CRITICAL_VALUE) ? 1.0 : 0.0;
+        if (ssq < std::numeric_limits<double>::epsilon())
+            return 1.0; // Все значения одинаковые
+
+        // 4. Вычисляем числитель W-статистики
+        double numerator = 0.0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            const int j = n - 1 - i;
+            numerator += a[i] * (sorted[j] - sorted[i]);
+        }
+        numerator *= numerator;
+
+        // 5. Рассчитываем W-статистику
+        const double W = numerator / ssq;
+
+        // 6. Сравнение с критическим значением
+        return (W >= SW_CRITICAL_VALUE) ? 1.0 : 0.0;
     }
 
     double calculateDensity(const std::vector<double> &data, double point)

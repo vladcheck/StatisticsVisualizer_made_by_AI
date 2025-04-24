@@ -45,6 +45,6 @@ namespace Calculate
     double calculateDensity(const std::vector<double>& data, double point);
     double chiSquareTest(const std::vector<double>& data);
     double kolmogorovSmirnovTest(const std::vector<double>& data);
-};
+}
 
 #endif // CALCULATIONS_H
