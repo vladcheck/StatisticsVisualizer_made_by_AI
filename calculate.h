@@ -3,6 +3,21 @@
 
 #include <QTableWidgetItem>
 #include <QString>
+#include <QHash>
+#include <QSet>
+#include <QtDebug>
+
+#include "calculate.h"
+#include "globals.h"
+#include "structs.h"
+
+#include <limits>
+#include <cmath>
+#include <algorithm>
+#include <numeric>
+#include <unordered_set>
+#include <map>
+#include <vector>
 
 namespace Calculate
 {

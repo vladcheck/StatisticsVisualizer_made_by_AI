@@ -1,28 +1,13 @@
-#include "calculate.h"
-#include "globals.h"
-#include "structs.h"
-
-#include <QTableWidgetItem>
-#include <QHash>
-#include <QSet>
-#include <QtDebug>
-
-#include <limits>
-#include <cmath>
-#include <algorithm>
-#include <numeric>
-#include <unordered_set>
-#include <map>
-#include <vector>
-
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
 #include <math.h>
+#include "calculate.h"
 
 namespace Calculate
 {
-    bool areWeightsValid(const QVector<double>& weights, const QVector<double>& values) {
+    bool areWeightsValid(const QVector<double> &weights, const QVector<double> &values)
+    {
         return (weights.size() == values.size()) && !weights.isEmpty();
     }
 
@@ -58,7 +43,7 @@ namespace Calculate
         return weights;
     }
 
-    double getSum(const std::vector<double>& values)
+    double getSum(const std::vector<double> &values)
     {
         long double sum = std::accumulate(values.begin(), values.end(), 0.0L);
         if (!std::isfinite(sum))
@@ -66,7 +51,7 @@ namespace Calculate
         return static_cast<double>(sum);
     }
 
-    double getMean(const std::vector<double>& values)
+    double getMean(const std::vector<double> &values)
     {
         if (values.empty())
         {
@@ -78,7 +63,7 @@ namespace Calculate
         return static_cast<double>(sum / values.size());
     }
 
-    double getMedian(const std::vector<double>& values)
+    double getMedian(const std::vector<double> &values)
     {
         if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
@@ -109,7 +94,7 @@ namespace Calculate
         }
     }
 
-    double getMode(const std::vector<double>& values)
+    double getMode(const std::vector<double> &values)
     {
         if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
@@ -152,7 +137,7 @@ namespace Calculate
         return mode;
     }
 
-    double getStandardDeviation(const std::vector<double>& values, double mean)
+    double getStandardDeviation(const std::vector<double> &values, double mean)
     {
         const int n = values.size();
         if (n < 2 || std::isnan(mean))
@@ -189,7 +174,7 @@ namespace Calculate
         return static_cast<double>(stdDev_ld);
     }
 
-    double geometricMean(const std::vector<double>& values)
+    double geometricMean(const std::vector<double> &values)
     {
         if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
@@ -218,7 +203,7 @@ namespace Calculate
         return static_cast<double>(result);
     }
 
-    double harmonicMean(const std::vector<double>& values)
+    double harmonicMean(const std::vector<double> &values)
     {
         if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
@@ -250,7 +235,7 @@ namespace Calculate
         return static_cast<double>(result);
     }
 
-    double weightedMean(const std::vector<double>& values, const std::vector<double> &weights)
+    double weightedMean(const std::vector<double> &values, const std::vector<double> &weights)
     {
         qDebug() << "=== weightedMean calculation ===";
         qDebug() << "Values:" << values;
@@ -324,7 +309,7 @@ namespace Calculate
         return std::vector<double>(table->rowCount(), 1.0);
     }
 
-    double rootMeanSquare(const std::vector<double>& values)
+    double rootMeanSquare(const std::vector<double> &values)
     {
         if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
@@ -336,7 +321,7 @@ namespace Calculate
         return std::sqrt(sumSquares / values.size());
     }
 
-    double skewness(const std::vector<double>& values, double mean, double stdDev)
+    double skewness(const std::vector<double> &values, double mean, double stdDev)
     {
         const int n = values.size();
         if (n < 3 || stdDev == 0)
@@ -352,7 +337,7 @@ namespace Calculate
         return factor * (sumCubedDeviations / std::pow(stdDev, 3));
     }
 
-    double kurtosis(const std::vector<double>& values, double mean, double stdDev)
+    double kurtosis(const std::vector<double> &values, double mean, double stdDev)
     {
         const int n = values.size();
         const long double n_ld = static_cast<long double>(n);
@@ -394,7 +379,7 @@ namespace Calculate
         return static_cast<double>(kurt);
     }
 
-    double trimmedMean(const std::vector<double>& values, double trimFraction = 0.1)
+    double trimmedMean(const std::vector<double> &values, double trimFraction = 0.1)
     {
         if (values.empty() || trimFraction < 0 || trimFraction >= 0.5)
             return std::numeric_limits<double>::quiet_NaN();
@@ -418,7 +403,7 @@ namespace Calculate
         return sum / (end - start);
     }
 
-    double medianAbsoluteDeviation(const std::vector<double>& values)
+    double medianAbsoluteDeviation(const std::vector<double> &values)
     {
         if (values.empty())
             return std::numeric_limits<double>::quiet_NaN();
@@ -436,7 +421,7 @@ namespace Calculate
         return getMedian(deviations);
     }
 
-    double robustStandardDeviation(const std::vector<double>& values)
+    double robustStandardDeviation(const std::vector<double> &values)
     {
         const double mad = medianAbsoluteDeviation(values);
         return (mad != 0.0 && !std::isnan(mad)) ? 1.4826 * mad
@@ -547,35 +532,104 @@ namespace Calculate
         return sum / (data.size() * h);
     }
 
-    double chiSquareTest(const std::vector<double> &data)
-    {
-        if (data.size() < MIN_SAMPLE_SIZE * 2)
+    // Реализация обратной функции ошибок через метод Ньютона
+    double erf_inv(double y) {
+        if (y <= -1.0 || y >= 1.0) {
+            return std::copysign(std::numeric_limits<double>::infinity(), y);
+        }
+        constexpr double twoOverSqrtPi = 1.1283791670955126;
+        constexpr double eps = 1e-12;
+        constexpr int max_iter = 50;
+        double x = 0.0;
+
+        // Начальное приближение
+        if (y < -0.7) x = -std::sqrt(-std::log((1.0 + y)/2.0));
+        else if (y > 0.7) x = std::sqrt(-std::log((1.0 - y)/2.0));
+        else x = y * M_PI_2;
+
+        // Уточнение методом Ньютона
+        for (int i = 0; i < max_iter; ++i) {
+            double err = std::erf(x) - y;
+            if (std::abs(err) < eps) break;
+
+            // Производная: d/dx erf(x) = 2/sqrt(π) * exp(-x²)
+            x -= err / (twoOverSqrtPi * std::exp(-x*x));
+        }
+        return x;
+    }
+
+
+    double chiSquareTest(const std::vector<double> &data) {
+        if (data.size() < MIN_SAMPLE_SIZE)
             return std::numeric_limits<double>::quiet_NaN();
 
-        std::vector<double> sorted = data;
-        std::sort(sorted.begin(), sorted.end());
+        // 1. Оценка параметров распределения
+        const double mu = getMean(data);
+        const double sigma = getStandardDeviation(data, mu);
 
-        const double min = sorted.front();
-        const double max = sorted.back();
-        const double binWidth = (max - min) / CHI2_BINS;
+        // Проверка edge-case: все данные одинаковые
+        if (sigma < std::numeric_limits<double>::epsilon()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
 
-        std::vector<int> observed(CHI2_BINS, 0);
-        for (double v : sorted)
-        {
-            int bin = static_cast<int>((v - min) / binWidth);
-            if (bin >= CHI2_BINS)
-                bin = CHI2_BINS - 1;
+        // 2. Создание бинов через квантили
+        const int target_bins = CHI2_BINS;
+        std::vector<double> bin_edges(target_bins + 1);
+
+        try {
+            for (int i = 0; i <= target_bins; ++i) {
+                const double p = static_cast<double>(i)/target_bins;
+                bin_edges[i] = mu + sigma * std::sqrt(2.0) * erf_inv(2*p - 1);
+            }
+        } catch (...) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+
+        // 3. Подсчет наблюдаемых частот
+        std::vector<int> observed(target_bins, 0);
+        for (double v : data) {
+            auto it = std::upper_bound(bin_edges.begin(), bin_edges.end(), v);
+            int bin = std::distance(bin_edges.begin(), it) - 1;
+            bin = std::clamp(bin, 0, target_bins-1);
             observed[bin]++;
         }
 
-        const double expected = data.size() / CHI2_BINS;
-        if (expected < CHI2_MIN_EXPECTED)
-            return NAN;
+        // 4. Расчет ожидаемых частот
+        std::vector<double> expected(target_bins);
+        const double total = data.size();
+        for (int i = 0; i < target_bins; ++i) {
+            double p_low = 0.5 * (1 + std::erf((bin_edges[i] - mu)/(sigma * M_SQRT2)));
+            double p_high = 0.5 * (1 + std::erf((bin_edges[i+1] - mu)/(sigma * M_SQRT2)));
+            expected[i] = total * (p_high - p_low);
+        }
 
+        // 5. Объединение бинов с малыми ожиданиями
+        std::vector<int> obs_merged;
+        std::vector<double> exp_merged;
+        double curr_exp = 0.0;
+        int curr_obs = 0;
+
+        for (int i = 0; i < target_bins; ++i) {
+            curr_exp += expected[i];
+            curr_obs += observed[i];
+
+            if (curr_exp >= CHI2_MIN_EXPECTED) {
+                exp_merged.push_back(curr_exp);
+                obs_merged.push_back(curr_obs);
+                curr_exp = 0.0;
+                curr_obs = 0;
+            }
+        }
+
+        // Edge-case: недостаточно бинов после объединения
+        if (exp_merged.size() < 3)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        // 6. Расчет χ² статистики
         double chi2 = 0.0;
-        for (int obs : observed)
-        {
-            chi2 += (obs - expected) * (obs - expected) / expected;
+        for (size_t i = 0; i < exp_merged.size(); ++i) {
+            if (exp_merged[i] < 1e-5) continue;
+            chi2 += std::pow(obs_merged[i] - exp_merged[i], 2) / exp_merged[i];
         }
 
         return chi2;
