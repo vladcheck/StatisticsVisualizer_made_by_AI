@@ -43,8 +43,10 @@
 #include <iostream>
 
 struct SeriesMarkers {
-    QScatterSeries* minMarker = nullptr;
     QScatterSeries* maxMarker = nullptr;
+    QScatterSeries* minMarker = nullptr;
+    QMetaObject::Connection maxConnection;
+    QMetaObject::Connection minConnection;
 };
 
 class MainWindow : public QMainWindow

@@ -256,32 +256,47 @@ void MainWindow::updateMarker(int seriesIndex, bool isMax) {
 }
 
 void MainWindow::handleExtremumToggle(int seriesIndex, bool isMax, bool checked) {
+    if (seriesIndex < 0 || seriesIndex >= m_seriesMarkers.size()) return;
+
     auto& markers = m_seriesMarkers[seriesIndex];
     QScatterSeries** targetMarker = isMax ? &markers.maxMarker : &markers.minMarker;
+    QMetaObject::Connection* connection = isMax ? &markers.maxConnection : &markers.minConnection;
 
-    // Удаляем предыдущий маркер
+    // Remove existing marker and disconnect its connection
     if (*targetMarker) {
-        m_chartView->chart()->removeSeries(*targetMarker);
-        delete* targetMarker;
-       * targetMarker = nullptr;
+        if (m_chartView && m_chartView->chart()) {
+            m_chartView->chart()->removeSeries(*targetMarker);
+        }
+        delete *targetMarker;
+        *targetMarker = nullptr;
+
+        // Disconnect the specific connection
+        if (*connection) {
+            QObject::disconnect(*connection);
+            *connection = QMetaObject::Connection(); // Reset to null
+        }
     }
 
     if (checked) {
         auto [value, col] = findExtremum(seriesIndex, isMax);
-        if (col != -1) {
-           * targetMarker = Draw::createMarker(col, value,
-                                               m_chartView->chart(), m_axisX, m_axisY, isMax);
+        if (col != -1 && m_chartView && m_chartView->chart()) {
+            *targetMarker = Draw::createMarker(col, value, m_chartView->chart(),
+                                               m_axisX, m_axisY, isMax);
 
-            // Подключаем обновление при изменении данных
-            connect(m_table->model(), &QAbstractItemModel::dataChanged,
-                    [this, seriesIndex, isMax]() {
-                        updateExtremumMarker(seriesIndex, isMax);
-                    });
+            // Connect dataChanged and store the connection
+            *connection = connect(m_table->model(), &QAbstractItemModel::dataChanged,
+                                  this, [=, this]() { updateExtremumMarker(seriesIndex, isMax); });
         }
     }
 }
 
+
 void MainWindow::updateExtremumMarker(int seriesIndex, bool isMax) {
+    if (seriesIndex < 0 ||
+        seriesIndex >= m_seriesMarkers.size() ||
+        seriesIndex >= m_maxButtons.size() ||
+        seriesIndex >= m_minButtons.size()) return;
+
     auto& markers = m_seriesMarkers[seriesIndex];
     QScatterSeries** targetMarker = isMax ? &markers.maxMarker : &markers.minMarker;
     QPushButton* btn = isMax ? m_maxButtons[seriesIndex] : m_minButtons[seriesIndex];
